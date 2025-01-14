@@ -1,17 +1,20 @@
-/*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.kie.pmml.evaluator.core;
 
@@ -19,9 +22,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.math3.util.Precision;
 import org.assertj.core.data.Percentage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,23 +88,27 @@ class PMMLRuntimeContextImplTest {
         AtomicReference<Double> totalReference = new AtomicReference<>(initialTotalProbability);
         Random rand = new Random();
         List<Double> doubles = IntStream.range(0, 3).mapToDouble(value -> {
-                    double currentTotal = totalReference.get();
-                    int nextInt = Math.abs(rand.nextInt((int) (currentTotal * 100)));
-                    double toReturn = (double) nextInt / 100;
-                    totalReference.set(currentTotal - toReturn);
-                    return toReturn;
-                }).boxed().sorted((f1, f2) -> Double.compare(f2, f1))
-                .collect(Collectors.toList());
+            double remainingProbability = totalReference.get();
+            double toReturn = invalidBound(remainingProbability) ? 0.00 :
+                    Precision.round(rand.nextDouble(remainingProbability), 2);
+            totalReference.set(Precision.round((remainingProbability - toReturn), 2));
+            return toReturn;
+        }).boxed().sorted((f1, f2) -> Double.compare(f2, f1)).toList();
         LinkedHashMap<String, Double> probabilityResultMap = new LinkedHashMap<>();
         int counter = 0;
         for (Double toPut : doubles) {
             probabilityResultMap.put("Element-" + counter, toPut);
             counter++;
         }
-        double initialProbability = probabilityResultMap.values().stream().mapToDouble(x -> x).sum();
+        double initialProbability = Precision.round(probabilityResultMap.values().stream().mapToDouble(x -> x).sum(),
+                                                    2);
         assertThat(initialProbability).isLessThanOrEqualTo(initialTotalProbability);
         LinkedHashMap<String, Double> retrieved = PMMLRuntimeContextImpl.getFixedProbabilityMap(probabilityResultMap);
         double totalProbability = retrieved.values().stream().mapToDouble(x -> x).sum();
         assertThat(totalProbability).isCloseTo(1.0, Percentage.withPercentage(0.01));
+    }
+
+    private static boolean invalidBound(double bound) {
+        return (!(0.0 < bound && bound < Double.POSITIVE_INFINITY));
     }
 }

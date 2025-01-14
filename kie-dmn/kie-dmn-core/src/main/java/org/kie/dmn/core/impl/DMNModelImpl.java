@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.impl;
 
 import java.io.Externalizable;
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,40 +65,46 @@ import org.kie.dmn.core.compiler.DMNTypeRegistryV11;
 import org.kie.dmn.core.compiler.DMNTypeRegistryV12;
 import org.kie.dmn.core.compiler.DMNTypeRegistryV13;
 import org.kie.dmn.core.compiler.DMNTypeRegistryV14;
+import org.kie.dmn.core.compiler.DMNTypeRegistryV15;
 import org.kie.dmn.core.pmml.DMNImportPMMLInfo;
 import org.kie.dmn.core.util.DefaultDMNMessagesManager;
 import org.kie.dmn.model.api.DMNModelInstrumentedBase;
 import org.kie.dmn.model.api.Definitions;
 
+import static org.kie.dmn.core.compiler.UnnamedImportUtils.isInUnnamedImport;
+import static org.kie.dmn.core.impl.TupleIdentifier.createTupleIdentifier;
+import static org.kie.dmn.core.impl.TupleIdentifier.createTupleIdentifierById;
+import static org.kie.dmn.core.impl.TupleIdentifier.createTupleIdentifierByName;
+
 public class DMNModelImpl
         implements DMNModel, DMNMessageManager, Externalizable {
     
-    private static enum SerializationFormat {
+    private enum SerializationFormat {
         // To ensure backward compatibility, append only:
         DMN_XML
     }
-    
 
     private SerializationFormat serializedAs = SerializationFormat.DMN_XML;
     private Resource resource;
     private Definitions definitions;
     
-    private Map<String, InputDataNode>              inputs       = new LinkedHashMap<>();
-    private Map<String, DecisionNode>               decisions    = new LinkedHashMap<>();
-    private Map<String, BusinessKnowledgeModelNode> bkms         = new LinkedHashMap<>();
-    private Map<String, ItemDefNode>                itemDefs     = new LinkedHashMap<>();
-    private Map<String, DecisionServiceNode> decisionServices    = new LinkedHashMap<>();
+    private Map<TupleIdentifier, InputDataNode>              inputs       = new LinkedHashMap<>();
+    private Map<TupleIdentifier, DecisionNode>               decisions    = new LinkedHashMap<>();
+    private Map<TupleIdentifier, BusinessKnowledgeModelNode> bkms         = new LinkedHashMap<>();
+    private Map<TupleIdentifier, ItemDefNode>                itemDefs     = new LinkedHashMap<>();
+    private Map<TupleIdentifier, DecisionServiceNode> decisionServices    = new LinkedHashMap<>();
+    private Map<TupleIdentifier, DMNImportPMMLInfo> pmmlImportInfo = new HashMap<>();
+    private Map<TupleIdentifier, QName> importAliases = new HashMap<>();
 
     // these are messages created at loading/compilation time
     private DMNMessageManager messages;
 
     private DMNTypeRegistry types;
     /**
-     * a compile-time preference to indicate if type-check should be performed during runtime evaluation. 
+     * a compile-time preference to indicate if type-check should be performed during runtime evaluation.
      */
     private boolean runtimeTypeCheck = false;
 
-    private Map<String, QName> importAliases = new HashMap<>();
     private ImportChain importChain;
 
     public DMNModelImpl() {
@@ -122,8 +131,10 @@ public class DMNModelImpl
             types = new DMNTypeRegistryV12(Collections.unmodifiableMap(importAliases));
         } else if (definitions instanceof org.kie.dmn.model.v1_3.TDefinitions) {
             types = new DMNTypeRegistryV13(Collections.unmodifiableMap(importAliases));
-        } else {
+        } else if (definitions instanceof org.kie.dmn.model.v1_4.TDefinitions) {
             types = new DMNTypeRegistryV14(Collections.unmodifiableMap(importAliases));
+        } else {
+            types = new DMNTypeRegistryV15(Collections.unmodifiableMap(importAliases));
         }
     }
     
@@ -160,21 +171,17 @@ public class DMNModelImpl
             return node.getName();
         } else {
             Optional<String> lookupAlias = getImportAliasFor(node.getModelNamespace(), node.getModelName());
-            if (lookupAlias.isPresent()) {
-                return lookupAlias.get() + "." + node.getName();
-            } else {
-                return null;
-            }
+            return lookupAlias.map(s -> s + "." + node.getName()).orElse(null);
         }
     }
 
     public void addInput(InputDataNode idn) {
-        inputs.put(computeDRGElementModelLocalId(idn), idn);
+        computeDRGElementModelLocalId(idn).forEach(id -> inputs.put(createTupleIdentifier(id, nameInCurrentModel(idn)), idn));
     }
 
     @Override
     public InputDataNode getInputById(String id) {
-        return this.inputs.get( id );
+        return this.inputs.get( new TupleIdentifier(id, null) );
     }
 
     @Override
@@ -182,34 +189,36 @@ public class DMNModelImpl
         if ( name == null ) {
             return null;
         }
-        for ( InputDataNode in : this.inputs.values() ) {
-            if (Objects.equals(name, nameInCurrentModel(in))) {
-                return in;
-            }
-        }
-        return null;
+        return inputs.get(new TupleIdentifier(null, name));
     }
 
     @Override
     public Set<InputDataNode> getInputs() {
-        return this.inputs.values().stream().collect( Collectors.toCollection(LinkedHashSet::new) );
+        return new LinkedHashSet<>(this.inputs.values());
     }
 
     public void addDecision(DecisionNode dn) {
-        decisions.put(computeDRGElementModelLocalId(dn), dn);
+        computeDRGElementModelLocalId(dn).forEach(id -> decisions.put(createTupleIdentifier(id, nameInCurrentModel(dn)), dn));
     }
 
-    private String computeDRGElementModelLocalId(DMNNode node) {
+    private List<String> computeDRGElementModelLocalId(DMNNode node) {
+        // incubator-kie-issues#852: The idea is to not treat the anonymous models as import, but to "merge" them with original opne,
+        // Here, if the node comes from an unnamed imported model, then it is stored only with its id, to be looked for
+        // as if defined in the model itself
         if (node.getModelNamespace().equals(definitions.getNamespace())) {
-            return node.getId();
+            return Collections.singletonList(node.getId());
+        } else if (isInUnnamedImport(node, this)) {
+            // the node is an unnamed import
+            return Arrays.asList(node.getId(), node.getModelNamespace() + "#" + node.getId());
         } else {
-            return node.getModelNamespace() + "#" + node.getId();
+            return Collections.singletonList(node.getModelNamespace() + "#" + node.getId());
         }
     }
 
+
     @Override
     public DecisionNode getDecisionById(String id) {
-        return this.decisions.get(id);
+        return id != null ? this.decisions.get(new TupleIdentifier(id, null)) : null;
     }
 
     @Override
@@ -217,17 +226,12 @@ public class DMNModelImpl
         if ( name == null ) {
             return null;
         }
-        for ( DecisionNode dn : this.decisions.values() ) {
-            if (Objects.equals(name, nameInCurrentModel(dn))) {
-                return dn;
-            }
-        }
-        return null;
+        return decisions.get(new TupleIdentifier(null, name));
     }
 
     @Override
     public Set<DecisionNode> getDecisions() {
-        return this.decisions.values().stream().collect(Collectors.toCollection(LinkedHashSet::new));
+        return new LinkedHashSet<>(this.decisions.values());
     }
 
     @Override
@@ -251,37 +255,32 @@ public class DMNModelImpl
     }
 
     public void addDecisionService(DecisionServiceNode dsn) {
-        decisionServices.put(computeDRGElementModelLocalId(dsn), dsn);
+        computeDRGElementModelLocalId(dsn).forEach(id -> decisionServices.put(createTupleIdentifier(id, dsn.getName()), dsn));
     }
 
     public DecisionServiceNode getDecisionServiceById(String id) {
-        return this.decisionServices.get(id);
+        return this.decisionServices.get(new TupleIdentifier(id, null));
     }
 
     public DecisionServiceNode getDecisionServiceByName(String name) {
         if (name == null) {
             return null;
         }
-        for (DecisionServiceNode dn : this.decisionServices.values()) {
-            if (Objects.equals(name, dn.getName())) {
-                return dn;
-            }
-        }
-        return null;
+        return decisionServices.get(new TupleIdentifier(null, name));
     }
 
     @Override
     public Collection<DecisionServiceNode> getDecisionServices() {
-        return this.decisionServices.values().stream().collect(Collectors.toCollection(LinkedHashSet::new));
+        return new LinkedHashSet<>(this.decisionServices.values());
     }
 
     public void addBusinessKnowledgeModel(BusinessKnowledgeModelNode bkm) {
-        bkms.put(computeDRGElementModelLocalId(bkm), bkm);
+        computeDRGElementModelLocalId(bkm).forEach(id -> bkms.put(createTupleIdentifier(id, bkm.getName()), bkm));
     }
 
     @Override
     public BusinessKnowledgeModelNode getBusinessKnowledgeModelById(String id) {
-        return this.bkms.get( id );
+        return this.bkms.get( new TupleIdentifier(id, null) );
     }
 
     @Override
@@ -289,17 +288,12 @@ public class DMNModelImpl
         if ( name == null ) {
             return null;
         }
-        for ( BusinessKnowledgeModelNode bkm : this.bkms.values() ) {
-            if (Objects.equals(name, bkm.getName())) {
-                return bkm;
-            }
-        }
-        return null;
+        return bkms.get(new TupleIdentifier(null, name));
     }
 
     @Override
     public Set<BusinessKnowledgeModelNode> getBusinessKnowledgeModels() {
-        return this.bkms.values().stream().collect(Collectors.toCollection(LinkedHashSet::new));
+        return new LinkedHashSet<>(this.bkms.values());
     }
 
     private void collectRequiredInputs(Collection<DMNNode> deps, Set<InputDataNode> inputs) {
@@ -316,12 +310,13 @@ public class DMNModelImpl
 
     public void addItemDefinition(ItemDefNode idn) {
         // if ID is null, generate an ID for it
-        this.itemDefs.put( idn.getId() != null ? idn.getId() : "_"+this.itemDefs.size(), idn );
+        String id = idn.getId() != null ? idn.getId() : "_" + this.itemDefs.size();
+        this.itemDefs.put( createTupleIdentifier(id, idn.getName()), idn );
     }
 
     @Override
     public ItemDefNode getItemDefinitionById(String id) {
-        return this.itemDefs.get( id );
+        return this.itemDefs.get( new TupleIdentifier(id, null) );
     }
 
     @Override
@@ -329,17 +324,12 @@ public class DMNModelImpl
         if ( name == null ) {
             return null;
         }
-        for ( ItemDefNode in : this.itemDefs.values() ) {
-            if (Objects.equals(name, in.getName())) {
-                return in;
-            }
-        }
-        return null;
+        return itemDefs.get(new TupleIdentifier(null, name));
     }
 
     @Override
     public Set<ItemDefNode> getItemDefinitions() {
-        return this.itemDefs.values().stream().collect( Collectors.toCollection(LinkedHashSet::new) );
+        return new LinkedHashSet<>(this.itemDefs.values());
     }
 
     @Override
@@ -466,21 +456,23 @@ public class DMNModelImpl
 
     public void setImportAliasForNS(String iAlias, String iNS, String iModelName) {
         if (getImportAliasFor(iNS, iModelName).isEmpty()) {
-            this.importAliases.put(iAlias, new QName(iNS, iModelName));
+            this.importAliases.put(createTupleIdentifierByName(iAlias), new QName(iNS, iModelName));
         }
     }
 
     public Map<String, QName> getImportAliasesForNS() {
-        return Collections.unmodifiableMap(this.importAliases);
+        return importAliases.entrySet()
+                .stream().collect(Collectors.toMap(tupleIdentifierQNameEntry -> tupleIdentifierQNameEntry.getKey().getName(),
+                                                   Entry::getValue));
     }
 
     public Optional<String> getImportAliasFor(String ns, String iModelName) {
         QName lookup = new QName(ns, iModelName);
-        return this.importAliases.entrySet().stream().filter(kv -> kv.getValue().equals(lookup)).map(kv -> kv.getKey()).findFirst();
+        return this.importAliases.entrySet().stream().filter(kv -> kv.getValue().equals(lookup)).map(kv -> kv.getKey().getName()).findFirst();
     }
 
     public QName getImportNamespaceAndNameforAlias(String iAlias) {
-        return this.importAliases.get(iAlias);
+        return this.importAliases.get(createTupleIdentifierByName(iAlias));
     }
 
     public void addImportChainChild(ImportChain child, String alias) {
@@ -497,6 +489,23 @@ public class DMNModelImpl
 
     public List<DMNModel> getImportChainDirectChildModels() {
         return this.importChain.getImportChainDirectChildModels();
+    }
+
+
+    @Override
+    public void addAllUnfiltered(List<? extends DMNMessage> messages) {
+        this.messages.addAllUnfiltered( messages );
+    }
+
+    public void addPMMLImportInfo(DMNImportPMMLInfo info) {
+        this.pmmlImportInfo.put(createTupleIdentifierByName(info.getImportName()), info);
+    }
+
+    public Map<String, DMNImportPMMLInfo> getPmmlImportInfo() {
+        return pmmlImportInfo.entrySet()
+                .stream().collect(Collectors.toMap(tupleIdentifierQNameEntry -> tupleIdentifierQNameEntry.getKey().getName(),
+                                                   Entry::getValue));
+
     }
 
     private static class ImportChain {
@@ -552,21 +561,6 @@ public class DMNModelImpl
         public List<DMNModel> getImportChainDirectChildModels() {
             return children.stream().map(chain -> chain.node).collect(Collectors.toList());
         }
-    }
-
-    @Override
-    public void addAllUnfiltered(List<? extends DMNMessage> messages) {
-        this.messages.addAllUnfiltered( messages );
-    }
-
-    private Map<String, DMNImportPMMLInfo> pmmlImportInfo = new HashMap<>();
-
-    public void addPMMLImportInfo(DMNImportPMMLInfo info) {
-        this.pmmlImportInfo.put(info.getImportName(), info);
-    }
-
-    public Map<String, DMNImportPMMLInfo> getPmmlImportInfo() {
-        return Collections.unmodifiableMap(pmmlImportInfo);
     }
 
 }

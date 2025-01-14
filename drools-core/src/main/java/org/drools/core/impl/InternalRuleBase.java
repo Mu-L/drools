@@ -1,38 +1,41 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.impl;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 import org.drools.base.RuleBase;
+import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.InvalidPatternException;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.ruleunit.RuleUnitDescriptionRegistry;
 import org.drools.core.KieBaseConfigurationImpl;
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.base.ClassFieldAccessorCache;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.base.common.RuleBasePartitionId;
-import org.drools.base.definitions.InternalKnowledgePackage;
-import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.AsyncReceiveNode;
 import org.drools.core.reteoo.EntryPointNode;
 import org.drools.core.reteoo.LeftTupleNode;
@@ -41,10 +44,7 @@ import org.drools.core.reteoo.Rete;
 import org.drools.core.reteoo.ReteooBuilder;
 import org.drools.core.reteoo.SegmentMemory;
 import org.drools.core.reteoo.SegmentMemory.SegmentPrototype;
-import org.drools.base.rule.InvalidPatternException;
-import org.drools.base.rule.TypeDeclaration;
 import org.drools.core.rule.accessor.FactHandleFactory;
-import org.drools.base.ruleunit.RuleUnitDescriptionRegistry;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.builder.ReleaseId;
 import org.kie.api.definition.KiePackage;
@@ -78,9 +78,10 @@ public interface InternalRuleBase extends RuleBase {
 
     Set<String> getEntryPointIds();
 
-    String getId();
 
     RuleBasePartitionId createNewPartitionId();
+    boolean isPartitioned();
+    int getParallelEvaluationSlotsCount();
 
     RuleBaseConfiguration getRuleBaseConfiguration();
 
@@ -95,7 +96,6 @@ public interface InternalRuleBase extends RuleBase {
 
     FactHandleFactory newFactHandleFactory(long id, long counter) throws IOException;
 
-    Map<String, Type> getGlobals();
 
     int getNodeCount();
     int getMemoryCount();
@@ -116,11 +116,6 @@ public interface InternalRuleBase extends RuleBase {
 
     Class<?> registerAndLoadTypeDefinition( String className, byte[] def ) throws ClassNotFoundException;
 
-    InternalKnowledgePackage[] getPackages();
-    InternalKnowledgePackage getPackage(String name);
-    Future<KiePackage> addPackage(KiePackage pkg );
-    void addPackages( Collection<? extends KiePackage> newPkgs );
-    Map<String, InternalKnowledgePackage> getPackagesMap();
 
     ClassFieldAccessorCache getClassFieldAccessorCache();
 
@@ -136,9 +131,6 @@ public interface InternalRuleBase extends RuleBase {
     boolean hasSegmentPrototypes();
 
     void processAllTypesDeclaration( Collection<InternalKnowledgePackage> pkgs );
-
-    void addRules( Collection<RuleImpl> rules ) throws InvalidPatternException;
-    void removeRules( Collection<RuleImpl> rules ) throws InvalidPatternException;
 
     default void beforeIncrementalUpdate(KieBaseUpdate kieBaseUpdate) { }
     default void afterIncrementalUpdate(KieBaseUpdate kieBaseUpdate) { }
@@ -156,8 +148,6 @@ public interface InternalRuleBase extends RuleBase {
 
     ReleaseId getResolvedReleaseId();
     void setResolvedReleaseId(ReleaseId currentReleaseId);
-    String getContainerId();
-    void setContainerId(String containerId);
 
     RuleUnitDescriptionRegistry getRuleUnitDescriptionRegistry();
     boolean hasUnits();

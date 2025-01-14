@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator.drlxparse;
 
 import java.lang.reflect.Type;
@@ -78,6 +80,8 @@ public class SingleDrlxParseSuccess extends AbstractDrlxParseSuccess {
     private Optional<Expression> implicitCastExpression = Optional.empty();
     private List<Expression> nullSafeExpressions = new ArrayList<>();
 
+    private Set<String> variablesFromDifferentPattern = new HashSet<>();
+
     public SingleDrlxParseSuccess(Class<?> patternType, String patternBinding, Expression expr, Type exprType) {
         this.patternType = patternType;
         this.patternBinding = patternBinding;
@@ -110,6 +114,7 @@ public class SingleDrlxParseSuccess extends AbstractDrlxParseSuccess {
         this.combined = drlx.isCombined();
         this.implicitCastExpression = drlx.getImplicitCastExpression();
         this.nullSafeExpressions = drlx.getNullSafeExpressions();
+        this.variablesFromDifferentPattern = drlx.getVariablesFromDifferentPattern();
 
         this.watchedProperties = drlx.getWatchedProperties();
     }
@@ -352,8 +357,26 @@ public class SingleDrlxParseSuccess extends AbstractDrlxParseSuccess {
         return this.isPredicate;
     }
 
+    /*
+     * This method finds out, if the parse result is a predicate enclosed in parentheses, bound to a variable.
+     * Example: Person($booleanVariable: (name != null))
+     * This shouldn't apply to any other form of predicate. So e.g.
+     * Person($booleanVariable: (name != null) == "someName") should be properly generated as a constraint.
+     * After discussions, to align the executable model behaviour with the old non-executable model,
+     * such predicate is not generated as a rule constraint, and just bound to a variable. This behaviour needs more
+     * discussions to revisit this behaviour.
+     */
+    private boolean isEnclosedPredicateBoundToVariable() {
+        final TypedExpression boundExpr = getBoundExpr();
+        return boundExpr != null
+                && boundExpr.getExpression() instanceof EnclosedExpr
+                && getExprBinding() != null
+                && !getLeft().getExpression().equals(boundExpr.getExpression())
+                && !getRight().getExpression().equals(boundExpr.getExpression());
+    }
+
     public SingleDrlxParseSuccess setIsPredicate(boolean predicate) {
-        this.isPredicate = predicate;
+        this.isPredicate = predicate && !isEnclosedPredicateBoundToVariable();
         return this;
     }
 
@@ -476,6 +499,15 @@ public class SingleDrlxParseSuccess extends AbstractDrlxParseSuccess {
 
     public SingleDrlxParseSuccess setNullSafeExpressions(List<Expression> nullSafeExpressions) {
         this.nullSafeExpressions = nullSafeExpressions;
+        return this;
+    }
+
+    public Set<String> getVariablesFromDifferentPattern() {
+        return variablesFromDifferentPattern;
+    }
+
+    public SingleDrlxParseSuccess setVariablesFromDifferentPattern(Set<String> variablesFromDifferentPattern) {
+        this.variablesFromDifferentPattern = variablesFromDifferentPattern;
         return this;
     }
 

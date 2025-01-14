@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.tms.beliefsystem.defeasible;
 
 import java.util.Arrays;
@@ -25,7 +28,7 @@ import org.drools.core.common.WorkingMemoryAction;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.util.FastIterator;
-import org.drools.core.util.LinkedListNode;
+import org.drools.core.util.DoubleLinkedEntry;
 import org.drools.tms.LogicalDependency;
 import org.drools.tms.TruthMaintenanceSystemEqualityKey;
 import org.drools.tms.beliefsystem.BeliefSystem;
@@ -138,7 +141,7 @@ public class DefeasibleBeliefSet<M extends DefeasibleMode<M>> implements JTMSBel
     private void reprocessDefeated( M deps ) {
         for ( M dep = deps; dep != null; ) {
             M next = dep.getNext();
-            dep.nullPrevNext(); // it needs to be removed, before it can be processed
+            dep.clear(); // it needs to be removed, before it can be processed
             add( dep ); // adding back in, effectively reprocesses the dep
             dep = next;
         }
@@ -281,7 +284,7 @@ public class DefeasibleBeliefSet<M extends DefeasibleMode<M>> implements JTMSBel
         } else {
             dep.getPrevious().setNext(dep.getNext());
             dep.getNext().setPrevious(dep.getPrevious());
-            dep.nullPrevNext();
+            dep.clear();
         }
     }
 
@@ -315,11 +318,11 @@ public class DefeasibleBeliefSet<M extends DefeasibleMode<M>> implements JTMSBel
         return dep;
     }
 
-    public LinkedListNode getRootUndefeated() {
+    public DoubleLinkedEntry getRootUndefeated() {
         return this.rootUndefeated;
     }
 
-    public LinkedListNode getTailUnDefeated() {
+    public DoubleLinkedEntry getTailUnDefeated() {
         return this.tailUndefeated;
     }
 
@@ -342,7 +345,7 @@ public class DefeasibleBeliefSet<M extends DefeasibleMode<M>> implements JTMSBel
     public void cancel(PropagationContext propagationContext) {
         // get all but last, as that we'll do via the BeliefSystem, for cleanup
         // note we don't update negative, conflict counters. It's needed for the last cleanup operation
-        FastIterator it = iterator();
+        FastIterator it = fastIterator();
         for ( M node =  getFirst(); node != tailUndefeated;  ) {
             M temp = (M) it.next(node); // get next, as we are about to remove it
 
@@ -431,7 +434,7 @@ public class DefeasibleBeliefSet<M extends DefeasibleMode<M>> implements JTMSBel
         return getStatus() != DefeasibilityStatus.UNDECIDABLY && getStatus() != DefeasibilityStatus.DEFEATEDLY;
     }
 
-    public FastIterator<M> iterator() {
+    public FastIterator<M> fastIterator() {
         return iterator;
     }
 

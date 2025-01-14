@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.pmml.models.regression.compiler.factories;
 
 import java.io.IOException;
@@ -28,7 +30,6 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import org.dmg.pmml.DataDictionary;
 import org.dmg.pmml.DataField;
-import org.dmg.pmml.FieldName;
 import org.dmg.pmml.MiningField;
 import org.dmg.pmml.MiningSchema;
 import org.dmg.pmml.OpType;
@@ -88,7 +89,7 @@ public class KiePMMLClassificationTableFactoryTest extends AbstractKiePMMLRegres
 
         String targetField = "targetField";
         DataField dataField = new DataField();
-        dataField.setName(FieldName.create(targetField));
+        dataField.setName(targetField);
         dataField.setOpType(OpType.CATEGORICAL);
         DataDictionary dataDictionary = new DataDictionary();
         dataDictionary.addDataFields(dataField);
@@ -129,7 +130,7 @@ public class KiePMMLClassificationTableFactoryTest extends AbstractKiePMMLRegres
         boolean isBinary = regressionModel.getRegressionTables().size() == 2;
         assertThat(retrieved.isBinary()).isEqualTo(isBinary);
         assertThat(retrieved.isBinary()).isEqualTo(isBinary);
-        assertThat(retrieved.getTargetField()).isEqualTo(targetMiningField.getName().getValue());
+        assertThat(retrieved.getTargetField()).isEqualTo(targetMiningField.getName());
     }
 
     @Test
@@ -142,7 +143,7 @@ public class KiePMMLClassificationTableFactoryTest extends AbstractKiePMMLRegres
 
         String targetField = "targetField";
         DataField dataField = new DataField();
-        dataField.setName(FieldName.create(targetField));
+        dataField.setName(targetField);
         dataField.setOpType(OpType.CATEGORICAL);
         DataDictionary dataDictionary = new DataDictionary();
         dataDictionary.addDataFields(dataField);
@@ -193,7 +194,7 @@ public class KiePMMLClassificationTableFactoryTest extends AbstractKiePMMLRegres
 
         String targetField = "targetField";
         DataField dataField = new DataField();
-        dataField.setName(FieldName.create(targetField));
+        dataField.setName(targetField);
         dataField.setOpType(OpType.CATEGORICAL);
         DataDictionary dataDictionary = new DataDictionary();
         dataDictionary.addDataFields(dataField);
@@ -279,7 +280,7 @@ public class KiePMMLClassificationTableFactoryTest extends AbstractKiePMMLRegres
 
         String targetField = "targetField";
         DataField dataField = new DataField();
-        dataField.setName(FieldName.create(targetField));
+        dataField.setName(targetField);
         dataField.setOpType(OpType.CATEGORICAL);
         DataDictionary dataDictionary = new DataDictionary();
         dataDictionary.addDataFields(dataField);
@@ -371,10 +372,10 @@ public class KiePMMLClassificationTableFactoryTest extends AbstractKiePMMLRegres
 
     private OutputField getOutputField(String name, ResultFeature resultFeature, String targetField) {
         OutputField toReturn = new OutputField();
-        toReturn.setName(FieldName.create(name));
+        toReturn.setName(name);
         toReturn.setResultFeature(resultFeature);
         if (targetField != null) {
-            toReturn.setTargetField(FieldName.create(targetField));
+            toReturn.setTargetField(targetField);
         }
         return toReturn;
     }

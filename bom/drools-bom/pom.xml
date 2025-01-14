@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
@@ -6,7 +25,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-core-bom</artifactId>
-    <version>8.40.0-SNAPSHOT</version>
+    <version>999-SNAPSHOT</version>
     <relativePath>../kie-core-bom/pom.xml</relativePath>
   </parent>
 
@@ -22,13 +41,13 @@
   <url>https://www.drools.org</url>
 
   <scm>
-    <connection>scm:git:https://github.com/kiegroup/drools.git</connection>
-    <developerConnection>scm:git:git@github.com:kiegroup/drools.git</developerConnection>
-    <url>https://github.com/kiegroup/drools</url>
+    <connection>scm:git:https://github.com/apache/incubator-kie-drools.git</connection>
+    <developerConnection>scm:git:git@github.com:apache/incubator-kie-drools.git</developerConnection>
+    <url>https://github.com/apache/incubator-kie-drools</url>
   </scm>
   <issueManagement>
-    <system>jira</system>
-    <url>https://issues.jboss.org/browse/DROOLS</url>
+    <system>GitHub Issues</system>
+    <url>https://github.com/apache/incubator-kie-issues/issues</url>
   </issueManagement>
   <developers>
     <developer>
@@ -44,7 +63,14 @@
   </contributors>
   <mailingLists>
     <mailingList>
-      <name>setup</name>
+      <name>Development mailing list</name>
+      <post>dev@kie.apache.org</post>
+      <subscribe>dev-subscribe@kie.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@kie.apache.org</unsubscribe>
+      <archive>https://lists.apache.org/list.html?dev@kie.apache.org</archive>
+    </mailingList>
+    <mailingList>
+      <name>Users</name>
       <subscribe>https://groups.google.com/forum/#!forum/drools-setup</subscribe>
       <unsubscribe>https://groups.google.com/forum/#!forum/drools-setup</unsubscribe>
       <otherArchives>
@@ -56,11 +82,6 @@
       <name>usage</name>
       <subscribe>https://groups.google.com/forum/#!forum/drools-usage</subscribe>
       <unsubscribe>https://groups.google.com/forum/#!forum/drools-usage</unsubscribe>
-    </mailingList>
-    <mailingList>
-      <name>development</name>
-      <subscribe>https://groups.google.com/forum/#!forum/drools-development</subscribe>
-      <unsubscribe>https://groups.google.com/forum/#!forum/drools-development</unsubscribe>
     </mailingList>
   </mailingLists>
 
@@ -294,6 +315,24 @@
       <dependency>
         <groupId>org.drools</groupId>
         <artifactId>drools-reliability-infinispan</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-reliability-h2mvstore</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-reliability-h2mvstore</artifactId>
+        <version>${project.version}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-reliability-h2mvstore</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
@@ -610,64 +649,82 @@
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
-
-      <!-- Quarkus Extension -->
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus</artifactId>
+        <artifactId>drools-model-prototype</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus</artifactId>
+        <artifactId>drools-model-prototype</artifactId>
         <version>${project.version}</version>
         <classifier>sources</classifier>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus</artifactId>
+        <artifactId>drools-model-prototype</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- Quarkus Extension -->
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-quarkus</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-quarkus</artifactId>
+        <version>${project.version}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-quarkus</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus-deployment</artifactId>
+        <artifactId>drools-quarkus-deployment</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus-deployment</artifactId>
+        <artifactId>drools-quarkus-deployment</artifactId>
         <version>${project.version}</version>
         <classifier>sources</classifier>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus-deployment</artifactId>
+        <artifactId>drools-quarkus-deployment</artifactId>
         <version>${project.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus-deployment</artifactId>
+        <artifactId>drools-quarkus-deployment</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus-util-deployment</artifactId>
+        <artifactId>drools-quarkus-util-deployment</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus-util-deployment</artifactId>
+        <artifactId>drools-quarkus-util-deployment</artifactId>
         <version>${project.version}</version>
         <classifier>sources</classifier>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
-        <artifactId>drools-drl-quarkus-util-deployment</artifactId>
+        <artifactId>drools-quarkus-util-deployment</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
@@ -843,6 +900,17 @@
       <dependency>
         <groupId>org.drools</groupId>
         <artifactId>drools-impact-analysis-graph-graphviz</artifactId>
+        <version>${project.version}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-impact-analysis-graph-json</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-impact-analysis-graph-json</artifactId>
         <version>${project.version}</version>
         <classifier>sources</classifier>
       </dependency>

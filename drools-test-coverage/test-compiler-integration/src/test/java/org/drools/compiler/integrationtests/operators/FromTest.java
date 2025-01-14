@@ -1,24 +1,25 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests.operators;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,11 +49,10 @@ import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieSessionTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.KieServices;
@@ -68,18 +68,10 @@ import org.kie.internal.builder.conf.PropertySpecificOption;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class FromTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public FromTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
     public static class ListsContainer {
@@ -95,8 +87,9 @@ public class FromTest {
     }
 
 
-    @Test
-    public void testFromSharing() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromSharing(KieBaseTestConfiguration kieBaseTestConfiguration) {
         testFromSharingCommon(kieBaseTestConfiguration, new HashMap<>(), 2, 2);
     }
 
@@ -142,8 +135,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromSharingWithPropertyReactive() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromSharingWithPropertyReactive(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // As above but with property reactive as default
         final String drl = fromSharingRule();
         // property reactive as default:
@@ -216,8 +210,9 @@ public class FromTest {
         return epn.getObjectTypeNodes().get(new ClassObjectType(ListsContainer.class));
     }
 
-    @Test
-    public void testFromSharingWithAccumulate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromSharingWithAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.integrationtests.operators;\n" +
                         "\n" +
@@ -297,8 +292,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromWithSingleValue() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromWithSingleValue(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1243
         final String drl =
                 "import " + ListsContainer.class.getCanonicalName() + "\n" +
@@ -328,8 +324,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromWithSingleValueAndIncompatibleType() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromWithSingleValueAndIncompatibleType(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1243
         final String drl =
                 "import " + ListsContainer.class.getCanonicalName() + "\n" +
@@ -356,8 +353,9 @@ public class FromTest {
             return this.wrapped;
         }
     }
-    @Test
-    public void testFromWithInterfaceAndAbstractClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromWithInterfaceAndAbstractClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import " + Container2.class.getCanonicalName() + "\n" +
                         "import " + Comparable.class.getCanonicalName() + "\n" +
@@ -409,8 +407,9 @@ public class FromTest {
             super(initialValue);
         }
     }
-    @Test
-    public void testFromWithInterfaceAndConcreteClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromWithInterfaceAndConcreteClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import " + Container2b.class.getCanonicalName() + "\n" +
                         "import " + CustomIntegerMarker.class.getCanonicalName() + "\n" +
@@ -457,8 +456,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromWithInterfaceAndFinalClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromWithInterfaceAndFinalClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import " + Container3.class.getCanonicalName() + "\n" +
                         "import " + CustomIntegerMarker.class.getCanonicalName() + "\n" +
@@ -476,8 +476,9 @@ public class FromTest {
         assertThat(kieBuilder.getResults().getMessages()).isNotEmpty();
     }
 
-    @Test
-    public void testBasicFrom() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testBasicFrom(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.operators;\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -576,8 +577,10 @@ public class FromTest {
         }
     }
 
-    @Test @Ignore
-    public void testFromWithParams() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Disabled
+    public void testFromWithParams(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.operators;\n" +
                 " \n" +
@@ -664,8 +667,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromWithNewConstructor() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromWithNewConstructor(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.operators\n" +
                 "\n" +
@@ -691,8 +695,9 @@ public class FromTest {
     /**
      * JBRULES-1415 Certain uses of from causes NullPointerException in WorkingMemoryLogger
      */
-    @Test
-    public void testFromDeclarationWithWorkingMemoryLogger() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromDeclarationWithWorkingMemoryLogger(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.integrationtests.operators;\n" +
             "import " + Cheesery.class.getCanonicalName() + ";\n" +
             "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -727,8 +732,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromArrayIteration() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromArrayIteration(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.operators;\n" +
                 "import " + DomainObject.class.getCanonicalName() + ";\n" +
@@ -764,8 +770,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromExprFollowedByNot() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromExprFollowedByNot(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                     "package org.drools.compiler.integrationtests.operators;\n" +
                     "import " + Person.class.getCanonicalName() + ";\n" +
@@ -800,8 +807,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromNestedAccessors() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromNestedAccessors(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.operators;\n" +
                 "import " + Order.class.getCanonicalName() + ";\n" +
@@ -841,8 +849,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromNodeWithMultipleBetas() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromNodeWithMultipleBetas(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "import " + Person.class.getCanonicalName() + ";\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
                 "import " + Address.class.getCanonicalName() + ";\n" +
@@ -870,8 +879,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testFromWithStrictModeOn() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromWithStrictModeOn(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3533
         final String drl =
                 "import java.util.Map;\n" +
@@ -890,17 +900,19 @@ public class FromTest {
         assertThat(kieBuilder.getResults().getMessages()).isNotEmpty();
     }
 
-    @Test
-    public void testJavaImplicitWithFrom() {
-        testDialectWithFrom("java");
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testJavaImplicitWithFrom(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        testDialectWithFrom(kieBaseTestConfiguration, "java");
     }
 
-    @Test
-    public void testMVELImplicitWithFrom() {
-        testDialectWithFrom("mvel");
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMVELImplicitWithFrom(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        testDialectWithFrom(kieBaseTestConfiguration, "mvel");
     }
 
-    private void testDialectWithFrom(final String dialect) {
+    private void testDialectWithFrom(KieBaseTestConfiguration kieBaseTestConfiguration, final String dialect) {
         final String drl = "" +
                 "package org.drools.compiler.test \n" +
                 "import java.util.List \n" +
@@ -929,8 +941,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testMultipleFroms() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMultipleFroms(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.operators;\n" +
                 "import java.util.List;\n" +
@@ -973,8 +986,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testNetworkBuildErrorAcrossEntryPointsAndFroms() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNetworkBuildErrorAcrossEntryPointsAndFroms(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.integrationtests.operators;\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -1014,8 +1028,9 @@ public class FromTest {
         }
     }
 
-    @Test
-    public void testUpdateFromCollect() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUpdateFromCollect(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6504
         final String drl =
                 "import " + List.class.getCanonicalName() + ";\n" +
@@ -1086,25 +1101,27 @@ public class FromTest {
                                           "       modify($p){setAge(10)};\n" +
                                           "end\n";
 
-    @Test
-    public void testJoinAndFrom() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testJoinAndFrom(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6821
         // Add JoinNode first
-        runKSessionWithAgendaGroup(RULE_HEAD +
+        runKSessionWithAgendaGroup(kieBaseTestConfiguration, RULE_HEAD +
                                    RULE_WITH_JOIN +
                                    RULE_WITH_FROM);
     }
 
-    @Test
-    public void testFromAndJoin() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testFromAndJoin(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6821
         // Add FromNode first
-        runKSessionWithAgendaGroup(RULE_HEAD +
+        runKSessionWithAgendaGroup(kieBaseTestConfiguration, RULE_HEAD +
                                    RULE_WITH_FROM +
                                    RULE_WITH_JOIN);
     }
 
-    private void runKSessionWithAgendaGroup(String drl) {
+    private void runKSessionWithAgendaGroup(KieBaseTestConfiguration kieBaseTestConfiguration, String drl) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("from-test",
                                                                          kieBaseTestConfiguration,
                                                                          drl);

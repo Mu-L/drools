@@ -1,17 +1,20 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.kie.pmml.models.drools.ast.factories;
 
@@ -55,7 +58,7 @@ public class KiePMMLSimplePredicateASTFactory extends KiePMMLAbstractPredicateAS
             final KiePMMLReasonCodeAndValue reasonCodeAndValue,
             final boolean isLastCharacteristic) {
         logger.trace("declareRuleFromSimplePredicateSurrogate {} {} {} {}", agendaActivationGroup, toAccumulate, statusToSet, isLastCharacteristic);
-        String fieldName = predicateASTFactoryData.getFieldTypeMap().get(((SimplePredicate) predicateASTFactoryData.getPredicate()).getField().getValue()).getGeneratedType();
+        String fieldName = predicateASTFactoryData.getFieldTypeMap().get(((SimplePredicate) predicateASTFactoryData.getPredicate()).getField()).getGeneratedType();
         String surrogateCurrentRule = String.format(KiePMMLAbstractModelASTFactory.SURROGATE_RULENAME_PATTERN, predicateASTFactoryData.getCurrentRule(), fieldName);
         final List<KiePMMLFieldOperatorValue> constraints = Collections.singletonList(KiePMMLASTFactoryUtils.getConstraintEntryFromSimplePredicates(fieldName, BOOLEAN_OPERATOR.SURROGATE, Collections.singletonList((SimplePredicate) predicateASTFactoryData.getPredicate()), predicateASTFactoryData.getFieldTypeMap()));
         // Create "TRUE" matcher
@@ -79,7 +82,7 @@ public class KiePMMLSimplePredicateASTFactory extends KiePMMLAbstractPredicateAS
             final Object result,
             boolean isFinalLeaf) {
         logger.trace("declareRuleFromSimplePredicateSurrogate {} {} {}", agendaActivationGroup, result, isFinalLeaf);
-        String fieldName = predicateASTFactoryData.getFieldTypeMap().get(((SimplePredicate) predicateASTFactoryData.getPredicate()).getField().getValue()).getGeneratedType();
+        String fieldName = predicateASTFactoryData.getFieldTypeMap().get(((SimplePredicate) predicateASTFactoryData.getPredicate()).getField()).getGeneratedType();
         String surrogateCurrentRule = String.format(KiePMMLAbstractModelASTFactory.SURROGATE_RULENAME_PATTERN, predicateASTFactoryData.getCurrentRule(), fieldName);
         final List<KiePMMLFieldOperatorValue> constraints = Collections.singletonList(KiePMMLASTFactoryUtils.getConstraintEntryFromSimplePredicates(fieldName, BOOLEAN_OPERATOR.SURROGATE, Collections.singletonList((SimplePredicate) predicateASTFactoryData.getPredicate()), predicateASTFactoryData.getFieldTypeMap()));
         String statusToSet = isFinalLeaf ? DONE : predicateASTFactoryData.getCurrentRule();
@@ -215,7 +218,7 @@ public class KiePMMLSimplePredicateASTFactory extends KiePMMLAbstractPredicateAS
     protected KiePMMLDroolsRule.Builder getBuilderForSimplePredicate(final String statusToSet) {
         logger.trace("getBuilderForSimplePredicate {}", statusToSet);
         String statusConstraint = StringUtils.isEmpty(predicateASTFactoryData.getParentPath()) ? KiePMMLAbstractModelASTFactory.STATUS_NULL : String.format(STATUS_PATTERN, predicateASTFactoryData.getParentPath());
-        String key = predicateASTFactoryData.getFieldTypeMap().get(((SimplePredicate) predicateASTFactoryData.getPredicate()).getField().getValue()).getGeneratedType();
+        String key = predicateASTFactoryData.getFieldTypeMap().get(((SimplePredicate) predicateASTFactoryData.getPredicate()).getField()).getGeneratedType();
         OPERATOR operator = OPERATOR.byName(((SimplePredicate) predicateASTFactoryData.getPredicate()).getOperator().value());
         Object value = KiePMMLASTFactoryUtils.getCorrectlyFormattedObject(((SimplePredicate) predicateASTFactoryData.getPredicate()), predicateASTFactoryData.getFieldTypeMap());
         List<KiePMMLFieldOperatorValue> andConstraints = Collections.singletonList(new KiePMMLFieldOperatorValue(key, BOOLEAN_OPERATOR.AND, Collections.singletonList(new KiePMMLOperatorValue(operator, value)), null));

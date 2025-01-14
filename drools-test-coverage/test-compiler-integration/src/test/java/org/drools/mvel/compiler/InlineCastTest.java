@@ -1,51 +1,46 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.compiler;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class InlineCastTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public InlineCastTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testInlineCast() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCast(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.*;\n" +
                 "rule R1 when\n" +
                 "   Person( name == \"mark\", address#LongAddress.country == \"uk\" )\n" +
@@ -70,8 +65,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineCastWithBinding() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastWithBinding(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.*;\n" +
                 "rule R1 when\n" +
                 "   Person( name == \"mark\", $country : address#LongAddress.country == \"uk\" )\n" +
@@ -96,8 +92,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineCastOnlyBinding() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastOnlyBinding(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.*;\n" +
                 "rule R1 when\n" +
                 "   Person( name == \"mark\", $country : address#LongAddress.country )\n" +
@@ -122,8 +119,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineCastWithFQN() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastWithFQN(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.Person;\n" +
                 "rule R1 when\n" +
                 "   Person( name == \"mark\", address#org.drools.mvel.compiler.LongAddress.country == \"uk\" )\n" +
@@ -141,8 +139,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineCastOnRightOperand() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastOnRightOperand(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.*;\n" +
                 "rule R1 when\n" +
                 "   $person : Person( )\n" +
@@ -162,8 +161,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineCastOnRightOperandWithFQN() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastOnRightOperandWithFQN(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.Person;\n" +
                 "rule R1 when\n" +
                 "   $person : Person( )\n" +
@@ -183,8 +183,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInferredCast() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInferredCast(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.*;\n" +
                 "rule R1 when\n" +
                 "   Person( name == \"mark\", address instanceof LongAddress, address.country == \"uk\" )\n" +
@@ -209,8 +210,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineTypeCast() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineTypeCast(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-136
         String str = "import org.drools.mvel.compiler.*;\n" +
                      "rule R1 when\n" +
@@ -236,8 +238,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineCastWithNestedAccces() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastWithNestedAccces(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-127
         String str = "import org.drools.mvel.compiler.*;\n" +
                      "rule R1 when\n" +
@@ -263,8 +266,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineCastWithNestedAcccesAndNullSafeDereferencing() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastWithNestedAcccesAndNullSafeDereferencing(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.*;\n" +
                      "rule R1 when\n" +
                      " Person( name == \"mark\", address#LongAddress.country!.length == 2 )\n" +
@@ -289,8 +293,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testInlineCastWithNestedAcccesAndNullSafeDereferencing2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastWithNestedAcccesAndNullSafeDereferencing2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "import org.drools.mvel.compiler.*;\n" +
                      "rule R1 when\n" +
                      " Person( " +
@@ -317,8 +322,9 @@ public class InlineCastTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testSuperclass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSuperclass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.compiler.integrationtests\n"
                      + "import org.drools.mvel.compiler.*;\n"
                      + "rule R1\n"
@@ -348,8 +354,9 @@ public class InlineCastTest {
         }
     }
 
-    @Test
-    public void testGroupedAccess() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testGroupedAccess(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.compiler.integrationtests\n"
                      + "import org.drools.mvel.compiler.*;\n"
                      + "rule R1\n"
@@ -379,8 +386,9 @@ public class InlineCastTest {
         }
     }
 
-    @Test
-    public void testMatchesOperator() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMatchesOperator(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-971008
         String drl = "package org.drools.mvel.compiler.integrationtests\n"
                      + "import org.drools.mvel.compiler.*;\n"
@@ -411,8 +419,9 @@ public class InlineCastTest {
         }
     }
 
-    @Test
-    public void testInlineCastWithThis() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastWithThis(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.compiler.integrationtests "
                      + "import org.drools.compiler.*; "
                      + "rule R1 "
@@ -433,8 +442,9 @@ public class InlineCastTest {
         }
     }
     
-    @Test
-    public void testInlineCastWithFQNAndMethodInvocation() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInlineCastWithFQNAndMethodInvocation(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-1337
         String str =
                 "import org.drools.mvel.compiler.Person;\n" +

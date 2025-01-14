@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.openapi.impl;
 
 import java.util.ArrayList;
@@ -30,10 +32,10 @@ import org.eclipse.microprofile.openapi.OASFactory;
 import org.eclipse.microprofile.openapi.models.media.Schema;
 import org.eclipse.microprofile.openapi.models.media.Schema.SchemaType;
 import org.kie.dmn.api.core.DMNType;
+import org.kie.dmn.api.core.DMNUnaryTest;
 import org.kie.dmn.core.impl.BaseDMNTypeImpl;
 import org.kie.dmn.core.impl.CompositeTypeImpl;
 import org.kie.dmn.core.impl.SimpleTypeImpl;
-import org.kie.dmn.feel.lang.types.BuiltInType;
 import org.kie.dmn.feel.runtime.UnaryTest;
 import org.kie.dmn.openapi.NamingPolicy;
 import org.kie.dmn.openapi.model.DMNModelIOSets;
@@ -64,13 +66,49 @@ public class DMNTypeSchemas {
         return schemas;
     }
 
+    static void populateSchemaWithConstraints(Schema toPopulate, SimpleTypeImpl t) {
+        if (t.getAllowedValues() != null && !t.getAllowedValues().isEmpty()) {
+            parseSimpleType(DMNOASConstants.X_DMN_ALLOWED_VALUES, toPopulate, t.getAllowedValuesFEEL(), t.getAllowedValues());
+        }
+        if (t.getTypeConstraint() != null && !t.getTypeConstraint().isEmpty()) {
+            parseSimpleType(DMNOASConstants.X_DMN_TYPE_CONSTRAINTS, toPopulate, t.getTypeConstraintFEEL(), t.getTypeConstraint());
+        }
+    }
+
+    static void parseSimpleType(String schemaString, Schema schema, List<UnaryTest> feelUnaryTests, List<DMNUnaryTest> dmnUnaryTests) {
+        schema.addExtension(schemaString, feelUnaryTests.stream().map(UnaryTest::toString).collect(Collectors.joining(", ")));
+        DMNUnaryTestsMapper.populateSchemaFromUnaryTests(schema, dmnUnaryTests);
+    }
+
+    private Schema schemaFromType(DMNType t) {
+        if (t instanceof CompositeTypeImpl compositeType) {
+            return schemaFromCompositeType(compositeType);
+        }
+        if (t instanceof SimpleTypeImpl simpleType) {
+            return schemaFromSimpleType(simpleType);
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    private Schema schemaFromSimpleType(SimpleTypeImpl t) {
+        DMNType baseType = t.getBaseType();
+        if (baseType == null) {
+            throw new IllegalStateException();
+        }
+        Schema schema = refOrBuiltinSchema(baseType);
+        populateSchemaWithConstraints(schema, t);
+        schema = nestAsItemIfCollection(schema, t);
+        schema.addExtension(X_DMN_TYPE, getDMNTypeSchemaXDMNTYPEdescr(t));
+        processIoSetDoc(schema, t);
+        return schema;
+    }
+
     private Schema refOrBuiltinSchema(DMNType t) {
         if (DMNTypeUtils.isFEELBuiltInType(t)) {
-            return FEELBuiltinTypeSchemas.from(t);
+            return FEELBuiltinTypeSchemaMapper.from(t);
         }
         if (typesIndex.contains(t)) {
-            Schema schema = OASFactory.createObject(Schema.class).ref(namingPolicy.getRef(t));
-            return schema;
+            return OASFactory.createObject(Schema.class).ref(namingPolicy.getRef(t));
         }
         throw new UnsupportedOperationException();
     }
@@ -108,43 +146,13 @@ public class DMNTypeSchemas {
         return Optional.ofNullable(res);
     }
 
-    private Schema schemaFromType(DMNType t) {
-        if (t instanceof CompositeTypeImpl) {
-            return schemaFromCompositeType((CompositeTypeImpl) t);
-        }
-        if (t instanceof SimpleTypeImpl) {
-            return schemaFromSimpleType((SimpleTypeImpl) t);
-        }
-        throw new UnsupportedOperationException();
-    }
-
-    private Schema schemaFromSimpleType(SimpleTypeImpl t) {
-        DMNType baseType = t.getBaseType();
-        if (baseType == null) {
-            throw new IllegalStateException();
-        }
-        Schema schema = refOrBuiltinSchema(baseType);
-        if (t.getAllowedValues() != null && !t.getAllowedValues().isEmpty()) {
-            schema.addExtension(DMNOASConstants.X_DMN_ALLOWED_VALUES, t.getAllowedValuesFEEL().stream().map(UnaryTest::toString).collect(Collectors.joining(", ")));
-            if (DMNTypeUtils.getFEELBuiltInType(ancestor(t)) == BuiltInType.NUMBER) {
-                FEELSchemaEnum.parseNumberAllowedValuesIntoSchema(schema, t.getAllowedValues());
-            } else {
-                FEELSchemaEnum.parseAllowedValuesIntoSchema(schema, t.getAllowedValues());
-            }
-        }
-        schema = nestAsItemIfCollection(schema, t);
-        schema.addExtension(X_DMN_TYPE, getDMNTypeSchemaXDMNTYPEdescr(t));
-        processIoSetDoc(schema, t);
-        return schema;
-    }
-
     private Schema schemaFromCompositeType(CompositeTypeImpl ct) {
         Schema schema = OASFactory.createObject(Schema.class).type(SchemaType.OBJECT);
         if (ct.getBaseType() == null) { // main case
             for (Entry<String, DMNType> fkv : ct.getFields().entrySet()) {
                 schema.addProperty(fkv.getKey(), refOrBuiltinSchema(fkv.getValue()));
             }
-            if (isIOSetForInputScope(ct) && ct.getFields().size() > 0) {
+            if (isIOSetForInputScope(ct) && !ct.getFields().isEmpty()) {
                 schema.required(new ArrayList<>(ct.getFields().keySet()));
             }
         } else {
@@ -166,14 +174,6 @@ public class DMNTypeSchemas {
         } else {
             return original;
         }
-    }
-    
-    private static DMNType ancestor(DMNType type) {
-    	 DMNType baseType = type.getBaseType();
-    	 while (baseType.getBaseType() != null) {
-    		 baseType = baseType.getBaseType();
-    	 }
-    	 return baseType;
     }
 
     private String getDMNTypeSchemaXDMNTYPEdescr(DMNType t) {

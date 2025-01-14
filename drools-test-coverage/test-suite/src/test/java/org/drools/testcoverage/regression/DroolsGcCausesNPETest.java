@@ -1,29 +1,30 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.testcoverage.regression;
 
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -38,7 +39,6 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.api.runtime.conf.ClockTypeOption;
 import org.kie.api.time.SessionPseudoClock;
-import org.kie.test.testcategory.TurtleTestCategory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public class DroolsGcCausesNPETest {
     private SessionPseudoClock clock;
     private FactType eventFactType;
 
-    @BeforeClass
+    @BeforeAll
     public static void beforeClass() throws Exception {
 
         final KieModuleModel module = SERVICES.newKieModuleModel();
@@ -86,7 +86,7 @@ public class DroolsGcCausesNPETest {
         SERVICES.getRepository().addKieModule(builder.getKieModule());
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         final KieSessionConfiguration conf = SERVICES.newKieSessionConfiguration();
         conf.setOption(ClockTypeOption.PSEUDO);
@@ -103,7 +103,6 @@ public class DroolsGcCausesNPETest {
      * BZ 1181584
      */
     @Test
-    @Category(TurtleTestCategory.class)
     public void testMoreTimesRepeated() throws Exception {
         final Random r = new Random(1);
         int i = 0;

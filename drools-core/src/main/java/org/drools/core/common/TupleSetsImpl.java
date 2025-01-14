@@ -1,35 +1,38 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.common;
 
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.Tuple;
 
-public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
+public class TupleSetsImpl implements TupleSets {
 
-    private T insertFirst;
-    private T deleteFirst;
-    private T updateFirst;
-    private T normalizedDeleteFirst;
+    private TupleImpl insertFirst;
+    private TupleImpl deleteFirst;
+    private TupleImpl updateFirst;
+    private TupleImpl normalizedDeleteFirst;
 
     private int insertSize;
 
     public TupleSetsImpl() { }
 
-    TupleSetsImpl( T insertFirst, T updateFirst, T deleteFirst, T normalizedDeleteFirst, int insertSize ) {
+    TupleSetsImpl(TupleImpl insertFirst, TupleImpl updateFirst, TupleImpl deleteFirst, TupleImpl normalizedDeleteFirst, int insertSize) {
         this.insertFirst = insertFirst;
         this.updateFirst = updateFirst;
         this.deleteFirst = deleteFirst;
@@ -41,35 +44,35 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         return insertSize;
     }
 
-    public T getInsertFirst() {
+    public TupleImpl getInsertFirst() {
         return this.insertFirst;
     }
 
-    protected void setInsertFirst( T insertFirst ) {
+    protected void setInsertFirst( TupleImpl insertFirst) {
         this.insertFirst = insertFirst;
     }
 
-    public T getDeleteFirst() {
+    public TupleImpl getDeleteFirst() {
         return this.deleteFirst;
     }
 
-    protected void setDeleteFirst( T deleteFirst ) {
+    protected void setDeleteFirst( TupleImpl deleteFirst) {
         this.deleteFirst = deleteFirst;
     }
 
-    public T getUpdateFirst() {
+    public TupleImpl getUpdateFirst() {
         return this.updateFirst;
     }
 
-    protected void setUpdateFirst( T updateFirst ) {
+    protected void setUpdateFirst( TupleImpl updateFirst) {
         this.updateFirst = updateFirst;
     }
 
-    public T getNormalizedDeleteFirst() {
+    public TupleImpl getNormalizedDeleteFirst() {
         return normalizedDeleteFirst;
     }
 
-    protected void setNormalizedDeleteFirst( T normalizedDeleteFirst ) {
+    protected void setNormalizedDeleteFirst( TupleImpl normalizedDeleteFirst) {
         this.normalizedDeleteFirst = normalizedDeleteFirst;
     }
 
@@ -81,7 +84,7 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         insertSize = 0;
     }
 
-    public boolean addInsert(T tuple) {
+    public boolean addInsert(TupleImpl tuple) {
         if ( getStagedType( tuple ) == Tuple.UPDATE) {
             // do nothing, it's already staged as an update, which means it's already scheduled for eval too.
             return false;
@@ -100,7 +103,7 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         return false;
     }
 
-    public boolean addDelete(T tuple) {
+    public boolean addDelete(TupleImpl tuple) {
         switch ( getStagedType( tuple ) ) {
             // handle clash with already staged entries
             case Tuple.INSERT:
@@ -122,7 +125,7 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         return false;
     }
 
-    public boolean addNormalizedDelete(T tuple) {
+    public boolean addNormalizedDelete(TupleImpl tuple) {
         setStagedType( tuple, Tuple.NORMALIZED_DELETE );
         if ( normalizedDeleteFirst == null ) {
             normalizedDeleteFirst = tuple;
@@ -134,7 +137,7 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         return false;
     }
 
-    public boolean addUpdate(T tuple) {
+    public boolean addUpdate(TupleImpl tuple) {
         if ( getStagedType( tuple ) != Tuple.NONE) {
             // do nothing, it's already staged as insert, which means it's already scheduled for eval too.
             return false;
@@ -151,16 +154,16 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         return false;
     }
 
-    public void removeInsert(T tuple) {
+    public void removeInsert(TupleImpl tuple) {
         if ( tuple == insertFirst ) {
-            T next = getNextTuple( tuple );
+            TupleImpl next = getNextTuple(tuple);
             if ( next != null ) {
                 setPreviousTuple( next, null );
             }
             setInsertFirst( next );
         } else {
-            T next = getNextTuple( tuple );
-            T previous = getPreviousTuple( tuple );
+            TupleImpl next     = getNextTuple(tuple);
+            TupleImpl previous = getPreviousTuple(tuple);
             if ( next != null ) {
                 setPreviousTuple( next, previous );
             }
@@ -170,16 +173,16 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         insertSize--;
     }
 
-    public void removeDelete(T tuple) {
+    public void removeDelete(TupleImpl tuple) {
         if ( tuple == deleteFirst ) {
-            T next = getNextTuple( tuple );
+            TupleImpl next = getNextTuple(tuple);
             if ( next != null ) {
                 setPreviousTuple( next, null );
             }
             deleteFirst = next;
         } else {
-            T next = getNextTuple( tuple );
-            T previous = getPreviousTuple( tuple );
+            TupleImpl next     = getNextTuple(tuple);
+            TupleImpl previous = getPreviousTuple(tuple);
             if ( next != null ) {
                 setPreviousTuple( next, previous );
             }
@@ -189,16 +192,16 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         tuple.clearStaged();
     }
 
-    public void removeUpdate(Tuple tuple) {
+    public void removeUpdate(TupleImpl tuple) {
         if ( tuple == updateFirst ) {
-            T next = getNextTuple( (T) tuple );
+            TupleImpl next = getNextTuple(tuple);
             if ( next != null ) {
                 setPreviousTuple( next, null );
             }
             updateFirst = next;
         } else {
-            T next = getNextTuple( (T) tuple );
-            T previous = getPreviousTuple( (T) tuple );
+            TupleImpl next     = getNextTuple(tuple);
+            TupleImpl previous = getPreviousTuple(tuple);
             if ( next != null ) {
                 setPreviousTuple( next, previous );
             }
@@ -207,19 +210,19 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         tuple.clearStaged();
     }
 
-    private void addAllInserts(TupleSets<T> tupleSets) {
+    private void addAllInserts(TupleSets tupleSets) {
         if ( tupleSets.getInsertFirst() != null ) {
             if ( insertFirst == null ) {
                 setInsertFirst( tupleSets.getInsertFirst() );
                 insertSize = tupleSets.getInsertSize();
             } else {
-                T current = insertFirst;
-                T last = null;
+                TupleImpl current = insertFirst;
+                TupleImpl last    = null;
                 while ( current != null ) {
                     last = current;
                     current = getNextTuple( current );
                 }
-                T tuple = tupleSets.getInsertFirst();
+                TupleImpl tuple = tupleSets.getInsertFirst();
                 setNextTuple( last, tuple );
                 setPreviousTuple( tuple, last );
                 insertSize = insertSize + tupleSets.getInsertSize();
@@ -228,18 +231,18 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         }
     }
 
-    private void addAllDeletes(TupleSets<T> tupleSets) {
+    private void addAllDeletes(TupleSets tupleSets) {
         if ( tupleSets.getDeleteFirst() != null ) {
             if ( deleteFirst == null ) {
                 setDeleteFirst( tupleSets.getDeleteFirst() );
             } else {
-                T current = deleteFirst;
-                T last = null;
+                TupleImpl current = deleteFirst;
+                TupleImpl last    = null;
                 while ( current != null ) {
                     last = current;
                     current = getNextTuple( current );
                 }
-                T tuple = tupleSets.getDeleteFirst();
+                TupleImpl tuple = tupleSets.getDeleteFirst();
                 setNextTuple( last, tuple );
                 setPreviousTuple( tuple, last );
             }
@@ -247,18 +250,18 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         }
     }
 
-    private void addAllUpdates(TupleSets<T> tupleSets) {
+    private void addAllUpdates(TupleSets tupleSets) {
         if ( tupleSets.getUpdateFirst() != null ) {
             if ( updateFirst == null ) {
                 setUpdateFirst( tupleSets.getUpdateFirst() );
             } else {
-                T current = updateFirst;
-                T last = null;
+                TupleImpl current = updateFirst;
+                TupleImpl last    = null;
                 while ( current != null ) {
                     last = current;
                     current = getNextTuple( current );
                 }
-                T tuple = tupleSets.getUpdateFirst();
+                TupleImpl tuple = tupleSets.getUpdateFirst();
                 setNextTuple( last, tuple );
                 setPreviousTuple( tuple, last );
             }
@@ -266,19 +269,19 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         }
     }
 
-    public void addAll(TupleSets<T> source) {
+    public void addAll(TupleSets source) {
         addAllInserts( source );
         addAllDeletes( source );
         addAllUpdates( source );
     }
 
-    public void addTo(TupleSets<T> target) {
+    public void addTo(TupleSets target) {
         target.addAll( this );
     }
 
     @Override
-    public TupleSets<T> takeAll() {
-        TupleSets<T> clone = new TupleSetsImpl(insertFirst, updateFirst, deleteFirst, normalizedDeleteFirst, insertSize);
+    public TupleSets takeAll() {
+        TupleSets clone = new TupleSetsImpl(insertFirst, updateFirst, deleteFirst, normalizedDeleteFirst, insertSize);
         resetAll();
         return clone;
     }
@@ -291,9 +294,9 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         resetAll();
     }
 
-    private void clear( T tuple ) {
+    private void clear( TupleImpl tuple) {
         while ( tuple != null ) {
-            T next = getNextTuple( tuple );
+            TupleImpl next = getNextTuple(tuple);
             tuple.clearStaged();
             tuple = next;
         }
@@ -327,33 +330,33 @@ public class TupleSetsImpl<T extends Tuple> implements TupleSets<T> {
         return sbuilder.toString();
     }
 
-    private void appendSet( StringBuilder sbuilder, Tuple tuple ) {
-        for ( ; tuple != null; tuple = getNextTuple( (T) tuple ) ) {
+    private void appendSet( StringBuilder sbuilder, TupleImpl tuple) {
+        for ( ; tuple != null; tuple = getNextTuple( tuple ) ) {
             sbuilder.append( " " ).append( tuple ).append( "\n" );
         }
     }
 
-    protected T getPreviousTuple( T tuple ) {
-        return (T) tuple.getStagedPrevious();
+    protected TupleImpl getPreviousTuple(TupleImpl tuple) {
+        return tuple.getStagedPrevious();
     }
 
-    protected void setPreviousTuple( T tuple, T stagedPrevious ) {
+    protected void setPreviousTuple(TupleImpl tuple, TupleImpl stagedPrevious) {
         tuple.setStagedPrevious( stagedPrevious );
     }
 
-    protected T getNextTuple( T tuple ) {
+    protected TupleImpl getNextTuple(TupleImpl tuple) {
         return tuple.getStagedNext();
     }
 
-    protected void setNextTuple( T tuple, T stagedNext ) {
+    protected void setNextTuple(TupleImpl tuple, TupleImpl stagedNext) {
         tuple.setStagedNext( stagedNext );
     }
 
-    protected void setStagedType( T tuple, short type ) {
+    protected void setStagedType(TupleImpl tuple, short type) {
         tuple.setStagedType( type );
     }
 
-    protected short getStagedType( T tuple ) {
+    protected short getStagedType( TupleImpl tuple) {
         return tuple.getStagedType();
     }
 }

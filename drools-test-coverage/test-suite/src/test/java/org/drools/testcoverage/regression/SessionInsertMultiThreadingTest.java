@@ -1,39 +1,39 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.testcoverage.regression;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.model.Message;
 import org.drools.testcoverage.common.model.Person;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.command.Command;
@@ -50,7 +50,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Test to verify BRMS-532 (Drools Session insert
  * ConcurrentModificationException in Multithreading Environment) is fixed
  */
-@RunWith(Parameterized.class)
 public class SessionInsertMultiThreadingTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionInsertMultiThreadingTest.class);
@@ -61,19 +60,11 @@ public class SessionInsertMultiThreadingTest {
     private KieBase kbase;
     private ExecutorService executor;
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public SessionInsertMultiThreadingTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseConfigurations().stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseConfigurations();
-    }
-
-    @Before
-    public void createExecutor() {
+    public void createExecutor(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final Resource resource = KieServices.Factory.get().getResources().newClassPathResource(
                 "sessionInsertMultithreadingTest.drl",
                 SessionInsertMultiThreadingTest.class);
@@ -83,7 +74,7 @@ public class SessionInsertMultiThreadingTest {
         executor = Executors.newFixedThreadPool(THREADS);
     }
 
-    @After
+    @AfterEach
     public void shutdownExecutor() throws Exception {
         if (kbase != null) {
             for (KieSession ksession : kbase.getKieSessions()) {
@@ -99,8 +90,10 @@ public class SessionInsertMultiThreadingTest {
         executor = null;
     }
 
-    @Test
-    public void testCommonBase() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCommonBase(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createExecutor(kieBaseTestConfiguration);
         final List<Future<?>> futures = new ArrayList<Future<?>>();
 
         for (int i = 0; i < RUNS_PER_THREAD; i++) {
@@ -112,8 +105,10 @@ public class SessionInsertMultiThreadingTest {
         waitForCompletion(futures);
     }
 
-    @Test
-    public void testCommonSession() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCommonSession(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createExecutor(kieBaseTestConfiguration);
         for (int i = 0; i < RUNS_PER_THREAD; i++) {
             testSingleCommonSession();
         }
@@ -136,8 +131,10 @@ public class SessionInsertMultiThreadingTest {
     /**
      * Reproducer for BZ 1187070.
      */
-    @Test
-    public void testCommonStatelessSessionBZ1187070() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCommonStatelessSessionBZ1187070(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createExecutor(kieBaseTestConfiguration);
         for (int i = 0; i < RUNS_PER_THREAD; i++) {
             testSingleCommonStatelessSession();
         }

@@ -1,23 +1,24 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests.concurrency;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -29,17 +30,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.mvel.compiler.StockTick;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieModule;
@@ -60,24 +62,18 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * This is a test case for multi-thred issues
  */
-@RunWith(Parameterized.class)
 public class MultithreadTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public MultithreadTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(MultithreadTest.class);
 
-    @Test(timeout = 2000000)
-    public void testSlidingTimeWindows() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(2000000)
+    public void testSlidingTimeWindows(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String str = "package org.drools\n" +
                 "global java.util.List list; \n" +
                 "import " + StockTick.class.getCanonicalName() + "; \n" +
@@ -95,7 +91,7 @@ public class MultithreadTest {
 
         final List<Exception> errors = new ArrayList<>();
 
-        KieBaseTestConfiguration streamConfig = TestParametersUtil.getStreamInstanceOf(kieBaseTestConfiguration);
+        KieBaseTestConfiguration streamConfig = TestParametersUtil2.getStreamInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", streamConfig, str);
 
         final KieSession ksession = kbase.newKieSession();
@@ -180,8 +176,10 @@ public class MultithreadTest {
         }
     }
 
-    @Test(timeout = 20000)
-    public void testClassLoaderRace() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(20000)
+    public void testClassLoaderRace(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
 
         final String drl = "package org.drools.integrationtests;\n" +
                 "" +
@@ -250,8 +248,10 @@ public class MultithreadTest {
         }
     }
 
-    @Test(timeout = 20000)
-    public void testRaceOnAccumulateNodeSimple() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(20000)
+    public void testRaceOnAccumulateNodeSimple(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
 
         final String drl = "package org.drools.integrationtests;\n" +
                 "" +
@@ -277,7 +277,7 @@ public class MultithreadTest {
                 "end\n" +
                 "\n";
 
-        KieBaseTestConfiguration streamConfig = TestParametersUtil.getStreamInstanceOf(kieBaseTestConfiguration);
+        KieBaseTestConfiguration streamConfig = TestParametersUtil2.getStreamInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", streamConfig, drl);
 
 
@@ -327,9 +327,10 @@ public class MultithreadTest {
         }
     }
 
-    @Test
-    @Ignore
-    public void testConcurrencyWithChronThreads() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Disabled
+    public void testConcurrencyWithChronThreads(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
 
         final String drl = "package it.intext.drools.fusion.bug;\n" +
                 "\n" +
@@ -350,7 +351,7 @@ public class MultithreadTest {
                 "    list.add( $count ); \n" +
                 "end";
 
-        KieBaseTestConfiguration streamConfig = TestParametersUtil.getStreamInstanceOf(kieBaseTestConfiguration);
+        KieBaseTestConfiguration streamConfig = TestParametersUtil2.getStreamInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", streamConfig, drl);
 
         final KieSessionConfiguration conf = RuleBaseFactory.newKnowledgeSessionConfiguration();
@@ -424,8 +425,10 @@ public class MultithreadTest {
         }
     }
 
-    @Test(timeout = 20000)
-    public void testConcurrentQueries() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(20000)
+    public void testConcurrentQueries(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-175
         final StringBuilder drl = new StringBuilder();
         drl.append("package org.drools.test;\n" +
@@ -480,8 +483,10 @@ public class MultithreadTest {
         }
     }
 
-    @Test(timeout = 40000)
-    public void testConcurrentDelete() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testConcurrentDelete(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import " + SlowBean.class.getCanonicalName() + ";\n" +
                         "rule R when\n" +
@@ -555,8 +560,10 @@ public class MultithreadTest {
         }
     }
 
-    @Test(timeout = 20000)
-    public void testConcurrentFireAndDispose() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(20000)
+    public void testConcurrentFireAndDispose(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
         // DROOLS-1103
         final String drl = "rule R no-loop timer( int: 1s )\n" +
                 "when\n" +
@@ -564,7 +571,7 @@ public class MultithreadTest {
                 "then\n" +
                 "end";
 
-        KieBaseTestConfiguration streamConfig = TestParametersUtil.getStreamInstanceOf(kieBaseTestConfiguration);
+        KieBaseTestConfiguration streamConfig = TestParametersUtil2.getStreamInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", streamConfig, drl);
 
         final KieSessionConfiguration ksconf = KieServices.Factory.get().newKieSessionConfiguration();
@@ -605,8 +612,10 @@ public class MultithreadTest {
         LOG.info("last line of test.");
     }
 
-    @Test(timeout = 20000)
-    public void testFireUntilHaltAndDispose() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(20000)
+    public void testFireUntilHaltAndDispose(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
         // DROOLS-1103
         final String drl = "rule R no-loop timer( int: 1s )\n" +
                 "when\n" +
@@ -614,7 +623,7 @@ public class MultithreadTest {
                 "then\n" +
                 "end";
 
-        KieBaseTestConfiguration streamConfig = TestParametersUtil.getStreamInstanceOf(kieBaseTestConfiguration);
+        KieBaseTestConfiguration streamConfig = TestParametersUtil2.getStreamInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", streamConfig, drl);
 
         final KieSessionConfiguration ksconf = KieServices.Factory.get().newKieSessionConfiguration();
@@ -642,8 +651,10 @@ public class MultithreadTest {
         }
     }
 
-    @Test(timeout = 40000)
-    public void testJittingShortComparison() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testJittingShortComparison(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1633
         final String drl =
                 "import " + BeanA.class.getCanonicalName() + "\n;" +

@@ -1,36 +1,36 @@
-/*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieSessionTestConfiguration;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.event.rule.DefaultAgendaEventListener;
@@ -46,29 +46,22 @@ import static org.assertj.core.api.Assertions.assertThat;
  * inserted through one or more entry points.
  * BZ-978979
  */
-@RunWith(Parameterized.class)
 public class NegativePatternsTest {
 
     private static final int LOOPS = 300;
     private static final int SHORT_SLEEP_TIME = 20;
     private static final int LONG_SLEEP_TIME = 30;
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
 
     private KieSession ksession;
     private TrackingAgendaEventListener firedRulesListener;
 
-    public NegativePatternsTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseStreamConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseStreamConfigurations(true).stream();
     }
-
-    @Before
-    public void prepareKieSession() {
+    
+    public void prepareKieSession(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.integrationtests\n" +
                      "\n" +
                      "import " + NegativePatternsTest.TestEvent.class.getCanonicalName() + "\n" +
@@ -122,15 +115,17 @@ public class NegativePatternsTest {
         ksession.addEventListener(firedRulesListener);
     }
 
-    @After
+    @AfterEach
     public void cleanKieSession() {
         if (ksession != null) {
             ksession.dispose();
         }
     }
 
-    @Test
-    public void testSingleEvent() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSingleEvent(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        prepareKieSession(kieBaseTestConfiguration);
         final EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
 
         int count = 0;
@@ -167,8 +162,10 @@ public class NegativePatternsTest {
         assertThat(firedRulesListener.ruleFiredCount("SingleAbsence")).isEqualTo(count);
     }
 
-    @Test
-    public void testConstrainedAbsence() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testConstrainedAbsence(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        prepareKieSession(kieBaseTestConfiguration);
         final EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
 
         int count = 0;
@@ -196,8 +193,10 @@ public class NegativePatternsTest {
         assertThat(firedRulesListener.ruleFiredCount("SingleConstrained")).isEqualTo(count);
     }
 
-    @Test
-    public void testMultipleEvents() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMultipleEvents(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        prepareKieSession(kieBaseTestConfiguration);
         final EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
 
         int count = 0;
@@ -235,8 +234,10 @@ public class NegativePatternsTest {
         assertThat(firedRulesListener.ruleFiredCount("MultipleEvents")).isEqualTo(count);
     }
 
-    @Test
-    public void testMultipleEntryPoints() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMultipleEntryPoints(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        prepareKieSession(kieBaseTestConfiguration);
         final EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
 
         final EntryPoint otherStream = ksession.getEntryPoint("OtherStream");

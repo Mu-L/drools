@@ -1,4 +1,23 @@
 /**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
  * A FEEL 1.1 grammar for ANTLR 4 based on the DMN Language Specification
  * chapter 10.
  *
@@ -116,6 +135,7 @@ type
     helper.popScope();
 }
     : {_input.LT(1).getText().equals("list")}? sk=Identifier LT type GT                                                        #listType
+    | {_input.LT(1).getText().equals("range")}? sk=Identifier LT type GT                                                        #rangeType
     | {_input.LT(1).getText().equals("context")}? sk=Identifier LT Identifier COLON type ( COMMA Identifier COLON type )* GT   #contextType
     | FUNCTION                                                                                                        #qnType
     | FUNCTION LT (type ( COMMA type )*)? GT RARROW type                                                              #functionType
@@ -304,7 +324,8 @@ literal
     |	BooleanLiteral          #boolLiteral
     |   atLiteral               #atLiteralLabel
     |	StringLiteral           #stringLiteral
-    |	NULL                #nullLiteral
+    |	NULL                    #nullLiteral
+    |   UNDEFINEDVALUE          #undefined
     ;
     
 atLiteral
@@ -319,6 +340,7 @@ BooleanLiteral
     :   TRUE
     |   FALSE
     ;
+
 
 /**************************
  *    OTHER CONSTRUCTS
@@ -443,6 +465,7 @@ reusableKeywords
     | BETWEEN
     | NOT
     | NULL
+    | UNDEFINEDVALUE
     | TRUE
     | FALSE
     ;
@@ -514,6 +537,10 @@ BETWEEN
 
 NULL
     : 'null'
+    ;
+
+UNDEFINEDVALUE
+    : 'undefined'
     ;
 
 TRUE

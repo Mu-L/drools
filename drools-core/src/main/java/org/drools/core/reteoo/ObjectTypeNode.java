@@ -1,49 +1,56 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
+
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import org.drools.base.InitialFact;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
+import org.drools.base.common.NetworkNode;
 import org.drools.base.common.RuleBasePartitionId;
 import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.Pattern;
 import org.drools.base.time.JobHandle;
 import org.drools.core.common.DefaultFactHandle;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
+import org.drools.core.common.SuperCacheFixer;
 import org.drools.core.common.UpdateContext;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.impl.WorkingMemoryReteExpireAction;
 import org.drools.core.reteoo.builder.BuildContext;
 import org.drools.core.time.Job;
 import org.drools.core.time.JobContext;
 import org.drools.core.time.impl.DefaultJobHandle;
-import org.drools.core.util.bitmask.BitMask;
-import org.drools.core.util.bitmask.EmptyBitMask;
-
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import org.drools.util.bitmask.BitMask;
+import org.drools.util.bitmask.EmptyBitMask;
 
 import static org.drools.base.rule.TypeDeclaration.NEVER_EXPIRES;
 
@@ -100,22 +107,25 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
                           final BuildContext context) {
         super(id,
               RuleBasePartitionId.MAIN_PARTITION,
-              context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation(),
               source,
               context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeHashingThreshold(),
               context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeRangeIndexThreshold());
         this.objectType = objectType;
-        idGenerator = new IdGenerator(id);
-
+        this.idGenerator = new IdGenerator(id);
         this.dirty = true;
-
-        hashcode = calculateHashCode();
-
-        if (objectType != ClassObjectType.InitialFact_ObjectType && context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation()) {
-            this.sink = new CompositePartitionAwareObjectSinkAdapter();
-        }
-
+        this.hashcode = calculateHashCode();
         initMemoryId( context );
+    }
+
+    public void setupParallelExecution(InternalRuleBase kbase) {
+        if (objectType == ClassObjectType.InitialFact_ObjectType) {
+            return;
+        }
+        CompositePartitionAwareObjectSinkAdapter partitionedSink = new CompositePartitionAwareObjectSinkAdapter(kbase.getParallelEvaluationSlotsCount());
+        for ( ObjectSink objectSink : this.sink.getSinks()) {
+            partitionedSink.addObjectSink(objectSink, alphaNodeHashingThreshold, alphaNodeRangeIndexThreshold);
+        }
+        this.sink = partitionedSink;
     }
 
     private static class IdGenerator {
@@ -126,8 +136,8 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
             this.otnId = otnId;
         }
 
-        private Id nextId() {
-            return new Id(otnId, otnIdCounter++);
+        private ObjectTypeNodeId nextId() {
+            return new ObjectTypeNodeId(otnId, otnIdCounter++);
         }
 
         private void reset() {
@@ -135,48 +145,10 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
         }
     }
 
-    public static final Id DEFAULT_ID = new Id(-1, 0);
-
-    public static class Id {
-
-        private final int otnId;
-        private final int id;
-
-        public Id(int otnId, int id) {
-            this.otnId = otnId;
-            this.id = id;
-        }
-
-        @Override
-        public String toString() {
-            return "ObjectTypeNode.Id[" + otnId + "#" + id + "]";
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Id)) return false;
-
-            Id otherId = (Id) o;
-            return id == otherId.id && otnId == otherId.otnId;
-        }
-
-        @Override
-        public int hashCode() {
-            return 31 * otnId + 37 * id;
-        }
-
-        public boolean before(Id otherId) {
-            return otherId != null && (otnId < otherId.otnId || (otnId == otherId.otnId && id < otherId.id));
-        }
-
-        public int getId() {
-            return id;
-        }
-    }
+    public static final ObjectTypeNodeId DEFAULT_ID = new ObjectTypeNodeId(-1, 0);
 
     @Override
-    public short getType() {
+    public int getType() {
         return NodeTypeEnums.ObjectTypeNode;
     }
 
@@ -198,7 +170,7 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
     }
 
     @Override
-    public BitMask calculateDeclaredMask(ObjectType modifiedType, List<String> settableProperties) {
+    public BitMask calculateDeclaredMask(Pattern pattern, ObjectType modifiedType, List<String> settableProperties) {
         return EmptyBitMask.get();
     }
 
@@ -278,28 +250,27 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
         retractLeftTuples( factHandle, context, reteEvaluator );
     }
 
-    public static void expireLeftTuple(LeftTuple leftTuple) {
+    public static void expireLeftTuple(TupleImpl leftTuple) {
         if (!leftTuple.isExpired()) {
             leftTuple.setExpired();
-            for ( LeftTuple child = leftTuple.getFirstChild(); child != null; child = child.getHandleNext() ) {
+            for ( TupleImpl child = leftTuple.getFirstChild(); child != null; child = child.getHandleNext() ) {
                 expireLeftTuple(child);
             }
-            for ( LeftTuple peer = leftTuple.getPeer(); peer != null; peer = peer.getPeer() ) {
+            for ( TupleImpl peer = leftTuple.getPeer(); peer != null; peer = peer.getPeer() ) {
                 expireLeftTuple(peer);
             }
         }
     }
 
-    public static void expireRightTuple(RightTuple rightTuple) {
-        for ( LeftTuple child = rightTuple.getFirstChild(); child != null; child = child.getHandleNext() ) {
+    public static void expireRightTuple(TupleImpl rightTuple) {
+        for ( TupleImpl child = rightTuple.getFirstChild(); child != null; child = child.getHandleNext() ) {
             expireLeftTuple(child);
         }
     }
 
     public static void retractLeftTuples( InternalFactHandle factHandle, PropagationContext context, ReteEvaluator reteEvaluator ) {
         factHandle.forEachLeftTuple( lt -> {
-            LeftTupleSink sink = lt.getTupleSink();
-            ((LeftInputAdapterNode) sink.getLeftTupleSource()).retractLeftTuple(lt, context, reteEvaluator);
+            ((LeftInputAdapterNode) SuperCacheFixer.getLeftTupleSource(lt)).retractLeftTuple(lt, context, reteEvaluator);
         } );
         factHandle.clearLeftTuples();
     }
@@ -307,20 +278,19 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
     public static void retractLeftTuples( InternalFactHandle factHandle, PropagationContext context, ReteEvaluator reteEvaluator, int partition ) {
         DefaultFactHandle.CompositeLinkedTuples linkedTuples = ( (DefaultFactHandle.CompositeLinkedTuples) factHandle.getLinkedTuples() );
         linkedTuples.forEachLeftTuple( partition, lt -> {
-            LeftTupleSink sink = lt.getTupleSink();
-            ((LeftInputAdapterNode) sink.getLeftTupleSource()).retractLeftTuple(lt, context, reteEvaluator);
+            ((LeftInputAdapterNode) SuperCacheFixer.getLeftTupleSource(lt)).retractLeftTuple(lt, context, reteEvaluator);
         } );
         linkedTuples.clearLeftTuples(partition);
     }
 
     public static void retractRightTuples( InternalFactHandle factHandle, PropagationContext context, ReteEvaluator reteEvaluator ) {
-        factHandle.forEachRightTuple( rt -> rt.retractTuple( context, reteEvaluator) );
+        factHandle.forEachRightTuple( rt -> ((RightTuple)rt).retractTuple(context, reteEvaluator));
         factHandle.clearRightTuples();
     }
 
     public static void retractRightTuples( InternalFactHandle factHandle, PropagationContext context, ReteEvaluator reteEvaluator, int partition ) {
         DefaultFactHandle.CompositeLinkedTuples linkedTuples = ( (DefaultFactHandle.CompositeLinkedTuples) factHandle.getLinkedTuples() );
-        linkedTuples.forEachRightTuple( partition, rt -> rt.retractTuple( context, reteEvaluator) );
+        linkedTuples.forEachRightTuple( partition, rt -> ((RightTuple)rt).retractTuple(context, reteEvaluator));
         linkedTuples.clearRightTuples(partition);
     }
 
@@ -344,7 +314,7 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
         if (InitialFact.class.isAssignableFrom(classType)) {
             sink.assertObject(workingMemory.getInitialFactHandle(), context, workingMemory);
         } else {
-            Iterator<InternalFactHandle> it = workingMemory.getStoreForClass(classType).iterator();
+            Iterator<InternalFactHandle> it = getFactHandlesIterator(workingMemory);
             while (it.hasNext()) {
                 sink.assertObject(it.next(), context, workingMemory);
             }
@@ -355,7 +325,7 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
         Class<?> classType = ((ClassObjectType) getObjectType()).getClassType();
         return InitialFact.class.isAssignableFrom(classType) ?
                 Collections.singleton(workingMemory.getInitialFactHandle()).iterator() :
-                workingMemory.getStoreForClass(classType).iterator();
+                workingMemory.getEntryPoint(((EntryPointNode)source).getEntryPoint().getEntryPointId()).getObjectStore().getStoreForClass(classType).iterator();
     }
 
     /**
@@ -385,22 +355,22 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
     protected static void updateTupleSinkId(ObjectTypeNode otn,
                                             ObjectSource source) {
         for (ObjectSink sink : source.sink.getSinks()) {
-            if (sink instanceof BetaNode) {
-                ((BetaNode) sink).setRightInputOtnId(otn.nextOtnId());
-            } else if (sink instanceof LeftInputAdapterNode) {
+            if (NodeTypeEnums.isBetaNode(sink)) {
+                ((BetaNode)sink).setRightInputOtnId(otn.nextOtnId());
+            } else if (NodeTypeEnums.isLeftInputAdapterNode(sink)) {
                 for (LeftTupleSink liaChildSink : ((LeftInputAdapterNode) sink).getSinkPropagator().getSinks()) {
                     liaChildSink.setLeftInputOtnId(otn.nextOtnId());
                 }
-            } else if (sink instanceof WindowNode) {
-                ((WindowNode) sink).setRightInputOtnId(otn.nextOtnId());
+            } else if (sink.getType() == NodeTypeEnums.WindowNode) {
+                ((WindowNode)sink).setRightInputOtnId(otn.nextOtnId());
                 updateTupleSinkId(otn, (WindowNode) sink);
-            } else if (sink instanceof AlphaNode) {
+            } else if (sink.getType() == NodeTypeEnums.AlphaNode) {
                 updateTupleSinkId(otn, (AlphaNode) sink);
             }
         }
     }
 
-    public Id nextOtnId() {
+    public ObjectTypeNodeId nextOtnId() {
         return idGenerator.nextId();
     }
 
@@ -438,7 +408,7 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
             return true;
         }
 
-        if ( !(object instanceof ObjectTypeNode) || this.hashCode() != object.hashCode() ) {
+        if (((NetworkNode)object).getType() != NodeTypeEnums.ObjectTypeNode || this.hashCode() != object.hashCode() ) {
             return false;
         }
 
@@ -469,7 +439,7 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
 
     public static class ExpireJob
             implements
-            Job {
+            Job, Serializable {
 
         @Override
         public void execute(JobContext ctx) {
@@ -484,9 +454,12 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
             implements
             JobContext,
             Externalizable {
-        public final WorkingMemoryReteExpireAction expireAction;
-        public final ReteEvaluator         reteEvaluator;
+        public WorkingMemoryReteExpireAction expireAction;
+        public transient ReteEvaluator         reteEvaluator;
         public JobHandle                     handle;
+
+        public ExpireJobContext() {
+        }
 
         public ExpireJobContext(WorkingMemoryReteExpireAction expireAction,
                                 ReteEvaluator reteEvaluator) {
@@ -513,6 +486,10 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
             return reteEvaluator;
         }
 
+        public void setReteEvaluator(ReteEvaluator reteEvaluator) {
+            this.reteEvaluator = reteEvaluator;
+        }
+
         public JobHandle getHandle() {
             return handle;
         }
@@ -524,13 +501,14 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink {
         @Override
         public void readExternal(ObjectInput in) throws IOException,
                                                         ClassNotFoundException {
-            //this.behavior = (O)
+            this.expireAction = (WorkingMemoryReteExpireAction) in.readObject();
+            this.handle = (JobHandle) in.readObject();
         }
 
         @Override
         public void writeExternal(ObjectOutput out) throws IOException {
-            // TODO Auto-generated method stub
-
+            out.writeObject(expireAction);
+            out.writeObject(handle);
         }
     }
 

@@ -1,26 +1,28 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.validation.dtanalysis;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.builder.Message.Level;
 import org.kie.dmn.api.core.DMNMessage;
 import org.kie.dmn.api.core.DMNMessageType;
@@ -29,10 +31,10 @@ import org.kie.dmn.validation.dtanalysis.model.DTAnalysis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.dmn.validation.DMNValidator.Validation.ANALYZE_DECISION_TABLE;
 
-public class Check1stNFViolationTest extends AbstractDTAnalysisTest {
+class Check1stNFViolationTest extends AbstractDTAnalysisTest {
 
     @Test
-    public void testCheck1stNFViolation() {
+    void check1stNFViolation() {
         List<DMNMessage> validate = validator.validate(getReader("DT1stNFViolation.dmn"), ANALYZE_DECISION_TABLE);
 
         DTAnalysis analysisDuplicate = getAnalysis(validate, "_053034d5-0e1f-4c4a-8513-ab3c6ba538db");
@@ -51,7 +53,7 @@ public class Check1stNFViolationTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testCheck1stNFViolationB() {
+    void check1stNFViolationB() {
         List<DMNMessage> validate = validator.validate(getReader("DT1stNFViolationB.dmn"), ANALYZE_DECISION_TABLE);
 
         DTAnalysis analysisDuplicate = getAnalysis(validate, "_053034d5-0e1f-4c4a-8513-ab3c6ba538db");
@@ -62,7 +64,7 @@ public class Check1stNFViolationTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testCheck1stNFViolationDuplicateNoSubsumption() {
+    void check1stNFViolationDuplicateNoSubsumption() {
         List<DMNMessage> validate = validator.validate(getReader("DT1stNFViolationDuplicateNoSubsumption.dmn"), ANALYZE_DECISION_TABLE);
 
         DTAnalysis analysis = getAnalysis(validate, "_221BF4A4-F8D4-466C-96E4-311FE3C9867B");
@@ -75,7 +77,7 @@ public class Check1stNFViolationTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testCheck1stNFViolationCollect() {
+    void check1stNFViolationCollect() {
         List<DMNMessage> validate = validator.validate(getReader("DT1stNFViolationCollect.dmn"), ANALYZE_DECISION_TABLE);
 
         DTAnalysis analysisDuplicate = getAnalysis(validate, "_4237d55b-2589-48a5-8183-f9f4e0e00c07");

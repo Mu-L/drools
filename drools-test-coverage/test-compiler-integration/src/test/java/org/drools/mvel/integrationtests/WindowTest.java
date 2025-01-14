@@ -1,35 +1,36 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
@@ -39,18 +40,10 @@ import org.kie.api.time.SessionPseudoClock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class WindowTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public WindowTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseStreamConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseStreamConfigurations(true).stream();
     }
 
     private KieSession ksession;
@@ -130,8 +123,7 @@ public class WindowTest {
             "        result.add($eventCount);\n" +
             "end\n";
 
-    @Before
-    public void initialization() {
+    public void initialization(KieBaseTestConfiguration kieBaseTestConfiguration) {
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl);
 
         KieSessionConfiguration ksconfig = RuleBaseFactory
@@ -143,13 +135,15 @@ public class WindowTest {
         clock = ksession.getSessionClock();
     }
 
-    @After
+    @AfterEach
     public void clean() {
         ksession.dispose();
     }
 
-    @Test
-    public void testTimeWindow() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTimeWindow(KieBaseTestConfiguration KieBaseTestConfiguration) throws InterruptedException {
+        initialization(KieBaseTestConfiguration);
         EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
         final long results[] = new long[] { 1, 2, 3, 3, 3 };
         TestEvent event;
@@ -164,8 +158,10 @@ public class WindowTest {
         }
     }
 
-    @Test
-    public void testLengthWindow() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLengthWindow(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        initialization(kieBaseTestConfiguration);
         EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
         TestEvent event;
 
@@ -178,8 +174,10 @@ public class WindowTest {
         }
     }
 
-    @Test
-    public void testDeclaredTimeWindowInQuery() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclaredTimeWindowInQuery(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initialization(kieBaseTestConfiguration);
         final long results[] = new long[] { 1, 2, 3, 4, 5, 5, 5, 5, 5, 5 };
         EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
         TestEvent event;
@@ -194,8 +192,10 @@ public class WindowTest {
         }
     }
 
-    @Test
-    public void testDeclaredLengthWindowInQuery() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclaredLengthWindowInQuery(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        initialization(kieBaseTestConfiguration);
         EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
         TestEvent event;
 
@@ -208,8 +208,10 @@ public class WindowTest {
         }
     }
 
-    @Test
-    public void testDeclaredTimeWindowInRule() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclaredTimeWindowInRule(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initialization(kieBaseTestConfiguration);
         final long results[] = new long[] { 1, 2, 3, 4, 5, 5, 5, 5, 5, 5 };
         EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
         List<Long> result = new ArrayList<Long>();
@@ -225,8 +227,10 @@ public class WindowTest {
         }
     }
 
-    @Test
-    public void testDeclaredLengthWindowInRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclaredLengthWindowInRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        initialization(kieBaseTestConfiguration);
         EntryPoint entryPoint = ksession.getEntryPoint("EventStream");
         List<Long> result = new ArrayList<Long>();
         ksession.setGlobal("result", result);

@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.api.core;
 
 import java.util.List;
@@ -96,6 +98,11 @@ import org.kie.dmn.model.api.ItemDefinition;
  * <h1>allowedValues</h1>
  * As per the DMN specification, the {@link ItemDefinition#getAllowedValues()} attribute lists the possible values or ranges of values in the base type that are allowed in this ItemDefinition.
  * This is reflected in this DMN type {@link #getAllowedValues()}.<br/>
+ * <br/>
+ * It is important to note that attribute can only be present when the type is specified by reference.
+ * <h1>typeConstraints</h1>
+ * As per the DMN specification, the {@link ItemDefinition#getTypeConstraint()} ()} attribute lists the possible values or ranges of values in the base type that are allowed in this ItemDefinition.
+ * This is reflected in this DMN type {@link #getTypeConstraint()}.<br/>
  * <br/>
  * It is important to note that attribute can only be present when the type is specified by reference.
  * <h1>getFields</h1>
@@ -202,7 +209,7 @@ public interface DMNType
     DMNType clone();
 
     /**
-     * Definition of `instance of` accordingly to FEEL specifications Table 49.
+     * Definition of `instance of` accordingly to FEEL specifications Table 61.
      * @param o
      * @return if o is instance of the type represented by this type. If the parameter is null, returns false. 
      */
@@ -210,10 +217,16 @@ public interface DMNType
     
     /**
      * Check if the value passed as parameter can be assigned to this type.
+     * It checks
+     * 1. type itself
+     * 2. allowedValues
+     * 3. typeConstraint
      * @param value
      * @return if value can be assigned to the type represented by this type. If the parameter is null, returns true. 
      */
     boolean isAssignableValue(Object value);
 
     List<DMNUnaryTest> getAllowedValues();
+
+    List<DMNUnaryTest> getTypeConstraint();
 }

@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
 import java.util.Collections;
@@ -21,39 +23,41 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.drools.base.reteoo.BaseTerminalNode;
-import org.drools.base.reteoo.NodeTypeEnums;
-import org.drools.core.RuleBaseConfiguration;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
+import org.drools.base.common.NetworkNode;
+import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.reteoo.BaseTerminalNode;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.Pattern;
+import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.common.DefaultFactHandle;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.Memory;
 import org.drools.core.common.MemoryFactory;
-import org.drools.base.common.NetworkNode;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.base.common.RuleBasePartitionId;
+import org.drools.core.common.SuperCacheFixer;
 import org.drools.core.common.TupleSets;
 import org.drools.core.common.UpdateContext;
+import org.drools.core.phreak.DetachedTuple;
 import org.drools.core.phreak.RuntimeSegmentUtilities;
-import org.drools.core.reteoo.ObjectTypeNode.Id;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.base.rule.Pattern;
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.util.AbstractBaseLinkedListNode;
-import org.drools.core.util.bitmask.AllSetBitMask;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.core.util.AbstractLinkedListNode;
+import org.drools.util.bitmask.AllSetBitMask;
+import org.drools.util.bitmask.BitMask;
 import org.kie.api.definition.rule.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
 import static org.drools.core.phreak.TupleEvaluationUtil.createLeftTupleTupleSets;
 import static org.drools.core.phreak.TupleEvaluationUtil.findPathToFlush;
 import static org.drools.core.phreak.TupleEvaluationUtil.findPathsToFlushFromRia;
 import static org.drools.core.phreak.TupleEvaluationUtil.flushLeftTupleIfNecessary;
 import static org.drools.core.phreak.TupleEvaluationUtil.forceFlushLeftTuple;
 import static org.drools.core.phreak.TupleEvaluationUtil.forceFlushPath;
-import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
 
 /**
  * All asserting Facts must propagated into the right <code>ObjectSink</code> side of a BetaNode, if this is the first Pattern
@@ -129,7 +133,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         return this.objectSource;
     }
 
-    public short getType() {
+    public int getType() {
         return NodeTypeEnums.LeftInputAdapterNode;
     }
 
@@ -194,7 +198,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         }
 
         LeftTupleSink sink = liaNode.getSinkPropagator().getFirstLeftTupleSink();
-        LeftTuple leftTuple = sink.createLeftTuple( factHandle, useLeftMemory );
+        TupleImpl leftTuple = TupleFactory.createLeftTuple( sink, factHandle, useLeftMemory );
         leftTuple.setPropagationContext( context );
 
         if ( sm.getRootNode() == liaNode ) {
@@ -202,11 +206,11 @@ public class LeftInputAdapterNode extends LeftTupleSource
         } else {
             // sm points to lia child sm, so iterate for all remaining children
             // all peer tuples must be created before propagation, or eager evaluation subnetworks have problem
-            LeftTuple peer = leftTuple;
+            TupleImpl     peer      = leftTuple;
             SegmentMemory originaSm = sm;
             for ( sm = sm.getNext(); sm != null; sm = sm.getNext() ) {
                 sink =  sm.getSinkFactory();
-                peer = sink.createPeer( peer ); // pctx is set during peer cloning
+                peer = TupleFactory.createPeer( sink, peer ); // pctx is set during peer cloning
             }
 
             sm = originaSm;
@@ -227,13 +231,13 @@ public class LeftInputAdapterNode extends LeftTupleSource
         }
     }
 
-    public static void doInsertSegmentMemoryWithFlush(ReteEvaluator reteEvaluator, boolean notifySegment, LiaNodeMemory lm, SegmentMemory sm, LeftTuple leftTuple, boolean streamMode) {
+    public static void doInsertSegmentMemoryWithFlush(ReteEvaluator reteEvaluator, boolean notifySegment, LiaNodeMemory lm, SegmentMemory sm, TupleImpl leftTuple, boolean streamMode) {
         for (PathMemory outPmem : doInsertSegmentMemory(reteEvaluator, notifySegment, lm, sm, leftTuple, streamMode )) {
             forceFlushPath(reteEvaluator, outPmem);
         }
     }
 
-    public static List<PathMemory> doInsertSegmentMemory(ReteEvaluator reteEvaluator, boolean linkOrNotify, LiaNodeMemory lm, SegmentMemory sm, LeftTuple leftTuple, boolean streamMode ) {
+    public static List<PathMemory> doInsertSegmentMemory(ReteEvaluator reteEvaluator, boolean linkOrNotify, LiaNodeMemory lm, SegmentMemory sm, TupleImpl leftTuple, boolean streamMode) {
         PathMemory pmem = findPathToFlush(sm, leftTuple, streamMode);
         if ( pmem != null ) {
             forceFlushLeftTuple( pmem, sm, reteEvaluator, createLeftTupleTupleSets(leftTuple, Tuple.INSERT) );
@@ -253,7 +257,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         return Collections.emptyList();
     }
 
-    public static void doDeleteObject(LeftTuple leftTuple,
+    public static void doDeleteObject(TupleImpl leftTuple,
                                       PropagationContext context,
                                       SegmentMemory sm,
                                       final ReteEvaluator reteEvaluator,
@@ -294,7 +298,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         }
     }
 
-    private static void doDeleteSegmentMemory(LeftTuple leftTuple, PropagationContext pctx, final LiaNodeMemory lm,
+    private static void doDeleteSegmentMemory(TupleImpl leftTuple, PropagationContext pctx, final LiaNodeMemory lm,
                                               SegmentMemory sm, ReteEvaluator reteEvaluator, boolean linkOrNotify, boolean streamMode) {
         leftTuple.setPropagationContext( pctx );
         if ( flushLeftTupleIfNecessary( reteEvaluator, sm, leftTuple, streamMode, Tuple.DELETE ) ) {
@@ -304,7 +308,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
             return;
         }
 
-        TupleSets<LeftTuple> leftTuples = sm.getStagedLeftTuples();
+        TupleSets leftTuples = sm.getStagedLeftTuples();
         boolean stagedDeleteWasEmpty = leftTuples.addDelete(leftTuple);
 
         if (  stagedDeleteWasEmpty && linkOrNotify ) {
@@ -313,7 +317,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         }
     }
 
-    public static void doUpdateObject(LeftTuple leftTuple,
+    public static void doUpdateObject(TupleImpl leftTuple,
                                       PropagationContext context,
                                       final ReteEvaluator reteEvaluator,
                                       final LeftInputAdapterNode liaNode,
@@ -343,10 +347,10 @@ public class LeftInputAdapterNode extends LeftTupleSource
         }
     }
 
-    private static void doUpdateSegmentMemory( LeftTuple leftTuple, PropagationContext pctx, ReteEvaluator reteEvaluator, boolean linkOrNotify,
-                                               final LiaNodeMemory lm, SegmentMemory sm, boolean streamMode ) {
+    private static void doUpdateSegmentMemory(TupleImpl leftTuple, PropagationContext pctx, ReteEvaluator reteEvaluator, boolean linkOrNotify,
+                                              final LiaNodeMemory lm, SegmentMemory sm, boolean streamMode ) {
         leftTuple.setPropagationContext( pctx );
-        TupleSets<LeftTuple> leftTuples = sm.getStagedLeftTuples();
+        TupleSets leftTuples = sm.getStagedLeftTuples();
 
         if ( leftTuple.getStagedType() == LeftTuple.NONE ) {
             if ( flushLeftTupleIfNecessary( reteEvaluator, sm, leftTuple, streamMode, Tuple.UPDATE ) ) {
@@ -366,7 +370,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         }
     }
 
-    public void retractLeftTuple(LeftTuple leftTuple,
+    public void retractLeftTuple(TupleImpl leftTuple,
                                  PropagationContext context,
                                  ReteEvaluator reteEvaluator) {
         LiaNodeMemory lm = reteEvaluator.getNodeMemory( this );
@@ -385,20 +389,20 @@ public class LeftInputAdapterNode extends LeftTupleSource
                              final ModifyPreviousTuples modifyPreviousTuples,
                              PropagationContext context,
                              ReteEvaluator reteEvaluator) {
-        ObjectTypeNode.Id otnId = this.sink.getFirstLeftTupleSink().getLeftInputOtnId();
+        ObjectTypeNodeId otnId = this.sink.getFirstLeftTupleSink().getLeftInputOtnId();
 
-        LeftTuple leftTuple = processDeletesFromModify(modifyPreviousTuples, context, reteEvaluator, otnId);
-        LiaNodeMemory lm = reteEvaluator.getNodeMemory( this );
+        TupleImpl     leftTuple = processDeletesFromModify(modifyPreviousTuples, context, reteEvaluator, otnId);
+        LiaNodeMemory lm        = reteEvaluator.getNodeMemory( this );
 
         LeftTupleSink sink = getSinkPropagator().getFirstLeftTupleSink();
         BitMask mask = sink.getLeftInferredMask();
 
-        if ( leftTuple != null && leftTuple.getInputOtnId().equals( otnId ) ) {
+        if ( leftTuple != null && leftTuple.getInputOtnId().equals(otnId) ) {
             modifyPreviousTuples.removeLeftTuple(partitionId);
             leftTuple.reAdd();
             if ( context.getModificationMask().intersects( mask) ) {
-                doUpdateObject(leftTuple, context, reteEvaluator, leftTuple.getTupleSource(), true, lm, lm.getOrCreateSegmentMemory(this, reteEvaluator ) );
-                if (leftTuple instanceof InternalMatch) {
+                doUpdateObject(leftTuple, context, reteEvaluator, (LeftInputAdapterNode) SuperCacheFixer.getLeftTupleSource(leftTuple), true, lm, lm.getOrCreateSegmentMemory(this, reteEvaluator));
+                if (leftTuple.isFullMatch()) {
                     ((InternalMatch)leftTuple).setActive(true);
                 }
             }
@@ -410,9 +414,9 @@ public class LeftInputAdapterNode extends LeftTupleSource
         }
     }
 
-    protected LeftTuple processDeletesFromModify(ModifyPreviousTuples modifyPreviousTuples, PropagationContext context, ReteEvaluator reteEvaluator, Id otnId) {
-        LeftTuple leftTuple = modifyPreviousTuples.peekLeftTuple(partitionId);
-        while ( leftTuple != null && leftTuple.getInputOtnId().before( otnId ) ) {
+    protected TupleImpl processDeletesFromModify(ModifyPreviousTuples modifyPreviousTuples, PropagationContext context, ReteEvaluator reteEvaluator, ObjectTypeNodeId otnId) {
+        TupleImpl leftTuple = modifyPreviousTuples.peekLeftTuple(partitionId);
+        while ( leftTuple != null && leftTuple.getInputOtnId().before(otnId) ) {
             modifyPreviousTuples.removeLeftTuple(partitionId);
             modifyPreviousTuples.doDeleteObject(context, reteEvaluator, leftTuple);
             leftTuple = modifyPreviousTuples.peekLeftTuple(partitionId);
@@ -440,7 +444,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
     }
 
 
-    public LeftTuple createPeer(LeftTuple original) {
+    public LeftTuple createPeer(TupleImpl original) {
         return null;
     }
 
@@ -500,7 +504,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
     public ObjectTypeNode getObjectTypeNode() {
         ObjectSource source = this.objectSource;
         while ( source != null ) {
-            if ( source instanceof ObjectTypeNode ) {
+            if ( source.getType() == NodeTypeEnums.ObjectTypeNode) {
                 return (ObjectTypeNode) source;
             }
             source = source.source;
@@ -512,7 +516,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         return new LiaNodeMemory();
     }
 
-    public static class LiaNodeMemory extends AbstractBaseLinkedListNode<Memory> implements SegmentNodeMemory {
+    public static class LiaNodeMemory extends AbstractLinkedListNode<Memory> implements SegmentNodeMemory {
         private int               counter;
 
         private SegmentMemory     segmentMemory;
@@ -575,7 +579,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
             segmentMemory.unlinkNodeWithoutRuleNotify(nodePosMaskBit);
         }
 
-        public short getNodeType() {
+        public int getNodeType() {
             return NodeTypeEnums.LeftInputAdapterNode;
         }
 
@@ -592,25 +596,33 @@ public class LeftInputAdapterNode extends LeftTupleSource
      * Used with the updateSink method, so that the parent ObjectSource
      * can  update the  TupleSink
      */
-    public static class RightTupleSinkAdapter
+    public static class LeftTupleSinkAdapter
             implements
             ObjectSink {
-        private LeftTupleSink sink;
         private LeftInputAdapterNode liaNode;
 
-        public RightTupleSinkAdapter(LeftInputAdapterNode liaNode) {
+        private List<DetachedTuple> detachedTuples;
+
+        public LeftTupleSinkAdapter(LeftInputAdapterNode liaNode, List<DetachedTuple> detachedTuples) {
             this.liaNode = liaNode;
+            this.detachedTuples = detachedTuples;
         }
 
         /**
          * Do not use this constructor. It should be used just by deserialization.
          */
-        public RightTupleSinkAdapter() {
+        public LeftTupleSinkAdapter() {
         }
 
         public void assertObject(final InternalFactHandle factHandle,
                                  final PropagationContext context,
                                  final ReteEvaluator reteEvaluator) {
+            ObjectTypeNodeId otnId = liaNode.getSinkPropagator().getFirstLeftTupleSink().getLeftInputOtnId();
+            TupleImpl detached = factHandle.getLinkedTuples().detachLeftTupleAfter(getPartitionId(), otnId);
+            if (detached != null) {
+                detachedTuples.add(new DetachedTuple((DefaultFactHandle) factHandle, detached));
+            }
+
             liaNode.assertObject(factHandle, context, reteEvaluator);
         }
 
@@ -626,7 +638,7 @@ public class LeftInputAdapterNode extends LeftTupleSource
         }
 
         public RuleBasePartitionId getPartitionId() {
-            return sink.getPartitionId();
+            return liaNode.getPartitionId();
         }
 
         public void byPassModifyToBetaNode(InternalFactHandle factHandle,
@@ -636,16 +648,16 @@ public class LeftInputAdapterNode extends LeftTupleSource
             throw new UnsupportedOperationException();
         }
 
-        public short getType() {
+        public int getType() {
             return NodeTypeEnums.LeftInputAdapterNode;
         }
 
         @Override public Rule[] getAssociatedRules() {
-            return sink.getAssociatedRules();
+            return liaNode.getAssociatedRules();
         }
 
         public boolean isAssociatedWith(Rule rule) {
-            return sink.isAssociatedWith( rule );
+            return liaNode.isAssociatedWith( rule );
         }
 
         @Override
@@ -655,22 +667,22 @@ public class LeftInputAdapterNode extends LeftTupleSource
 
         @Override
         public void addAssociatedTerminal(BaseTerminalNode terminalNode) {
-            sink.addAssociatedTerminal(terminalNode);
+            liaNode.addAssociatedTerminal(terminalNode);
         }
 
         @Override
         public void removeAssociatedTerminal(BaseTerminalNode terminalNode) {
-            sink.removeAssociatedTerminal(terminalNode);
+            liaNode.removeAssociatedTerminal(terminalNode);
         }
 
         @Override
         public int getAssociatedTerminalsSize() {
-            return sink.getAssociatedTerminalsSize();
+            return liaNode.getAssociatedTerminalsSize();
         }
 
         @Override
         public boolean hasAssociatedTerminal(BaseTerminalNode terminalNode) {
-            return sink.hasAssociatedTerminal(terminalNode);
+            return liaNode.hasAssociatedTerminal(terminalNode);
         }
     }
 

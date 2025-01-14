@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.parser.feel11;
 
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ import org.kie.dmn.feel.lang.ast.NameRefNode;
 import org.kie.dmn.feel.lang.ast.QualifiedNameNode;
 import org.kie.dmn.feel.lang.ast.QuantifiedExpressionNode;
 import org.kie.dmn.feel.lang.ast.RangeNode;
+import org.kie.dmn.feel.lang.ast.RangeTypeNode;
 import org.kie.dmn.feel.lang.ast.StringNode;
 import org.kie.dmn.feel.lang.ast.TypeNode;
 import org.kie.dmn.feel.lang.ast.UnaryTestListNode;
@@ -58,7 +61,7 @@ import org.kie.dmn.feel.lang.types.DefaultBuiltinFEELTypeRegistry;
 import org.kie.dmn.feel.lang.types.FEELTypeRegistry;
 import org.kie.dmn.feel.parser.feel11.FEEL_1_1Parser.RelExpressionValueContext;
 import org.kie.dmn.feel.parser.feel11.FEEL_1_1Parser.TypeContext;
-import org.kie.dmn.feel.util.EvalHelper;
+import org.kie.dmn.feel.util.StringEvalHelper;
 
 public class ASTBuilderVisitor
         extends FEEL_1_1BaseVisitor<BaseNode> {
@@ -108,6 +111,11 @@ public class ASTBuilderVisitor
     @Override
     public BaseNode visitNullLiteral(FEEL_1_1Parser.NullLiteralContext ctx) {
         return ASTBuilderFactory.newNullNode( ctx );
+    }
+
+    @Override
+    public BaseNode visitUndefined(FEEL_1_1Parser.UndefinedContext ctx) {
+        return ASTBuilderFactory.newUndefinedValueNode();
     }
 
     @Override
@@ -185,13 +193,13 @@ public class ASTBuilderVisitor
         String op = ctx.op.getText();
         switch (UnaryOperator.determineOperator(op)) {
             case GT:
-                return ASTBuilderFactory.newIntervalNode(ctx, RangeNode.IntervalBoundary.OPEN, value, ASTBuilderFactory.newNullNode(ctx), RangeNode.IntervalBoundary.OPEN);
+                return ASTBuilderFactory.newIntervalNode(ctx, RangeNode.IntervalBoundary.OPEN, value, ASTBuilderFactory.newUndefinedValueNode(), RangeNode.IntervalBoundary.OPEN);
             case GTE:
-                return ASTBuilderFactory.newIntervalNode(ctx, RangeNode.IntervalBoundary.CLOSED, value, ASTBuilderFactory.newNullNode(ctx), RangeNode.IntervalBoundary.OPEN);
+                return ASTBuilderFactory.newIntervalNode(ctx, RangeNode.IntervalBoundary.CLOSED, value, ASTBuilderFactory.newUndefinedValueNode(), RangeNode.IntervalBoundary.OPEN);
             case LT:
-                return ASTBuilderFactory.newIntervalNode(ctx, RangeNode.IntervalBoundary.OPEN, ASTBuilderFactory.newNullNode(ctx), value, RangeNode.IntervalBoundary.OPEN);
+                return ASTBuilderFactory.newIntervalNode(ctx, RangeNode.IntervalBoundary.OPEN, ASTBuilderFactory.newUndefinedValueNode(), value, RangeNode.IntervalBoundary.OPEN);
             case LTE:
-                return ASTBuilderFactory.newIntervalNode(ctx, RangeNode.IntervalBoundary.OPEN, ASTBuilderFactory.newNullNode(ctx), value, RangeNode.IntervalBoundary.CLOSED);
+                return ASTBuilderFactory.newIntervalNode(ctx, RangeNode.IntervalBoundary.OPEN, ASTBuilderFactory.newUndefinedValueNode(), value, RangeNode.IntervalBoundary.CLOSED);
             default:
                 throw new UnsupportedOperationException("by the parser rule FEEL grammar rule 7.a for range syntax should not have determined the operator " + op);
         }
@@ -569,7 +577,7 @@ public class ASTBuilderVisitor
     public TypeNode visitQnType(FEEL_1_1Parser.QnTypeContext ctx) {
         List<String> qns = new ArrayList<>();
         if (ctx.qualifiedName() != null) {
-            ctx.qualifiedName().nameRef().forEach(nr -> qns.add(EvalHelper.normalizeVariableName(ParserHelper.getOriginalText(nr))));
+            ctx.qualifiedName().nameRef().forEach(nr -> qns.add(StringEvalHelper.normalizeVariableName(ParserHelper.getOriginalText(nr))));
         } else if (ctx.FUNCTION() != null) {
             qns.add("function");
         } else {
@@ -582,6 +590,12 @@ public class ASTBuilderVisitor
     public BaseNode visitListType(FEEL_1_1Parser.ListTypeContext ctx) {
         TypeNode type = (TypeNode) visit(ctx.type());
         return new ListTypeNode(ctx, type);
+    }
+
+    @Override
+    public BaseNode visitRangeType(FEEL_1_1Parser.RangeTypeContext ctx) {
+        TypeNode type = (TypeNode) visit(ctx.type());
+        return new RangeTypeNode(ctx, type);
     }
 
     @Override

@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.lang.types;
 
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import org.kie.dmn.feel.lang.Symbol;
 import org.kie.dmn.feel.lang.Type;
 import org.kie.dmn.feel.parser.feel11.FEEL_1_1Lexer;
 import org.kie.dmn.feel.util.EvalHelper;
+import org.kie.dmn.feel.util.StringEvalHelper;
 import org.kie.dmn.feel.util.TokenTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +79,7 @@ public class ScopeImpl
             // duplicate symbol definition
             return false;
         }
-        symbols.put( EvalHelper.normalizeVariableName( symbol.getId() ), symbol );
+        symbols.put(StringEvalHelper.normalizeVariableName(symbol.getId() ), symbol );
         if( tokenTree != null ) {
             // also load the symbol into the token tree
             tokenTree.addName( tokenize( symbol.getId() ) );
@@ -85,7 +88,7 @@ public class ScopeImpl
     }
 
     public Symbol resolve(String id) {
-        Symbol s = symbols.get( EvalHelper.normalizeVariableName( id ) );
+        Symbol s = symbols.get( StringEvalHelper.normalizeVariableName( id ) );
         if (s == null && getParentScope() != null) {
             return getParentScope().resolve(id);
         }
@@ -93,13 +96,13 @@ public class ScopeImpl
     }
 
     public Symbol resolve(String[] qualifiedName) {
-        Symbol root = symbols.get( EvalHelper.normalizeVariableName( qualifiedName[0] ) );
+        Symbol root = symbols.get( StringEvalHelper.normalizeVariableName( qualifiedName[0] ) );
         if (root == null && getParentScope() != null) {
             return getParentScope().resolve(qualifiedName);
         } else if( root != null ) {
             Symbol currentSymbol = root;
             for( int i = 1; i < qualifiedName.length && currentSymbol != null; i++ ) {
-                currentSymbol = currentSymbol.getScope().resolve( EvalHelper.normalizeVariableName( qualifiedName[i] ) );
+                currentSymbol = currentSymbol.getScope().resolve( StringEvalHelper.normalizeVariableName( qualifiedName[i] ) );
             }
             return currentSymbol;
         }

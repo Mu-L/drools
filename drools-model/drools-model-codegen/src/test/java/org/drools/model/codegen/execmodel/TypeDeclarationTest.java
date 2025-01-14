@@ -1,28 +1,31 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.model.codegen.execmodel;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.drools.model.codegen.execmodel.domain.Result;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.definition.type.FactType;
 import org.kie.api.runtime.KieSession;
@@ -31,12 +34,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class TypeDeclarationTest extends BaseModelTest {
 
-    public TypeDeclarationTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test
-    public void testRecursiveDeclaration() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testRecursiveDeclaration(RUN_TYPE runType) throws Exception {
         String str =
               "package org.drools.compiler\n" +
               "declare Node\n" +
@@ -50,7 +50,7 @@ public class TypeDeclarationTest extends BaseModelTest {
               "   System.out.println( $value );\n" +
               "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         KieBase kbase = ksession.getKieBase();
 
         FactType nodeType = kbase.getFactType( "org.drools.compiler", "Node" );
@@ -67,8 +67,9 @@ public class TypeDeclarationTest extends BaseModelTest {
         assertThat(rules).isEqualTo(1);
     }
 
-    @Test
-    public void testGenerics() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGenerics(RUN_TYPE runType) throws Exception {
         // DROOLS-4939
         String str =
               "package org.drools.compiler\n" +
@@ -82,7 +83,7 @@ public class TypeDeclarationTest extends BaseModelTest {
               "   System.out.println( $node );\n" +
               "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         KieBase kbase = ksession.getKieBase();
 
         FactType nodeType = kbase.getFactType( "org.drools.compiler", "Node" );
@@ -98,8 +99,9 @@ public class TypeDeclarationTest extends BaseModelTest {
         Map<String, String> getValues();
     }
 
-    @Test
-    public void testGenericsMap() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGenericsMap(RUN_TYPE runType) throws Exception {
         // DROOLS-4939
         String str =
               "package org.drools.compiler\n" +
@@ -114,7 +116,7 @@ public class TypeDeclarationTest extends BaseModelTest {
               "   System.out.println( $node );\n" +
               "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         KieBase kbase = ksession.getKieBase();
 
         FactType nodeType = kbase.getFactType( "org.drools.compiler", "Node" );
@@ -128,8 +130,9 @@ public class TypeDeclarationTest extends BaseModelTest {
         assertThat(rules).isEqualTo(1);
     }
 
-    @Test
-    public void testSerialVersionUID() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSerialVersionUID(RUN_TYPE runType) throws Exception {
         // DROOLS-5340
         String str =
                 "package org.drools.compiler\n" +
@@ -147,13 +150,14 @@ public class TypeDeclarationTest extends BaseModelTest {
                 "   insert( new ServiceInformation(\"123456\", \"ServiceTest\", new ArrayList()) );\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         int rules = ksession.fireAllRules();
         assertThat(rules).isEqualTo(1);
     }
 
-    @Test
-    public void testSerialVersionUIDWithAllkeys() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSerialVersionUIDWithAllkeys(RUN_TYPE runType) throws Exception {
         // DROOLS-5400
         String str =
                 "package org.drools.compiler\n" +
@@ -171,13 +175,14 @@ public class TypeDeclarationTest extends BaseModelTest {
                 "   insert( new ServiceInformation(\"123456\", \"ServiceTest\", new ArrayList()) );\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         int rules = ksession.fireAllRules();
         assertThat(rules).isEqualTo(1);
     }
 
-    @Test
-    public void testPositionalWithLiteral() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPositionalWithLiteral(RUN_TYPE runType) {
         // DROOLS-6128
         String str =
                 "import " + Result.class.getCanonicalName() + ";" +
@@ -197,7 +202,7 @@ public class TypeDeclarationTest extends BaseModelTest {
                 "  insert(new Result($age));\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.fireAllRules();
 
@@ -206,8 +211,9 @@ public class TypeDeclarationTest extends BaseModelTest {
         assertThat(results.iterator().next().getValue()).isEqualTo(37);
     }
 
-    @Test
-    public void testPositionalWithJoin() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPositionalWithJoin(RUN_TYPE runType) {
         // DROOLS-6128
         String str =
                 "import " + Result.class.getCanonicalName() + ";" +
@@ -228,7 +234,7 @@ public class TypeDeclarationTest extends BaseModelTest {
                 "  insert(new Result($age));\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( "Mark" );
         ksession.fireAllRules();

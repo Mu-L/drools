@@ -1,40 +1,34 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.kiesession.agenda;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Stream;
-
+import org.drools.base.common.NetworkNode;
+import org.drools.base.common.PartitionsManager;
 import org.drools.core.common.ActivationsFilter;
 import org.drools.core.common.AgendaGroupsManager;
+import org.drools.core.common.InternalActivationGroup;
 import org.drools.core.common.InternalAgenda;
 import org.drools.core.common.InternalAgendaGroup;
 import org.drools.core.common.InternalWorkingMemory;
-import org.drools.base.common.NetworkNode;
+import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.base.common.RuleBasePartitionId;
+import org.drools.core.common.RuleFlowGroup;
 import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.phreak.ExecutableEntry;
@@ -45,57 +39,55 @@ import org.drools.core.reteoo.PathMemory;
 import org.drools.core.reteoo.RuleTerminalNodeLeftTuple;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.common.InternalActivationGroup;
 import org.drools.core.rule.consequence.KnowledgeHelper;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.common.RuleFlowGroup;
 import org.drools.core.util.CompositeIterator;
 import org.kie.api.runtime.rule.AgendaFilter;
-import org.kie.internal.concurrent.ExecutorProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Stream;
+
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static org.drools.base.common.PartitionsManager.doOnForkJoinPool;
 
 public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
 
-    protected static final transient Logger log = LoggerFactory.getLogger( CompositeDefaultAgenda.class );
-
-    private static final ExecutorService EXECUTOR = ExecutorProviderFactory.getExecutorProvider().getExecutor();
-
-    private static final AtomicBoolean FIRING_UNTIL_HALT_USING_EXECUTOR = new AtomicBoolean( false );
-
-    private final DefaultAgenda[] agendas = new DefaultAgenda[RuleBasePartitionId.PARALLEL_PARTITIONS_NUMBER];
+    protected static final Logger log = LoggerFactory.getLogger( CompositeDefaultAgenda.class );
 
     private final DefaultAgenda.ExecutionStateMachine executionStateMachine = new DefaultAgenda.ConcurrentExecutionStateMachine();
+
+    private DefaultAgenda[] agendas;
 
     private PropagationList propagationList;
 
     public CompositeDefaultAgenda() { }
 
-    public CompositeDefaultAgenda(InternalRuleBase kBase) {
-        this( kBase, true );
-    }
-
-    public CompositeDefaultAgenda(InternalRuleBase kBase, boolean initMain) {
-        for ( int i = 0; i < agendas.length; i++ ) {
-            agendas[i] = new PartitionedDefaultAgenda(kBase, initMain, executionStateMachine, i);
+    public CompositeDefaultAgenda(InternalWorkingMemory workingMemory) {
+        InternalRuleBase kBase = workingMemory.getKnowledgeBase();
+        this.agendas = new DefaultAgenda[kBase.getParallelEvaluationSlotsCount()];
+        for ( int i = 0; i < this.agendas.length; i++ ) {
+            agendas[i] = new PartitionedDefaultAgenda(workingMemory, executionStateMachine, i);
         }
+        // this composite agenda and the first partitioned one share the same propagation list
+        this.propagationList = agendas[0].getPropagationList();
     }
 
     @Override
     public void writeExternal( ObjectOutput out ) throws IOException {
-        for ( DefaultAgenda agenda : agendas ) {
-            out.writeObject( agenda );
-        }
+        out.writeObject( agendas );
     }
 
     @Override
     public void readExternal( ObjectInput in ) throws IOException, ClassNotFoundException {
-        for ( int i = 0; i < agendas.length; i++ ) {
-            agendas[i] = (DefaultAgenda) in.readObject();
-        }
+        agendas = (DefaultAgenda[]) in.readObject();
     }
 
     @Override
@@ -134,13 +126,6 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
     }
 
     @Override
-    public void setWorkingMemory( InternalWorkingMemory workingMemory ) {
-        Stream.of( agendas ).forEach( a -> a.setWorkingMemory( workingMemory ) );
-        // this composite agenda and the first partitioned one share the same propagation list
-        this.propagationList = agendas[0].getPropagationList();
-    }
-
-    @Override
     public int fireAllRules( AgendaFilter agendaFilter, int fireLimit ) {
         if (!executionStateMachine.toFireAllRules()) {
             return 0;
@@ -174,17 +159,7 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
     }
 
     private int parallelFire( AgendaFilter agendaFilter, int fireLimit ) {
-        CompletableFuture<Integer>[] results = new CompletableFuture[agendas.length-1];
-        for (int i = 0; i < results.length; i++) {
-            final int j = i;
-            results[j] = supplyAsync( () -> agendas[j].internalFireAllRules( agendaFilter, fireLimit, false ), EXECUTOR );
-        }
-
-        int result = agendas[agendas.length-1].internalFireAllRules( agendaFilter, fireLimit, false );
-        for (int i = 0; i < results.length; i++) {
-            result += results[i].join();
-        }
-        return result;
+        return doOnForkJoinPool(() -> Stream.of(agendas).parallel().mapToInt(a -> a.internalFireAllRules( agendaFilter, fireLimit, false )).sum() );
     }
 
     @Override
@@ -204,39 +179,27 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
 
     @Override
     public void fireUntilHalt( AgendaFilter agendaFilter ) {
-        ExecutorService fireUntilHaltExecutor = EXECUTOR;
-
-        if ( FIRING_UNTIL_HALT_USING_EXECUTOR.getAndSet( true )) {
-            fireUntilHaltExecutor = ExecutorProviderFactory.getExecutorProvider().newFixedThreadPool();
-        }
-
         if ( log.isTraceEnabled() ) {
             log.trace("Starting Fire Until Halt");
         }
+
+        ExecutorService fireUntilHaltExecutor = PartitionsManager.borrowFireUntilHaltExecutors();
         if (executionStateMachine.toFireUntilHalt()) {
             try {
                 while ( isFiring() ) {
-                    CompletableFuture<Void>[] futures = new CompletableFuture[agendas.length - 1];
+                    CompletableFuture<Void>[] futures = new CompletableFuture[agendas.length];
                     for ( int i = 0; i < futures.length; i++ ) {
                         final int j = i;
                         futures[j] = runAsync( () -> agendas[j].internalFireUntilHalt( agendaFilter, false ), fireUntilHaltExecutor );
                     }
-
-                    agendas[agendas.length - 1].internalFireUntilHalt( agendaFilter, false );
-
-                    for ( int i = 0; i < futures.length; i++ ) {
-                        futures[i].join();
-                    }
+                    CompletableFuture.allOf(futures).join();
                 }
             } finally {
                 executionStateMachine.immediateHalt( propagationList );
-                if ( fireUntilHaltExecutor == EXECUTOR ) {
-                    FIRING_UNTIL_HALT_USING_EXECUTOR.set( false );
-                } else {
-                    fireUntilHaltExecutor.shutdown();
-                }
+                PartitionsManager.offerFireUntilHaltExecutors(fireUntilHaltExecutor);
             }
         }
+
         if ( log.isTraceEnabled() ) {
             log.trace("Ending Fire Until Halt");
         }
@@ -305,6 +268,13 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
     public void notifyWaitOnRest() {
         for ( int i = 0; i < agendas.length; i++ ) {
             agendas[i].notifyWaitOnRest();
+        }
+    }
+
+    @Override
+    public void haltGroupEvaluation() {
+        for ( int i = 0; i < agendas.length; i++ ) {
+            agendas[i].haltGroupEvaluation();
         }
     }
 
@@ -417,11 +387,6 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
     }
 
     @Override
-    public int fireNextItem( AgendaFilter filter, int fireCount, int fireLimit ) {
-        throw new UnsupportedOperationException( "org.drools.core.common.CompositeDefaultAgenda.fireNextItem -> TODO" );
-    }
-
-    @Override
     public void cancelActivation( InternalMatch internalMatch) {
         throw new UnsupportedOperationException( "org.drools.core.common.CompositeDefaultAgenda.cancelActivation -> TODO" );
     }
@@ -437,10 +402,12 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
     }
 
     @Override
-    public void setFocus( String name ) {
+    public boolean setFocus( String name ) {
+        boolean groupChanged = false;
         for ( int i = 0; i < agendas.length; i++ ) {
-            agendas[i].setFocus( name );
+            groupChanged |= agendas[i].setFocus( name );
         }
+        return groupChanged;
     }
 
     @Override
@@ -525,6 +492,11 @@ public class CompositeDefaultAgenda implements Externalizable, InternalAgenda {
 
     @Override
     public KnowledgeHelper getKnowledgeHelper() {
+        throw new UnsupportedOperationException( "This method has to be called on the single partitioned agendas" );
+    }
+
+    @Override
+    public void resetKnowledgeHelper() {
         throw new UnsupportedOperationException( "This method has to be called on the single partitioned agendas" );
     }
 

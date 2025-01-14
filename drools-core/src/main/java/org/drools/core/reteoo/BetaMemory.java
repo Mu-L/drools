@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
 import org.drools.core.common.Memory;
@@ -21,20 +23,16 @@ import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.TupleSets;
 import org.drools.core.common.TupleSetsImpl;
 import org.drools.core.reteoo.RightInputAdapterNode.RiaPathMemory;
-import org.drools.base.rule.ContextEntry;
-import org.drools.core.util.AbstractBaseLinkedListNode;
+import org.drools.core.util.AbstractLinkedListNode;
 
-public class BetaMemory extends AbstractBaseLinkedListNode<Memory>
-        implements
-        SegmentNodeMemory {
+public class BetaMemory<C> extends AbstractLinkedListNode<Memory> implements SegmentNodeMemory {
 
-    private static final long serialVersionUID = 510l;
-    private TupleMemory                leftTupleMemory;
-    private TupleMemory                rightTupleMemory;
-    private TupleSets<RightTuple>      stagedRightTuples;
-    private ContextEntry[]             context;
+    private              TupleMemory leftTupleMemory;
+    private              TupleMemory rightTupleMemory;
+    private              TupleSets stagedRightTuples;
+    private              C         context;
     // the node type this memory belongs to
-    private short                      nodeType;
+    private              int     nodeType;
     private SegmentMemory              segmentMemory;
     private long                       nodePosMaskBit;
     private int                        counter;
@@ -45,20 +43,20 @@ public class BetaMemory extends AbstractBaseLinkedListNode<Memory>
 
     public BetaMemory(final TupleMemory tupleMemory,
                       final TupleMemory objectMemory,
-                      final ContextEntry[] context,
-                      final short nodeType) {
+                      final C context,
+                      final int nodeType) {
         this.leftTupleMemory = tupleMemory;
         this.rightTupleMemory = objectMemory;
-        this.stagedRightTuples = new TupleSetsImpl<>();
+        this.stagedRightTuples = new TupleSetsImpl();
         this.context = context;
         this.nodeType = nodeType;
     }
 
-    public TupleSets<RightTuple> getStagedRightTuples() {
+    public TupleSets getStagedRightTuples() {
         return stagedRightTuples;
     }
 
-    public void setStagedRightTuples(TupleSets<RightTuple> stagedRightTuples) {
+    public void setStagedRightTuples(TupleSets stagedRightTuples) {
         this.stagedRightTuples = stagedRightTuples;
     }
 
@@ -81,7 +79,7 @@ public class BetaMemory extends AbstractBaseLinkedListNode<Memory>
     /**
      * @return the context
      */
-    public ContextEntry[] getContext() {
+    public C getContext() {
         return context;
     }
 
@@ -102,7 +100,7 @@ public class BetaMemory extends AbstractBaseLinkedListNode<Memory>
         return segmentMemory.unlinkNode(nodePosMaskBit, reteEvaluator);
     }
 
-    public short getNodeType() {
+    public int getNodeType() {
         return this.nodeType;
     }
 
@@ -163,6 +161,7 @@ public class BetaMemory extends AbstractBaseLinkedListNode<Memory>
         }
     }
 
+    @Override
     public void reset() {
         if (leftTupleMemory != null) {
             leftTupleMemory.clear();

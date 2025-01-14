@@ -1,30 +1,28 @@
-/*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
-
-import java.util.Collection;
-import java.util.List;
 
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.event.rule.AgendaEventListener;
@@ -35,28 +33,24 @@ import org.kie.api.runtime.KieSession;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@RunWith(Parameterized.class)
 public class RuleChainingTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public RuleChainingTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testRuleChainingWithLogicalInserts() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRuleChainingWithLogicalInserts(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package com.sample\n" +
                 " \n" +
                 "declare Some\n" +
@@ -122,5 +116,56 @@ public class RuleChainingTest {
         } finally {
             ksession.dispose();
         }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDoubleInsertLogical(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // DROOLS-7525
+        final String drl =
+                "package org.test;\n" +
+                        "\n" +
+                        "declare Fact\n" +
+                        "    value : Integer\n" +
+                        "end\n" +
+                        "\n" +
+                        "declare Logical\n" +
+                        "    value : Integer\n" +
+                        "end\n" +
+                        "\n" +
+                        "rule \"Init\"\n" +
+                        "  when\n" +
+                        "  then\n" +
+                        "    insert(new Fact(1));\n" +
+                        "    insert(new Fact(2));\n" +
+                        "end\n" +
+                        "\n" +
+                        "rule \"Eliminate all\"\n" +
+                        "  when\n" +
+                        "    $fact : Fact($val : value)\n" +
+                        "    not( Fact(value < $val) )\n" +
+                        "    Logical(value == $val)\n" +
+                        "  then\n" +
+                        "    System.out.println(\"delete\" + $fact);\n" +
+                        "    delete($fact);\n" +
+                        "end\n" +
+                        "\n" +
+                        "rule \"Logical\"\n" +
+                        "  when\n" +
+                        "    Fact(value==1)\n" +
+                        "  then\n" +
+                        "    insertLogical(new Logical(1));\n" +
+                        "    insertLogical(new Logical(2));\n" +
+                        "end";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("logical-test", kieBaseTestConfiguration, drl);
+        final KieSession ksession = kbase.newKieSession();
+
+        ksession.fireAllRules();
+
+        // The retraction of Fact(1) should also cause the immediate deletion of both Logical(1) and Logical(2)
+        // thus preventing rule "Eliminate all" to fire a second time and leaving Fact(2) in the working memory
+        assertThat(ksession.getObjects()).hasSize(1);
+        assertThat(ksession.getObjects().iterator().next().toString()).isEqualTo("Fact( value=2 )");
     }
 }

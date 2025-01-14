@@ -1,19 +1,21 @@
-/*
- * Copyright 2011 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.traits.compiler.integrationtests;
 
 import java.util.ArrayList;
@@ -28,7 +30,7 @@ import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.drools.traits.compiler.CommonTraitTest;
 import org.drools.traits.compiler.Person;
 import org.drools.traits.core.factmodel.Entity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
@@ -41,10 +43,14 @@ import org.kie.api.runtime.KieSession;
 import org.kie.internal.builder.KnowledgeBuilder;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
 import org.kie.internal.utils.KieHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TraitTypeGenerationTest extends CommonTraitTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TraitTypeGenerationTest.class);
 
     @PropertyReactive
     @Traitable
@@ -76,7 +82,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         }
     }
 
-    @Test(timeout=10000)
+    @Test
     public void testWithDeclaredTypeAndTraitInDifferentPackages() {
         // DROOLS-91
         final String str1 =
@@ -188,7 +194,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KieBuilder kbuilder = ks.newKieBuilder(kfs );
 
         kbuilder.buildAll();
-        assertThat(kbuilder.getResults().getMessages().size()).isEqualTo(0);
+        assertThat(kbuilder.getResults().getMessages()).isEmpty();
 
         ks.newKieContainer( kbuilder.getKieModule().getReleaseId() ).getKieBase();
 
@@ -199,7 +205,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         ksession.setGlobal( "students", students );
         ksession.insert( new Person("tom", 20 ) );
         ksession.fireAllRules();
-        assertThat(students.size()).isEqualTo(1);
+        assertThat(students).hasSize(1);
     }
 
     public static interface FooIntf {
@@ -290,7 +296,6 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
                         "when " +
                         "   $g : Goal( $m : entity, $prop : property, $val : value ) " +
                         "then " +
-                        "   System.out.println( 'Satisfy ' + $g ); \n" +
                         "   modify ( $m ) { getFields().put( $prop, $val ); } \n" +
                         "end " +
 
@@ -301,7 +306,6 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
                         "rule Main\n" +
                         "when \n" +
                         "then \n" +
-                        "   System.out.println( 'Don MONKEY ' ); " +
                         "   Entity e = new Entity(); \n" +
                         "   Monkey monkey = don( e, Monkey.class );" +
                         "end \n" +
@@ -311,7 +315,6 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
                         "   $m : Monkey( $pos : position ) " +
                         "   ?check( $m, \"position\", 4 ; ) " +
                         "then " +
-                        "   System.out.println( 'Monkey madness' + $m ); " +
                         "   list.add( $m.getPosition() ); " +
                         "end " +
 
@@ -326,7 +329,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         session.fireAllRules();
 
         for ( Object o : session.getObjects() ) {
-            System.out.println( ">>> " + o );
+            LOGGER.debug( ">>> " + o );
         }
 
         assertThat(list).isEqualTo(List.of(4));
@@ -344,7 +347,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KieHelper kh = new KieHelper();
         kh.addContent( s1, ResourceType.DRL );
 
-        assertThat(kh.verify().getMessages(Message.Level.ERROR).size()).isEqualTo(1);
+        assertThat(kh.verify().getMessages(Message.Level.ERROR)).hasSize(1);
     }
 
     public static class SomeClass {}
@@ -370,7 +373,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KnowledgeBuilder kBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kBuilder.add(new ByteArrayResource(drl.getBytes()), ResourceType.DRL);
         if (kBuilder.hasErrors()) {
-            System.err.println(kBuilder.getErrors());
+            LOGGER.error(kBuilder.getErrors().toString());
         }
         assertThat(kBuilder.hasErrors()).isFalse();
 
@@ -378,7 +381,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         knowledgeBase.addPackages(kBuilder.getKnowledgePackages());
 
         FactType sw = knowledgeBase.getFactType("org.drools.test", "MultiInhPosTrait");
-        assertThat(sw.getFields().size()).isEqualTo(5);
+        assertThat(sw.getFields()).hasSize(5);
         assertThat(sw.getFields().get(0).getName()).isEqualTo("field0");
         assertThat(sw.getFields().get(1).getName()).isEqualTo("field1");
         assertThat(sw.getFields().get(2).getName()).isEqualTo("mfield1");
@@ -406,7 +409,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KnowledgeBuilder kBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kBuilder.add(new ByteArrayResource(drl.getBytes()), ResourceType.DRL);
         if (kBuilder.hasErrors()) {
-            System.err.println(kBuilder.getErrors());
+            LOGGER.error(kBuilder.getErrors().toString());
         }
         assertThat(kBuilder.hasErrors()).isFalse();
 
@@ -414,7 +417,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         knowledgeBase.addPackages(kBuilder.getKnowledgePackages());
 
         FactType sw = knowledgeBase.getFactType("org.drools.test", "MultiInhPosTrait");
-        assertThat(sw.getFields().size()).isEqualTo(5);
+        assertThat(sw.getFields()).hasSize(5);
         assertThat(sw.getFields().get(0).getName()).isEqualTo("mfield0");
         assertThat(sw.getFields().get(1).getName()).isEqualTo("field0");
         assertThat(sw.getFields().get(2).getName()).isEqualTo("mfield1");
@@ -442,7 +445,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KnowledgeBuilder kBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kBuilder.add(new ByteArrayResource(drl.getBytes()), ResourceType.DRL);
         if (kBuilder.hasErrors()) {
-            System.err.println(kBuilder.getErrors());
+            LOGGER.error(kBuilder.getErrors().toString());
         }
         assertThat(kBuilder.hasErrors()).isFalse();
 
@@ -450,7 +453,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         knowledgeBase.addPackages(kBuilder.getKnowledgePackages());
 
         FactType sw = knowledgeBase.getFactType("org.drools.test", "MultiInhPosTrait");
-        assertThat(sw.getFields().size()).isEqualTo(5);
+        assertThat(sw.getFields()).hasSize(5);
         assertThat(sw.getFields().get(0).getName()).isEqualTo("field0");
         assertThat(sw.getFields().get(1).getName()).isEqualTo("field2");
         assertThat(sw.getFields().get(2).getName()).isEqualTo("field1");
@@ -478,7 +481,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KnowledgeBuilder kBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kBuilder.add(new ByteArrayResource(drl.getBytes()), ResourceType.DRL);
         if (kBuilder.hasErrors()) {
-            System.err.println(kBuilder.getErrors());
+            LOGGER.error(kBuilder.getErrors().toString());
         }
         assertThat(kBuilder.hasErrors()).isFalse();
 
@@ -486,7 +489,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         knowledgeBase.addPackages(kBuilder.getKnowledgePackages());
 
         FactType sw = knowledgeBase.getFactType("org.drools.test", "MultiInhPosTrait");
-        assertThat(sw.getFields().size()).isEqualTo(5);
+        assertThat(sw.getFields()).hasSize(5);
         assertThat(sw.getFields().get(0).getName()).isEqualTo("field1");
         assertThat(sw.getFields().get(1).getName()).isEqualTo("field2");
         assertThat(sw.getFields().get(2).getName()).isEqualTo("mfield0");
@@ -514,7 +517,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KnowledgeBuilder kBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kBuilder.add(new ByteArrayResource(drl.getBytes()), ResourceType.DRL);
         if (kBuilder.hasErrors()) {
-            System.err.println(kBuilder.getErrors());
+            LOGGER.error(kBuilder.getErrors().toString());
         }
         assertThat(kBuilder.hasErrors()).isFalse();
 
@@ -522,7 +525,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         knowledgeBase.addPackages(kBuilder.getKnowledgePackages());
 
         FactType sw = knowledgeBase.getFactType("org.drools.test", "MultiInhPosTrait");
-        assertThat(sw.getFields().size()).isEqualTo(5);
+        assertThat(sw.getFields()).hasSize(5);
         assertThat(sw.getFields().get(0).getName()).isEqualTo("field1");
         assertThat(sw.getFields().get(1).getName()).isEqualTo("field0");
         assertThat(sw.getFields().get(2).getName()).isEqualTo("mfield1");
@@ -556,7 +559,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KnowledgeBuilder kBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kBuilder.add(new ByteArrayResource(drl.getBytes()), ResourceType.DRL);
         if (kBuilder.hasErrors()) {
-            System.err.println(kBuilder.getErrors());
+            LOGGER.error(kBuilder.getErrors().toString());
         }
         assertThat(kBuilder.hasErrors()).isFalse();
 
@@ -564,7 +567,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         knowledgeBase.addPackages(kBuilder.getKnowledgePackages());
 
         FactType sw = knowledgeBase.getFactType("org.drools.test", "MultiInhPosTrait");
-        assertThat(sw.getFields().size()).isEqualTo(6);
+        assertThat(sw.getFields()).hasSize(6);
         assertThat(sw.getFields().get(0).getName()).isEqualTo("field0");
         assertThat(sw.getFields().get(1).getName()).isEqualTo("field1");
         assertThat(sw.getFields().get(2).getName()).isEqualTo("field2");
@@ -599,7 +602,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         KnowledgeBuilder kBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kBuilder.add(new ByteArrayResource(drl.getBytes()), ResourceType.DRL);
         if (kBuilder.hasErrors()) {
-            System.err.println(kBuilder.getErrors());
+            LOGGER.error(kBuilder.getErrors().toString());
         }
         assertThat(kBuilder.hasErrors()).isFalse();
 
@@ -607,7 +610,7 @@ public class TraitTypeGenerationTest extends CommonTraitTest {
         knowledgeBase.addPackages(kBuilder.getKnowledgePackages());
 
         FactType sw = knowledgeBase.getFactType("org.drools.test", "MultiInhPosTrait");
-        assertThat(sw.getFields().size()).isEqualTo(6);
+        assertThat(sw.getFields()).hasSize(6);
         assertThat(sw.getFields().get(0).getName()).isEqualTo("field0");
         assertThat(sw.getFields().get(1).getName()).isEqualTo("field2");
         assertThat(sw.getFields().get(2).getName()).isEqualTo("mfield0");

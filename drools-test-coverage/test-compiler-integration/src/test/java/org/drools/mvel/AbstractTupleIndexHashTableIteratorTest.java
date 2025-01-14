@@ -1,21 +1,26 @@
-/*
- * Copyright (c) 2021. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.drools.mvel;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.compiler.builder.impl.EvaluatorRegistry;
 import org.drools.core.base.ClassFieldAccessorCache;
@@ -23,8 +28,8 @@ import org.drools.base.base.ClassObjectType;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.accessor.ReadAccessor;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
-import org.drools.core.util.Entry;
+import org.drools.base.rule.constraint.BetaConstraint;
+import org.drools.core.util.SingleLinkedEntry;
 import org.drools.core.util.index.IndexMemory;
 import org.drools.core.util.index.TupleIndexHashTable;
 import org.drools.drl.parser.impl.Operator;
@@ -32,23 +37,18 @@ import org.drools.model.functions.Predicate2;
 import org.drools.model.index.BetaIndexImpl;
 import org.drools.modelcompiler.util.EvaluationUtil;
 import org.drools.mvel.accessors.ClassFieldAccessorStore;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public abstract class AbstractTupleIndexHashTableIteratorTest {
 
     public static EvaluatorRegistry registry = new EvaluatorRegistry();
 
-    protected boolean useLambdaConstraint;
-
     private IndexMemory.EqualityMemoryType originalMemoryImpl;
 
-    @Before
+    @BeforeEach
     public void before() {
         try {
             originalMemoryImpl = IndexMemory.getEqualityMemoryType();
@@ -59,7 +59,7 @@ public abstract class AbstractTupleIndexHashTableIteratorTest {
     }
 
 
-    @After
+    @AfterEach
     public void after() {
         try {
             IndexMemory.setEqualityMemoryType(originalMemoryImpl);
@@ -68,15 +68,11 @@ public abstract class AbstractTupleIndexHashTableIteratorTest {
         }
     }
 
-    @Parameterized.Parameters(name = "useLambdaConstraint={0}")
-    public static Collection<Object[]> getParameters() {
-        Collection<Object[]> parameters = new ArrayList<>();
-        parameters.add(new Object[]{false});
-        parameters.add(new Object[]{true});
-        return parameters;
+    public static Stream<Boolean> parameters() {
+        return Stream.of(false, true);
     }
 
-    protected static BetaNodeFieldConstraint createFooThisEqualsDBetaConstraint(boolean useLambdaConstraint) {
+    protected static BetaConstraint createFooThisEqualsDBetaConstraint(boolean useLambdaConstraint) {
         if (useLambdaConstraint) {
             return createFooThisEqualsDBetaConstraintWithLambdaConstraint();
         } else {
@@ -84,7 +80,7 @@ public abstract class AbstractTupleIndexHashTableIteratorTest {
         }
     }
 
-    private static BetaNodeFieldConstraint createFooThisEqualsDBetaConstraintWithLambdaConstraint() {
+    private static BetaConstraint createFooThisEqualsDBetaConstraintWithLambdaConstraint() {
         Pattern pattern = new Pattern(0, new ClassObjectType(Foo.class));
         Pattern varPattern = new Pattern(1, new ClassObjectType(Foo.class));
         Predicate2<Foo, Foo> predicate = new Predicate2.Impl<Foo, Foo>((_this, d) -> EvaluationUtil.areNullSafeEquals(_this, d));
@@ -92,7 +88,7 @@ public abstract class AbstractTupleIndexHashTableIteratorTest {
         return LambdaConstraintTestUtil.createLambdaConstraint2(Foo.class, Foo.class, pattern, varPattern, "d", predicate, index);
     }
 
-    private static BetaNodeFieldConstraint createFooThisEqualsDBetaConstraintWithMvelConstraint() {
+    private static BetaConstraint createFooThisEqualsDBetaConstraintWithMvelConstraint() {
         ClassFieldAccessorStore store = new ClassFieldAccessorStore();
         store.setClassFieldAccessorCache(new ClassFieldAccessorCache(Thread.currentThread().getContextClassLoader()));
         store.setEagerWire(true);
@@ -103,13 +99,13 @@ public abstract class AbstractTupleIndexHashTableIteratorTest {
     }
 
     protected List createTableIndexListForAssertion(TupleIndexHashTable hashTable) {
-        Entry[] table = hashTable.getTable();
-        List list = new ArrayList();
+        SingleLinkedEntry[] table = hashTable.getTable();
+        List                list  = new ArrayList();
         for (int i = 0; i < table.length; i++) {
             if (table[i] != null) {
                 List entries = new ArrayList();
                 entries.add(i);
-                Entry entry = table[i];
+                SingleLinkedEntry entry = table[i];
                 while (entry != null) {
                     entries.add(entry);
                     entry = entry.getNext();

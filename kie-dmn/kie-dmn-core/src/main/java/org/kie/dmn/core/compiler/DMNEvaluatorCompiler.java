@@ -1,19 +1,21 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.compiler;
 
 import static java.util.stream.Collectors.toList;
@@ -36,7 +38,7 @@ import org.kie.dmn.api.core.ast.BusinessKnowledgeModelNode;
 import org.kie.dmn.api.core.ast.DMNNode;
 import org.kie.dmn.api.core.ast.DecisionNode;
 import org.kie.dmn.core.api.DMNExpressionEvaluator;
-import org.kie.dmn.core.api.EvaluatorResult;
+import org.kie.dmn.api.core.EvaluatorResult;
 import org.kie.dmn.core.ast.DMNBaseNode;
 import org.kie.dmn.core.ast.DMNConditionalEvaluator;
 import org.kie.dmn.core.ast.DMNContextEvaluator;
@@ -59,6 +61,7 @@ import org.kie.dmn.core.pmml.DMNImportPMMLInfo;
 import org.kie.dmn.core.pmml.PMMLModelInfo;
 import org.kie.dmn.core.util.Msg;
 import org.kie.dmn.core.util.MsgUtil;
+import org.kie.dmn.core.util.NamespaceUtil;
 import org.kie.dmn.feel.FEEL;
 import org.kie.dmn.feel.lang.CompiledExpression;
 import org.kie.dmn.feel.lang.impl.RootExecutionFrame;
@@ -599,7 +602,7 @@ public class DMNEvaluatorCompiler implements DMNDecisionLogicCompiler {
                                                    index );
             } else if ( ic.getInputExpression().getTypeRef() != null ) {
                 QName inputExpressionTypeRef = ic.getInputExpression().getTypeRef();
-                QName resolvedInputExpressionTypeRef = DMNCompilerImpl.getNamespaceAndName(ic.getInputExpression(), model.getImportAliasesForNS(), inputExpressionTypeRef, model.getNamespace());
+                QName resolvedInputExpressionTypeRef = NamespaceUtil.getNamespaceAndName(ic.getInputExpression(), model.getImportAliasesForNS(), inputExpressionTypeRef, model.getNamespace());
                 BaseDMNTypeImpl typeRef = (BaseDMNTypeImpl) model.getTypeRegistry().resolveType(resolvedInputExpressionTypeRef.getNamespaceURI(), resolvedInputExpressionTypeRef.getLocalPart());
                 inputType = typeRef;
                 if (inputType == null) {
@@ -675,7 +678,7 @@ public class DMNEvaluatorCompiler implements DMNDecisionLogicCompiler {
         java.util.List<DTDecisionRule> rules = new ArrayList<>();
         index = 0;
         for ( DecisionRule dr : dt.getRule() ) {
-            DTDecisionRule rule = new DTDecisionRule( index );
+            DTDecisionRule rule = new DTDecisionRule( index, dr.getId() );
             for ( int i = 0; i < dr.getInputEntry().size(); i++ ) {
                 UnaryTests ut = dr.getInputEntry().get(i);
                 final java.util.List<UnaryTest> tests;
@@ -762,7 +765,7 @@ public class DMNEvaluatorCompiler implements DMNDecisionLogicCompiler {
         BaseDMNTypeImpl typeRef = (BaseDMNTypeImpl) model.getTypeRegistry().unknown();
         if ( oc.getTypeRef() != null ) {
             QName outputExpressionTypeRef = oc.getTypeRef();
-            QName resolvedOutputExpressionTypeRef = DMNCompilerImpl.getNamespaceAndName(oc, model.getImportAliasesForNS(), outputExpressionTypeRef, model.getNamespace());
+            QName resolvedOutputExpressionTypeRef = NamespaceUtil.getNamespaceAndName(oc, model.getImportAliasesForNS(), outputExpressionTypeRef, model.getNamespace());
             typeRef = (BaseDMNTypeImpl) model.getTypeRegistry().resolveType(resolvedOutputExpressionTypeRef.getNamespaceURI(), resolvedOutputExpressionTypeRef.getLocalPart());
             if( typeRef == null ) {
                 typeRef = (BaseDMNTypeImpl) model.getTypeRegistry().unknown();
@@ -771,7 +774,7 @@ public class DMNEvaluatorCompiler implements DMNDecisionLogicCompiler {
             QName inferredTypeRef = recurseUpToInferTypeRef(model, oc, dt);
             // if inferredTypeRef is null, a std err will have been reported
             if (inferredTypeRef != null) {
-                QName resolvedInferredTypeRef = DMNCompilerImpl.getNamespaceAndName(oc, model.getImportAliasesForNS(), inferredTypeRef, model.getNamespace());
+                QName resolvedInferredTypeRef = NamespaceUtil.getNamespaceAndName(oc, model.getImportAliasesForNS(), inferredTypeRef, model.getNamespace());
                 typeRef = (BaseDMNTypeImpl) model.getTypeRegistry().resolveType(resolvedInferredTypeRef.getNamespaceURI(), resolvedInferredTypeRef.getLocalPart());
             }
         }
@@ -970,7 +973,7 @@ public class DMNEvaluatorCompiler implements DMNDecisionLogicCompiler {
     private DMNExpressionEvaluator compileIterator(DMNCompilerContext ctx, DMNModelImpl model, DMNBaseNode node, String exprName, Iterator expression) {
         if (expression.getIteratorVariable() == null || expression.getIteratorVariable().isEmpty()) {
             MsgUtil.reportMessage(logger, DMNMessage.Severity.ERROR, node.getSource(), model, null, null, Msg.MISSING_EXPRESSION_FOR_ITERATOR,
-                    expression.getTypeRef().toString().toLowerCase(), node.getIdentifierString());
+                    "iteratorVariable", node.getIdentifierString());
             return null;
         }
 

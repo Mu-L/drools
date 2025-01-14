@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.util.ArrayList;
@@ -27,10 +30,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.drools.core.reteoo.BetaMemory;
 import org.drools.kiesession.entrypoints.NamedEntryPoint;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.reteoo.AlphaNode;
-import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.BetaNode;
 import org.drools.core.reteoo.ObjectSink;
 import org.drools.core.reteoo.ObjectTypeNode;
@@ -39,8 +42,9 @@ import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.SegmentMemory;
 import org.drools.mvel.CommonTestMethodBase;
 import org.drools.mvel.compiler.StockTick;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.EntryPoint;
@@ -50,7 +54,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@Ignore
+@Disabled
 public class PhreakConcurrencyTest extends CommonTestMethodBase {
 
     // This test already fails with standard-drl (probably not maintained) so not enhanced for exec-model
@@ -156,7 +160,8 @@ public class PhreakConcurrencyTest extends CommonTestMethodBase {
         }
     }
 
-    @Test(timeout = 10000)
+    @Test
+    @Timeout(10000)
     public void testMultipleConcurrentEPs2() {
         String str = "global java.util.List results\n" +
                      "\n" +
@@ -396,7 +401,7 @@ public class PhreakConcurrencyTest extends CommonTestMethodBase {
             ReteEvaluator reteEvaluator = ((NamedEntryPoint)ep).getReteEvaluator();
             ObjectTypeNode otn = ((NamedEntryPoint)ep).getEntryPointNode().getObjectTypeNodes().values().iterator().next();
             AlphaNode alpha = (AlphaNode)otn.getObjectSinkPropagator().getSinks()[0];
-            BetaNode beta = (BetaNode)alpha.getObjectSinkPropagator().getSinks()[0];
+            BetaNode       beta   = (BetaNode)alpha.getObjectSinkPropagator().getSinks()[0];
             BetaMemory memory = (BetaMemory) reteEvaluator.getNodeMemory(beta);
             memory.getSegmentMemory();
 

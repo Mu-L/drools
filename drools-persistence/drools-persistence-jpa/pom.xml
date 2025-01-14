@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
@@ -6,7 +26,7 @@
   <parent>
     <groupId>org.drools</groupId>
     <artifactId>drools-persistence</artifactId>
-    <version>8.40.0-SNAPSHOT</version>
+    <version>999-SNAPSHOT</version>
   </parent>
 
   <artifactId>drools-persistence-jpa</artifactId>
@@ -19,7 +39,6 @@
 
     <!-- These are properties used in the database profiles. Some of them must be initialized
          to be empty so that Maven applies their values via filtering to the resources. -->
-    <maven.hibernate.dialect>org.hibernate.dialect.H2Dialect</maven.hibernate.dialect>
     <maven.datasource.classname>org.h2.jdbcx.JdbcDataSource</maven.datasource.classname>
     <maven.jdbc.driver.class>org.h2.Driver</maven.jdbc.driver.class>
     <maven.jdbc.db.name/>
@@ -54,6 +73,7 @@
           <additionalClasspathElements>
             <additionalClasspathElement>${maven.jdbc.driver.jar}</additionalClasspathElement>
           </additionalClasspathElements>
+          <argLine>-javaagent:${settings.localRepository}/org/apache/openjpa/openjpa/${version.org.apache.openjpa}/openjpa-${version.org.apache.openjpa}.jar</argLine>
         </configuration>
       </plugin>
     </plugins>
@@ -104,11 +124,6 @@
     </dependency>
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
       <artifactId>jaxb-xjc</artifactId>
       <scope>provided</scope>
     </dependency>
@@ -146,29 +161,14 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Hibernate -->
     <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-entitymanager</artifactId>
+      <groupId>org.apache.openjpa</groupId>
+      <artifactId>openjpa</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-core</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.glassfish.jaxb</groupId>
-          <artifactId>jaxb-runtime</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jboss</groupId>
-          <artifactId>jandex</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>${jandex.group-id}</groupId>
+      <groupId>io.smallrye</groupId>
       <artifactId>jandex</artifactId>
       <scope>test</scope>
     </dependency>
@@ -183,12 +183,18 @@
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.jboss.narayana.jta</groupId>
       <artifactId>narayana-jta</artifactId>
@@ -196,7 +202,7 @@
     </dependency>
     <dependency>
       <groupId>org.jboss</groupId>
-      <artifactId>jboss-transaction-spi-jakarta</artifactId>
+      <artifactId>jboss-transaction-spi</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -248,7 +254,11 @@
         </exclusion>
       </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>        
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>

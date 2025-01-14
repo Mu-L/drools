@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
 import java.util.ArrayDeque;
@@ -28,8 +30,9 @@ import org.drools.model.codegen.execmodel.domain.Person;
 import org.drools.model.codegen.execmodel.domain.Pet;
 import org.drools.model.codegen.execmodel.domain.Result;
 import org.drools.model.codegen.execmodel.domain.VariousCasePropFact;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.Message.Level;
 import org.kie.api.definition.type.Modifies;
@@ -40,12 +43,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class PropertyReactivityTest extends BaseModelTest {
 
-    public PropertyReactivityTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test
-    public void testPropertyReactivity() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivity(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -55,7 +55,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -64,8 +64,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testPropertyReactivityWithUpdate() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivityWithUpdate(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -76,7 +77,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    update($p);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -85,8 +86,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testPropertyReactivityMvel() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivityMvel(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -96,7 +98,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { age = $p.age+1 };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -105,8 +107,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testPropertyReactivityMvelWithUpdate() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivityMvelWithUpdate(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -117,7 +120,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    update($p);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -126,8 +129,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testWatch() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWatch(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -137,7 +141,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -146,8 +150,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testWatchAll() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWatchAll(RUN_TYPE runType) {
         // DROOLS-4509
 
         final String str =
@@ -159,7 +164,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -168,8 +173,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(50);
     }
 
-    @Test
-    public void testWatchAllBeforeBeta() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWatchAllBeforeBeta(RUN_TYPE runType) {
         // DROOLS-4509
 
         final String str =
@@ -183,7 +189,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -193,8 +199,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(50);
     }
 
-    @Test
-    public void testWatchAllBeforeFrom() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWatchAllBeforeFrom(RUN_TYPE runType) {
         // DROOLS-4509
 
         final String str =
@@ -208,7 +215,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         p.addAddress( new Address( "Milan" ) );
@@ -219,8 +226,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(50);
     }
 
-    @Test
-    public void testImplicitWatch() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testImplicitWatch(RUN_TYPE runType) {
         String str =
                 "import " + Result.class.getCanonicalName() + ";" +
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -232,7 +240,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "  $r.setValue($p2.getName() + \" is older than \" + $p1.getName());\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Result result = new Result();
         ksession.insert(result);
@@ -260,8 +268,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(result.getValue()).isEqualTo("Edson is older than Mark");
     }
 
-    @Test
-    public void testImplicitWatchWithDeclaration() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testImplicitWatchWithDeclaration(RUN_TYPE runType) {
         String str =
                 "import " + Result.class.getCanonicalName() + ";" +
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -273,7 +282,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "  $r.setValue($p2.getName() + \" is older than \" + $p1.getName());\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Result result = new Result();
         ksession.insert(result);
@@ -301,8 +310,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(result.getValue()).isEqualTo("Edson is older than Mark");
     }
 
-    @Test
-    public void testImmutableField() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testImmutableField(RUN_TYPE runType) {
         final String str =
                 "declare Integer @propertyReactive end\n" +
                 "declare Long @propertyReactive end\n" +
@@ -312,16 +322,17 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "then\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( 42 );
         ksession.insert( 42L );
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-
-    @Test(timeout = 5000L)
-    public void testPRAfterAccumulate() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    @Timeout(5000)
+    public void testPRAfterAccumulate(RUN_TYPE runType) {
         // DROOLS-2427
         final String str =
                 "import " + Order.class.getCanonicalName() + "\n" +
@@ -336,7 +347,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "        modify($o) { setPrice(10) }\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Order order = new Order( Arrays.asList(new OrderLine( 9 ), new OrderLine( 8 )), 12 );
         ksession.insert( order );
@@ -394,8 +405,10 @@ public class PropertyReactivityTest extends BaseModelTest {
         public void setValue(String value) {}
     }
 
-    @Test(timeout = 5000L)
-    public void testPRWithAddOnList() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    @Timeout(5000)
+    public void testPRWithAddOnList(RUN_TYPE runType) {
         final String str =
                 "import " + Bean.class.getCanonicalName() + "\n" +
                 "rule R when\n" +
@@ -405,14 +418,15 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    update($b);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new Bean() );
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testPRWithUpdateOnList() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPRWithUpdateOnList(RUN_TYPE runType) {
         final String str =
                 "import " + List.class.getCanonicalName() + "\n" +
                 "rule R1 when\n" +
@@ -426,14 +440,15 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "then\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new ArrayList() );
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testPROnAtomic() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPROnAtomic(RUN_TYPE runType) {
         final String str =
                 "import " + AtomicInteger.class.getCanonicalName() + "\n" +
                 "rule R2 when\n" +
@@ -444,33 +459,41 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    update($i);" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert(new AtomicInteger(0));
         assertThat(ksession.fireAllRules()).isEqualTo(3);
     }
 
-    @Test(timeout = 10000L)
-    public void testPropertyReactivityWith2Rules() {
-        checkPropertyReactivityWith2Rules( "age == 41\n" );
+    @ParameterizedTest
+	@MethodSource("parameters")
+    @Timeout(10000)
+    public void testPropertyReactivityWith2Rules(RUN_TYPE runType) {
+        checkPropertyReactivityWith2Rules(runType, "age == 41\n");
     }
 
-    @Test(timeout = 10000L)
-    public void testPropertyReactivityWith2RulesUsingAccessor() {
-        checkPropertyReactivityWith2Rules( "getAge() == 41\n" );
+    @ParameterizedTest
+	@MethodSource("parameters")
+    @Timeout(10000)
+    public void testPropertyReactivityWith2RulesUsingAccessor(RUN_TYPE runType) {
+        checkPropertyReactivityWith2Rules(runType, "getAge() == 41\n");
     }
 
-    @Test(timeout = 10000L)
-    public void testPropertyReactivityWith2RulesLiteralFirst() {
-        checkPropertyReactivityWith2Rules( "41 == age\n" );
+    @ParameterizedTest
+	@MethodSource("parameters")
+    @Timeout(10000)
+    public void testPropertyReactivityWith2RulesLiteralFirst(RUN_TYPE runType) {
+        checkPropertyReactivityWith2Rules(runType, "41 == age\n");
     }
 
-    @Test(timeout = 10000L)
-    public void testPropertyReactivityWith2RulesLiteralFirstUsingAccessor() {
-        checkPropertyReactivityWith2Rules( "41 == getAge()\n" );
+    @ParameterizedTest
+	@MethodSource("parameters")
+    @Timeout(10000)
+    public void testPropertyReactivityWith2RulesLiteralFirstUsingAccessor(RUN_TYPE runType) {
+        checkPropertyReactivityWith2Rules(runType, "41 == getAge()\n");
     }
 
-    private void checkPropertyReactivityWith2Rules( String constraint ) {
+    private void checkPropertyReactivityWith2Rules(RUN_TYPE runType, String constraint) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -485,7 +508,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setEmployed( true ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person( "Mario", 40 );
         ksession.insert( p );
@@ -495,8 +518,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getEmployed()).isTrue();
     }
 
-    @Test
-    public void testReassignment() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testReassignment(RUN_TYPE runType) {
         // DROOLS-4884
         final String str =
                 "package com.example\n" +
@@ -521,13 +545,14 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    update($c);\n" +
                 "end\n\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         assertThat(ksession.fireAllRules(5)).isEqualTo(5);
     }
 
-    @Test
-    public void testReassignment2() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testReassignment2(RUN_TYPE runType) {
         // DROOLS-4884
         final String str =
                 "package com.example\n" +
@@ -552,13 +577,14 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    update($c);\n" +
                 "end\n\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         assertThat(ksession.fireAllRules(5)).isEqualTo(2);
     }
 
-    @Test
-    public void testMultipleFieldUpdate() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultipleFieldUpdate(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -573,7 +599,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         p.setLikes("Beer");
@@ -583,8 +609,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(42);
     }
 
-    @Test
-    public void testComplexSetterArgument() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testComplexSetterArgument(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                 "rule R \n" +
@@ -594,7 +621,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setLikes( String.valueOf(($p.getAddress().getStreet() + $p.getAddress().getCity()))) };\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person me = new Person( "Mario", 40 );
         me.setAddress(new Address("street1", 2, "city1"));
@@ -605,8 +632,51 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(me.getLikes()).isEqualTo("street1city1");
     }
 
-    @Test
-    public void testNestedPropInRHS() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void thisWithGetter(RUN_TYPE runType) {
+        String str =
+                "import " + Person.class.getCanonicalName() + ";" +
+                        "rule R \n" +
+                        "when\n" +
+                        "    $p: Person(this.getAddress() != null)\n" +
+                        "then\n" +
+                        "    modify($p) { setLikes(\"Cheese\") };\n" +
+                        "end";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        Person me = new Person( "Mario", 40 );
+        me.setAddress(new Address("street1", 2, "city1"));
+        ksession.insert( me );
+
+        assertThat(ksession.fireAllRules(10)).as("should not loop").isEqualTo(1);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void nullSafeDereferencing(RUN_TYPE runType) {
+        String str =
+                "import " + Person.class.getCanonicalName() + ";" +
+                        "rule R \n" +
+                        "when\n" +
+                        "    $p: Person(address!.street == \"street1\")\n" +
+                        "then\n" +
+                        "    modify($p) { setLikes(\"Cheese\") };\n" +
+                        "end";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        Person me = new Person( "Mario", 40 );
+        me.setAddress(new Address("street1", 2, "city1"));
+        ksession.insert( me );
+
+        assertThat(ksession.fireAllRules(10)).as("should not loop").isEqualTo(1);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNestedPropInRHS(RUN_TYPE runType) throws Exception {
         // Property Reactivity for "owner"
         final String str =
                 "package org.drools.test;\n" +
@@ -623,7 +693,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "then\n" +
                            "end";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Pet pet = new Pet(Pet.PetType.cat);
         Person person = new Person("John");
@@ -635,8 +705,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testDeeplyNestedPropInRHS() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDeeplyNestedPropInRHS(RUN_TYPE runType) throws Exception {
         // Property Reactivity for "owner"
         final String str =
                 "package org.drools.test;\n" +
@@ -653,7 +724,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "then\n" +
                            "end";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Pet pet = new Pet(Pet.PetType.cat);
         Person person = new Person("John");
@@ -665,8 +736,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testOutsideModifyBlockWithGetterAsArgument() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOutsideModifyBlockWithGetterAsArgument(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                            "\n" +
@@ -677,7 +749,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($p) { setAge(41) };\n" +
                            "end\n";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert(p);
@@ -687,8 +759,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testOutsideModifyBlockWithNonGetterAsArgument() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOutsideModifyBlockWithNonGetterAsArgument(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                            "\n" +
@@ -699,7 +772,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($p) { setAge(41) };\n" +
                            "end\n";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert(p);
@@ -709,8 +782,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testMultipleModifyBlocksWithNonGetterAsArgument() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultipleModifyBlocksWithNonGetterAsArgument(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "import " + Address.class.getCanonicalName() + ";\n" +
@@ -726,7 +800,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($a) { setNumber(20) };\n" +
                            "end\n";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert(p);
@@ -741,8 +815,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(a.getNumber()).isEqualTo(20);
     }
 
-    @Test
-    public void testUpdateWithGetterAsArgument() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUpdateWithGetterAsArgument(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                            "\n" +
@@ -754,7 +829,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    update($p);\n" +
                            "end\n";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert(p);
@@ -764,8 +839,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testUpdateWithNonGetterAsArgument() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUpdateWithNonGetterAsArgument(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                            "\n" +
@@ -777,7 +853,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    update($p);\n" +
                            "end\n";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert(p);
@@ -787,8 +863,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testUpdateWithNonGetterAsDeclaration() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUpdateWithNonGetterAsDeclaration(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                            "\n" +
@@ -801,7 +878,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    update($p);\n" +
                            "end\n";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert(p);
@@ -811,8 +888,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testUpdateWithNonGetterIntentinalLoop() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUpdateWithNonGetterIntentinalLoop(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                            "\n" +
@@ -824,7 +902,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    update($p);\n" +
                            "end\n";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert(p);
@@ -837,8 +915,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testPropertyReactivityOnBoundVariable() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivityOnBoundVariable(RUN_TYPE runType) {
         // RHDM-1387
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -849,7 +928,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -862,8 +941,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         return i;
     }
 
-    @Test
-    public void testWatchCallingExternalMethod() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWatchCallingExternalMethod(RUN_TYPE runType) {
         // DROOLS-5514
         final String str =
                 "import static " + this.getClass().getCanonicalName() + ".dummy;\n" +
@@ -875,7 +955,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -884,8 +964,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(50);
     }
 
-    @Test
-    public void testWatchCallingExternalMethod2() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWatchCallingExternalMethod2(RUN_TYPE runType) {
         // DROOLS-5514
         final String str =
                 "import static " + this.getClass().getCanonicalName() + ".dummy;\n" +
@@ -897,7 +978,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setName( $p.getName()+\"1\" ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -906,8 +987,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getName()).isEqualTo("Mario111");
     }
 
-    @Test
-    public void testWatchCallingExternalMethod3() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWatchCallingExternalMethod3(RUN_TYPE runType) {
         // DROOLS-5514
         final String str =
                 "import static " + this.getClass().getCanonicalName() + ".dummy;\n" +
@@ -919,7 +1001,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setName( $p.getName()+\"1\" ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -928,8 +1010,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getName()).isEqualTo("Mario1");
     }
 
-    @Test
-    public void test2PropertiesInOneExpression() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void test2PropertiesInOneExpression(RUN_TYPE runType) {
         // DROOLS-5677
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -956,7 +1039,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setSalary( 100 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("John", 0);
         p.setSalary(0);
@@ -969,8 +1052,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getSalary().intValue()).isEqualTo(20); // R2 should be cancelled
     }
 
-    @Test
-    public void test3PropertiesInOneExpression() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void test3PropertiesInOneExpression(RUN_TYPE runType) {
         // DROOLS-5677
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1004,7 +1088,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setSalary( 100 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("John", 0);
         p.setSalary(0);
@@ -1020,6 +1104,7 @@ public class PropertyReactivityTest extends BaseModelTest {
 
     public static class Fact {
         private int a;
+        private int b;
         private String result;
 
         public int getA() {
@@ -1028,6 +1113,14 @@ public class PropertyReactivityTest extends BaseModelTest {
 
         public void setA(int a) {
             this.a = a;
+        }
+
+        public int getB() {
+            return b;
+        }
+
+        public void setB(int b) {
+            this.b = b;
         }
 
         public String getResult() {
@@ -1039,6 +1132,18 @@ public class PropertyReactivityTest extends BaseModelTest {
         }
     }
 
+    public static class AnotherFact {
+        private int a;
+
+        public int getA() {
+            return a;
+        }
+
+        public void setA(int a) {
+            this.a = a;
+        }
+    }
+
     public static String convertToString(int num) {
         if (num < 1000) {
             return "SMALL";
@@ -1046,8 +1151,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         return "BIG";
     }
 
-    @Test
-    public void testExternalFunction() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testExternalFunction(RUN_TYPE runType) {
         // BAPL-1773
         final String str =
                 "import " + Fact.class.getCanonicalName() + ";\n" +
@@ -1059,7 +1165,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($fact) { setResult(\"OK\") };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Fact fact = new Fact();
         fact.setA(99999);
@@ -1070,8 +1176,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(fact.getResult()).isEqualTo("OK");
     }
 
-    @Test
-    public void testExternalFunction2() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testExternalFunction2(RUN_TYPE runType) {
         // BAPL-1773
         final String str =
                 "import " + Fact.class.getCanonicalName() + ";\n" +
@@ -1083,7 +1190,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($fact) { setA(99999) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Fact fact = new Fact();
         fact.setA(99999);
@@ -1093,8 +1200,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(ksession.fireAllRules(3)).isEqualTo(3);
     }
 
-    @Test
-    public void externalFunctionWithBindVariable_shouldNotCauseInfiniteLoop() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void externalFunctionWithBindVariable_shouldNotCauseInfiniteLoop(RUN_TYPE runType) {
         // DROOLS-7372
         final String str = "import " + Fact.class.getCanonicalName() + ";\n" +
                            "import static " + PropertyReactivityTest.class.getCanonicalName() + ".*;\n" +
@@ -1105,7 +1213,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($fact) { setResult(\"OK\") };\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Fact bigString = new Fact();
         bigString.setA(99999);
@@ -1118,8 +1226,93 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(bigString.getResult()).isEqualTo("OK");
     }
 
-    @Test
-    public void testUnwatch() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void externalFunctionWithBindVariableFromAnotherPatternOfSameType_shouldTriggerClassReactive(RUN_TYPE runType) {
+        // DROOLS-7398
+        final String str =
+                "import " + Fact.class.getCanonicalName() + ";\n" +
+                           "import static " + PropertyReactivityTest.class.getCanonicalName() + ".*;\n" +
+                           "rule R when\n" +
+                           "    $fact1 : Fact( $id : a )\n" +
+                           "    $fact2 : Fact( convertToString($id) == \"BIG\" )\n" +
+                           "then\n" +
+                           "    modify($fact2) { setResult(\"OK\") };\n" +
+                           "end\n";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        Fact bigStringFact = new Fact();
+        bigStringFact.setA(99999);
+        bigStringFact.setResult("NG");
+        ksession.insert(bigStringFact);
+        int fired = ksession.fireAllRules(10); // intentional loop
+
+        assertThat(fired).as("$id comes from a different pattern, so it triggers class reactivity, not property reactivity.")
+                         .isEqualTo(10);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void multipleExternalFunctionsWithBindVariablesFromAnotherPatternOfSameType_shouldTriggerClassReactive(RUN_TYPE runType) {
+        // DROOLS-7398
+        final String str =
+                "import " + Fact.class.getCanonicalName() + ";\n" +
+                           "import static " + PropertyReactivityTest.class.getCanonicalName() + ".*;\n" +
+                           "rule R when\n" +
+                           "    $fact1 : Fact( $id_a : a, $id_b : b )\n" +
+                           "    $fact2 : Fact( convertToString($id_a) == convertToString($id_b) )\n" +
+                           "then\n" +
+                           "    modify($fact2) { setResult(\"OK\") };\n" +
+                           "end\n";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        Fact bigStringFact = new Fact();
+        bigStringFact.setA(99999);
+        bigStringFact.setB(99999);
+        bigStringFact.setResult("NG");
+        ksession.insert(bigStringFact);
+        int fired = ksession.fireAllRules(10); // intentional loop
+
+        assertThat(fired).as("$id comes from a different pattern, so it triggers class reactivity, not property reactivity.")
+                         .isEqualTo(10);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void externalFunctionWithBindVariableFromAnotherPatternOfDifferentType_shouldTriggerClassReactive(RUN_TYPE runType) {
+        // DROOLS-7390
+        final String str =
+                "import " + Fact.class.getCanonicalName() + ";\n" +
+                        "import " + AnotherFact.class.getCanonicalName() + ";\n" +
+                           "import static " + PropertyReactivityTest.class.getCanonicalName() + ".*;\n" +
+                           "rule R when\n" +
+                           "    $fact1 : AnotherFact( $id : a )\n" +
+                           "    $fact2 : Fact( convertToString($id) == \"BIG\" )\n" +
+                           "then\n" +
+                           "    modify($fact2) { setResult(\"OK\") };\n" +
+                           "end\n";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        AnotherFact bigStringAnotherFact = new AnotherFact();
+        bigStringAnotherFact.setA(99999);
+        ksession.insert(bigStringAnotherFact);
+
+        Fact smallStringFact = new Fact();
+        smallStringFact.setA(1);
+        smallStringFact.setResult("NG");
+        ksession.insert(smallStringFact);
+        int fired = ksession.fireAllRules(10); // intentional loop
+
+        assertThat(fired).as("$id comes from a different pattern, so it triggers class reactivity, not property reactivity.")
+                         .isEqualTo(10);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUnwatch(RUN_TYPE runType) {
         // RHDM-1553
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1130,7 +1323,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge() + 1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1139,8 +1332,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testUnwatchWithFieldBinding() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUnwatchWithFieldBinding(RUN_TYPE runType) {
         // RHDM-1553
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1151,7 +1345,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $age + 1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1160,8 +1354,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testUnwatchWithFieldBindingAndMvel() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUnwatchWithFieldBindingAndMvel(RUN_TYPE runType) {
         // RHDM-1553
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1172,7 +1367,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { age = $age + 1 };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1181,8 +1376,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testUnwatchWithWatchedField() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUnwatchWithWatchedField(RUN_TYPE runType) {
         // RHDM-1553
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1193,7 +1389,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge() + 1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1202,8 +1398,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(43);
     }
 
-    @Test
-    public void testNoConstraint() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNoConstraint(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -1213,7 +1410,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setAge( $p.getAge()+1 ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1222,8 +1419,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testNoConstraintWithUpdate() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNoConstraintWithUpdate(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -1234,7 +1432,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    update($p);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1243,8 +1441,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testModifiesAnnotation() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testModifiesAnnotation(RUN_TYPE runType) {
         final String str =
                 "import " + Light.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -1254,7 +1453,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($l) { turnOn() };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Light l = new Light("Alert");
         ksession.insert( l );
@@ -1293,8 +1492,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testSettersInAndOutModifyBlock() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSettersInAndOutModifyBlock(RUN_TYPE runType) {
         // RHDM-1552
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1306,7 +1506,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setName( \"Mario\" ) };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1315,8 +1515,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(43);
     }
 
-    @Test
-    public void testSettersInAndOutModifyBlockMvel() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSettersInAndOutModifyBlockMvel(RUN_TYPE runType) {
         // RHDM-1552
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1328,7 +1529,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { name = \"Mario\" };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1337,8 +1538,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getAge()).isEqualTo(43);
     }
 
-    @Test
-    public void testMvelModifyBlockWithComma() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMvelModifyBlockWithComma(RUN_TYPE runType) {
         // RHDM-1552
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1349,7 +1551,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    modify($p) { setName(\"Mario\"), age = $p.age + 1 };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1398,8 +1600,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testUpdateNonPropertyInMvel() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUpdateNonPropertyInMvel(RUN_TYPE runType) {
         // DROOLS-6096
         final String str =
                 "import " + AssessmentContext.class.getCanonicalName() + ";\n" +
@@ -1423,7 +1626,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    update($ac);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         AssessmentContext ac1 = new AssessmentContext();
         ac1.pushStackFrame(null);
@@ -1434,8 +1637,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(ksession.fireAllRules(2)).isEqualTo(2);
     }
 
-    @Test
-    public void testPropertyReactivityWithPublicField() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivityWithPublicField(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                            "rule R1 when\n" +
@@ -1452,7 +1656,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "then\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("John");
         p.publicAge = 40;
@@ -1463,8 +1667,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.publicAge).isEqualTo(41);
     }
 
-    @Test
-    public void testUnknownPropertyNameInWatch() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testUnknownPropertyNameInWatch(RUN_TYPE runType) throws Exception {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                            "global java.util.List result;\n" +
@@ -1480,12 +1685,13 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($p) { setAge(20) }\n" +
                            "end\n";
 
-        KieBuilder kbuilder = createKieBuilder(str);
+        KieBuilder kbuilder = createKieBuilder(runType, str);
         assertThat(kbuilder.getResults().hasMessages(Level.ERROR)).isTrue();
     }
 
-    @Test
-    public void testSetterWithoutGetter() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSetterWithoutGetter(RUN_TYPE runType) {
         // DROOLS-6523
         final String str =
                 "import " + ClassWithValue.class.getCanonicalName() + ";\n" +
@@ -1496,7 +1702,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "        update($cwv);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ClassWithValue cwv = new ClassWithValue();
         ksession.insert(cwv);
@@ -1527,8 +1733,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testPropertyReactivityOn2Properties() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivityOn2Properties(RUN_TYPE runType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "\n" +
@@ -1541,7 +1748,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1551,8 +1758,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(p.getId()).isEqualTo(1);
     }
 
-    @Test
-    public void testPropertyReactivityOn2PropertiesWithWrongSeparator() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivityOn2PropertiesWithWrongSeparator(RUN_TYPE runType) {
         // DROOLS-6480
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1566,12 +1774,13 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    };\n" +
                 "end\n";
 
-        KieBuilder kbuilder = createKieBuilder(str);
+        KieBuilder kbuilder = createKieBuilder(runType, str);
         assertThat(kbuilder.getResults().hasMessages(Level.ERROR)).isTrue();
     }
 
-    @Test
-    public void testMvelModifyAfterSingleQuote() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMvelModifyAfterSingleQuote(RUN_TYPE runType) {
         // DROOLS-6542
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1589,7 +1798,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                 "    insert(\"ok\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert( p );
@@ -1599,38 +1808,43 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(ksession.getObjects((Object object) -> object.equals("ok")).size()).isEqualTo(1);
     }
 
-    @Test
-    public void testOnlyFirstLetterIsUpperCaseProperty() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOnlyFirstLetterIsUpperCaseProperty(RUN_TYPE runType) {
         // See JavaBeans 1.01 spec : 8.8 Capitalization of inferred names
         // “FooBah” becomes “fooBah”
-        testVariousCasePropFact("modify($f) { MyTarget = \"123\" };", "R1", "R2"); // Actually, this modifies "myTarget" property (backed by private "MyTarget" field). This shouldn't react R1
+        testVariousCasePropFact(runType, "modify($f) { MyTarget = \"123\" };", "R1", "R2"); // Actually, this modifies "myTarget" property (backed by private "MyTarget" field). This shouldn't react R1
     }
 
-    @Test
-    public void testTwoFirstLettersAreUpperCaseProperty() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testTwoFirstLettersAreUpperCaseProperty(RUN_TYPE runType) {
         // See JavaBeans 1.01 spec : 8.8 Capitalization of inferred names
         // “URL” becomes “URL”
-        testVariousCasePropFact("modify($f) { URL = \"123\" };", "R1", "R2"); // This shouldn't react R1
+        testVariousCasePropFact(runType, "modify($f) { URL = \"123\" };", "R1", "R2"); // This shouldn't react R1
     }
 
-    @Test
-    public void testFirstLetterIsMultibyteProperty() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFirstLetterIsMultibyteProperty(RUN_TYPE runType) {
         // Multibyte is not mentioned in JavaBeans spec
-        testVariousCasePropFact("modify($f) { 名前 = \"123\" };", "R1", "R2"); // This shouldn't react R1
+        testVariousCasePropFact(runType, "modify($f) { 名前 = \"123\" };", "R1", "R2"); // This shouldn't react R1
     }
 
-    @Test
-    public void testOnlyFirstLetterIsUpperCaseAndMultibyteProperty() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOnlyFirstLetterIsUpperCaseAndMultibyteProperty(RUN_TYPE runType) {
         // Multibyte is not mentioned in JavaBeans spec
-        testVariousCasePropFact("modify($f) { My名前 = \"123\" };", "R1", "R2"); // Actually, this modifies "my名前" property (backed by private "My名前" field). This shouldn't react R1
+        testVariousCasePropFact(runType, "modify($f) { My名前 = \"123\" };", "R1", "R2"); // Actually, this modifies "my名前" property (backed by private "My名前" field). This shouldn't react R1
     }
 
-    @Test
-    public void testOnlyFirstLetterIsUpperCasePublicFieldProperty() {
-        testVariousCasePropFact("modify($f) { MyPublicTarget = \"123\" };", "R1", "R2"); // this modifies "MyPublicTarget" public field directly. This shouldn't react R1
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOnlyFirstLetterIsUpperCasePublicFieldProperty(RUN_TYPE runType) {
+        testVariousCasePropFact(runType, "modify($f) { MyPublicTarget = \"123\" };", "R1", "R2"); // this modifies "MyPublicTarget" public field directly. This shouldn't react R1
     }
 
-    private void testVariousCasePropFact(String modifyStatement, String... expectedResults) {
+    private void testVariousCasePropFact(RUN_TYPE runType, String modifyStatement, String... expectedResults) {
         final String str =
                 "import " + VariousCasePropFact.class.getCanonicalName() + ";\n" +
                            "dialect \"mvel\"\n" +
@@ -1651,7 +1865,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            modifyStatement + "\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> results = new ArrayList<>();
         ksession.setGlobal("results", results);
 
@@ -1663,8 +1877,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(results).containsExactly(expectedResults);
     }
 
-    @Test
-    public void bindOnlyPropertyReacts() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bindOnlyPropertyReacts(RUN_TYPE runType) {
         // DROOLS-7214
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1675,7 +1890,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($p) { age = $age + 1 };\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         ksession.insert(p);
@@ -1684,8 +1899,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(fired).isEqualTo(10);
     }
 
-    @Test
-    public void bindOnlyMapPropertyReacts() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bindOnlyMapPropertyReacts(RUN_TYPE runType) {
         // DROOLS-7214
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1697,7 +1913,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($p) { itemsString = $p.itemsString };\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         p.getItemsString().put("A", "itemA");
@@ -1707,8 +1923,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(fired).isEqualTo(10);
     }
 
-    @Test
-    public void bindOnlyMapPropertyWithAccessOperatorReacts() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bindOnlyMapPropertyWithAccessOperatorReacts(RUN_TYPE runType) {
         // DROOLS-7214
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1720,7 +1937,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($p) { itemsString = $p.itemsString };\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         p.getItemsString().put("A", "itemA");
@@ -1730,8 +1947,9 @@ public class PropertyReactivityTest extends BaseModelTest {
         assertThat(fired).isEqualTo(10);
     }
 
-    @Test
-    public void bindOnlyListPropertyWithAccessOperatorReacts() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bindOnlyListPropertyWithAccessOperatorReacts(RUN_TYPE runType) {
         // DROOLS-7214
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -1744,7 +1962,7 @@ public class PropertyReactivityTest extends BaseModelTest {
                            "    modify($p) { addresses = $p.addresses };\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Person p = new Person("Mario", 40);
         p.getAddresses().add(new Address("A"));
@@ -1753,5 +1971,28 @@ public class PropertyReactivityTest extends BaseModelTest {
         int fired = ksession.fireAllRules(10); // intentional loop
 
         assertThat(fired).isEqualTo(10);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testPropertyReactivityWithRedundantVariableDeclaration(RUN_TYPE runType) {
+        // KIE-DROOLS-5943
+        final String str =
+                "import " + Person.class.getCanonicalName() + ";\n" +
+                "\n" +
+                "rule R when\n" +
+                "    $p : Person( $p.name == \"Mario\" )\n" +
+                "then\n" +
+                "    $p.setAge( $p.getAge()+1 );\n" +
+                "    update($p);\n" +
+                "end\n";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        Person p = new Person("Mario", 40);
+        ksession.insert( p );
+        ksession.fireAllRules(3);
+
+        assertThat(p.getAge()).isEqualTo(41);
     }
 }

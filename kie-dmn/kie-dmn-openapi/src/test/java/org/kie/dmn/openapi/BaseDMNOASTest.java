@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.openapi;
 
 import java.io.IOException;
@@ -36,11 +38,11 @@ import org.kie.dmn.openapi.model.DMNOASResult;
 
 public abstract class BaseDMNOASTest {
 
-    protected DMNRuntime createRuntime(String string, Class<?> class1) {
+    protected static DMNRuntime createRuntime(String string, Class<?> class1) {
         return BaseVariantTest.VariantTestConf.KIE_API_TYPECHECK.createRuntime(string, class1);
     }
 
-    protected DMNRuntime createRuntimeWithAdditionalResources(String string, Class<?> class1, String... string2) {
+    protected static DMNRuntime createRuntimeWithAdditionalResources(String string, Class<?> class1, String... string2) {
         return BaseVariantTest.VariantTestConf.KIE_API_TYPECHECK.createRuntimeWithAdditionalResources(string, class1, string2);
     }
     
@@ -52,7 +54,7 @@ public abstract class BaseDMNOASTest {
         return mapper.readTree(content);
     }
 
-    protected JsonSchema getJSONSchema(JsonNode schemaContent) {
+    protected static JsonSchema getJSONSchema(JsonNode schemaContent) {
         JsonSchemaFactory factory = JsonSchemaFactory.getInstance(com.networknt.schema.SpecVersion.VersionFlag.V4);
         return factory.getSchema(schemaContent);
     }
@@ -61,12 +63,12 @@ public abstract class BaseDMNOASTest {
         return validator.validate(readJSON(json));
     }
 
-    protected ObjectNode synthesizeSchema(DMNOASResult result, DMNModel modelUnderTest) {
+    protected static ObjectNode synthesizeSchema(DMNOASResult result, DMNModel modelUnderTest) {
         DMNType InputSetTypeUT = result.lookupIOSetsByModel(modelUnderTest).getInputSet();
         return synthesizeSchema(result, InputSetTypeUT);
     }
 
-    private ObjectNode synthesizeSchema(DMNOASResult result, DMNType InputSetTypeUT) {
+    private static ObjectNode synthesizeSchema(DMNOASResult result, DMNType InputSetTypeUT) {
         String dollarRef = result.getNamingPolicy().getRef(InputSetTypeUT);
         ObjectNode syntheticJSONSchema = result.getJsonSchemaNode().deepCopy();
         JsonUtil.stringProperty(syntheticJSONSchema, "$ref", dollarRef);

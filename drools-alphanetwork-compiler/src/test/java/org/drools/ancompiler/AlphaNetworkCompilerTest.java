@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.ancompiler;
 
 import java.io.Serializable;
@@ -25,7 +27,8 @@ import org.drools.kiesession.entrypoints.NamedEntryPoint;
 import org.drools.core.reteoo.CompositeObjectSinkAdapter;
 import org.drools.core.reteoo.ObjectSinkPropagator;
 import org.drools.core.reteoo.ObjectTypeNode;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieServices;
 import org.kie.api.builder.ReleaseId;
 import org.kie.api.builder.model.KieModuleModel;
@@ -37,9 +40,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AlphaNetworkCompilerTest extends BaseModelTest {
 
-    public AlphaNetworkCompilerTest(RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
 
     public class Message implements Serializable {
         private final String value;
@@ -53,8 +53,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testNonHashedAlphaNode() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testNonHashedAlphaNode(RUN_TYPE testRunType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "global java.util.List resultsM;\n" +
@@ -73,7 +74,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         final List<Person> resultsM = new ArrayList<>();
         final List<Person> resultsL = new ArrayList<>();
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.setGlobal("resultsM", resultsM);
         ksession.setGlobal("resultsL", resultsL);
@@ -93,8 +94,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(resultsL.iterator().next()).isEqualTo(luca);
     }
 
-    @Test
-    public void testNormalizationForAlphaIndexing() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testNormalizationForAlphaIndexing(RUN_TYPE testRunType) {
         final String str =
                 "package org.drools.test;\n" +
                         "import " + Person.class.getCanonicalName() + ";\n" +
@@ -111,7 +113,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "then\n" +
                         "end\n";
 
-        final KieSession ksession = getKieSession(str);
+        final KieSession ksession = getKieSession(testRunType, str);
 
         ObjectTypeNode otn = ((NamedEntryPoint) ksession.getEntryPoint("DEFAULT")).getEntryPointNode().getObjectTypeNodes().entrySet()
                 .stream()
@@ -120,7 +122,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                 .findFirst()
                 .get();
         ObjectSinkPropagator objectSinkPropagator = otn.getObjectSinkPropagator();
-        if(this.testRunType.isAlphaNetworkCompiler()) {
+        if(testRunType.isAlphaNetworkCompiler()) {
             objectSinkPropagator = ((CompiledNetwork)objectSinkPropagator).getOriginalSinkPropagator();
         }
         CompositeObjectSinkAdapter sinkAdaptor = (CompositeObjectSinkAdapter) objectSinkPropagator;
@@ -133,8 +135,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testNodeHashingWithMultipleConditions() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testNodeHashingWithMultipleConditions(RUN_TYPE testRunType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "global java.util.List results;\n" +
@@ -154,7 +157,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
 
         final List<Person> results = new ArrayList<>();
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.setGlobal("results", results);
 
@@ -173,8 +176,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
 
     }
 
-    @Test
-    public void testHashedInteger() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testHashedInteger(RUN_TYPE testRunType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "global java.util.List resultsM;\n" +
@@ -193,7 +197,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         final List<Person> resultsM = new ArrayList<>();
         final List<Person> resultsL = new ArrayList<>();
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.setGlobal("resultsM", resultsM);
         ksession.setGlobal("resultsL", resultsL);
@@ -213,8 +217,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(resultsL.iterator().next()).isEqualTo(luca);
     }
 
-    @Test
-    public void testAlphaConstraint() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testAlphaConstraint(RUN_TYPE testRunType) {
         String str =
                 "rule \"Bind\"\n" +
                         "when\n" +
@@ -222,7 +227,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "then\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.insert("Luca");
         ksession.insert("Asdrubale");
@@ -230,8 +235,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testAlphaConstraintsSwitchString() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testAlphaConstraintsSwitchString(RUN_TYPE testRunType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "rule \"Bind1\"\n" +
@@ -250,7 +256,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "then\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.insert(new Person("Luca"));
         ksession.insert(new Person("Asdrubale"));
@@ -261,8 +267,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
     /*
         This generates the switch but not the inlining
      */
-    @Test
-    public void testAlphaConstraintsSwitchBigDecimal() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testAlphaConstraintsSwitchBigDecimal(RUN_TYPE testRunType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "import " + BigDecimal.class.getCanonicalName() + ";" +
@@ -282,7 +289,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "then\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.insert(new Person("Luca", new BigDecimal(0)));
         ksession.insert(new Person("Asdrubale", new BigDecimal(10)));
@@ -290,8 +297,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testAlphaConstraintsSwitchPerson() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testAlphaConstraintsSwitchPerson(RUN_TYPE testRunType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "rule \"Bind1\"\n" +
@@ -310,7 +318,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "then\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.insert(new Person("Luca"));
         ksession.insert(new Person("Asdrubale"));
@@ -318,8 +326,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testAlphaConstraintsSwitchIntegers() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testAlphaConstraintsSwitchIntegers(RUN_TYPE testRunType) {
         String str =
                 "rule \"Bind1\"\n" +
                         "when\n" +
@@ -337,7 +346,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "then\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.insert("Luca");
         ksession.insert("Asdrubale");
@@ -345,8 +354,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testEnum() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testEnum(RUN_TYPE testRunType) {
         String str =
                 "import " + EnumFact1.class.getCanonicalName() + ";\n" +
                         "import " + ChildFactWithEnum1.class.getCanonicalName() + ";\n" +
@@ -363,14 +373,15 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "then\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
         ksession.insert(new ChildFactWithEnum1(1, 3, EnumFact1.FIRST));
         ksession.insert(new ChildFactWithEnum1(1, 3, EnumFact1.SECOND));
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testAlphaConstraintWithModification() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testAlphaConstraintWithModification(RUN_TYPE testRunType) {
         String str =
                         "global java.util.List results;\n" +
                         "rule \"Bind\"\n" +
@@ -380,7 +391,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "  results.add($s + \" is greater than 4 and smaller than 10\");\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.insert("Luca");
         ksession.insert("Asdrubale");
@@ -394,8 +405,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(results.iterator().next()).isEqualTo("Asdrubale is greater than 4 and smaller than 10");
     }
 
-    @Test
-    public void testModify() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testModify(RUN_TYPE testRunType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "rule \"Modify\"\n" +
@@ -405,7 +417,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "   modify($p) { setName($p.getName() + \"30\"); }" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         final Person luca = new Person("Luca", 30);
         ksession.insert(luca);
@@ -416,8 +428,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(luca.getName()).isEqualTo("Luca30");
     }
 
-    @Test
-    public void testModify2() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testModify2(RUN_TYPE testRunType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "global java.util.List results;\n" +
@@ -428,7 +441,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "   modify($p) { setAge($p.getAge() + 1); }" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         final Person luca = new Person("Luca", 30);
         ksession.insert(luca);
@@ -442,8 +455,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(luca.getAge() == 40).isTrue();
     }
 
-    @Test
-    public void testAlphaConstraintNagate() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testAlphaConstraintNagate(RUN_TYPE testRunType) {
         final String str =
                 "import " + Person.class.getCanonicalName() + ";\n" +
                         "rule R1 when\n" +
@@ -451,17 +465,15 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
                         "then\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
-        try {
+        try (KieSession ksession = getKieSession(testRunType, str)) {
             ksession.insert(new Person("Mario", 45));
             assertThat(ksession.fireAllRules()).isEqualTo(0);
-        } finally {
-            ksession.dispose();
         }
     }
 
-    @Test
-    public void testKJarUpgradeWithDeclaredType() throws Exception {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeWithDeclaredType(RUN_TYPE testRunType) throws Exception {
         String drl1 = "package org.drools.incremental\n" +
                 "declare Message value : String end\n" +
                 "rule Init when then insert(new Message( \"Hello World\" )); end\n" +
@@ -496,30 +508,30 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         ReleaseId releaseId1 = ks.newReleaseId( "org.kie", "test-upgrade", "1.0.0" );
 
         KieModuleModel kieModuleModel = ks.newKieModuleModel();
-        if(this.testRunType.isAlphaNetworkCompiler()) {
+        if(testRunType.isAlphaNetworkCompiler()) {
             kieModuleModel.setConfigurationProperty("drools.alphaNetworkCompiler", AlphaNetworkCompilerOption.INMEMORY.toString());
         }
-        createAndDeployJar( ks, kieModuleModel, releaseId1, drl1, drl2_1 );
+        createAndDeployJar(testRunType, ks, kieModuleModel, releaseId1, drl1, drl2_1);
 
         KieContainer kc = ks.newKieContainer( releaseId1 );
 
         // Create a session and fire rules
         KieSession ksession = kc.newKieSession();
-        if(this.testRunType.isAlphaNetworkCompiler()) {
+        if(testRunType.isAlphaNetworkCompiler()) {
             this.assertReteIsAlphaNetworkCompiled(ksession);
         }
         assertThat(ksession.fireAllRules()).isEqualTo(2);
 
         // Create a new jar for version 1.1.0
         ReleaseId releaseId2 = ks.newReleaseId( "org.kie", "test-upgrade", "1.1.0" );
-        createAndDeployJar( ks, kieModuleModel, releaseId2, drl1, drl2_2 );
+        createAndDeployJar(testRunType, ks, kieModuleModel, releaseId2, drl1, drl2_2 );
 
         // try to update the container to version 1.1.0
         kc.updateToVersion( releaseId2 );
 
         // try with a new session
         KieSession ksession2 = kc.newKieSession();
-        if(this.testRunType.isAlphaNetworkCompiler()) {
+        if(testRunType.isAlphaNetworkCompiler()) {
             this.assertReteIsAlphaNetworkCompiled(ksession2);
         }
 
@@ -527,12 +539,12 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
 
         // Create a new jar for version 1.2.0
         ReleaseId releaseId3 = ks.newReleaseId( "org.kie", "test-upgrade", "1.2.0" );
-        createAndDeployJar( ks, kieModuleModel, releaseId3, drl1, drl2_3 );
+        createAndDeployJar(testRunType, ks, kieModuleModel, releaseId3, drl1, drl2_3);
 
         // try to update the container to version 1.2.0
         kc.updateToVersion( releaseId3 );
         KieSession kieSession3 = kc.newKieSession();
-        if(this.testRunType.isAlphaNetworkCompiler()) {
+        if(testRunType.isAlphaNetworkCompiler()) {
             this.assertReteIsAlphaNetworkCompiled(kieSession3);
         }
 
@@ -543,8 +555,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(list.get(0)).isEqualTo("Hello World");
     }
 
-    @Test
-    public void testNodeHashingWith2LevelConditionsCheckFirstCondition() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testNodeHashingWith2LevelConditionsCheckFirstCondition(RUN_TYPE testRunType) {
         // DROOLS-7137
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -567,7 +580,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
 
         final List<Person> results = new ArrayList<>();
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.setGlobal("results", results);
 
@@ -585,8 +598,9 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
         assertThat(results).containsExactlyInAnyOrder(luca20, luca18);
     }
 
-    @Test
-    public void testNodeHashingWith2LevelConditionsCheckFirstConditionWithLong() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testNodeHashingWith2LevelConditionsCheckFirstConditionWithLong(RUN_TYPE testRunType) {
         // DROOLS-7137
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -609,7 +623,7 @@ public class AlphaNetworkCompilerTest extends BaseModelTest {
 
         final List<Person> results = new ArrayList<>();
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         ksession.setGlobal("results", results);
 

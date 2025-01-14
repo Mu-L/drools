@@ -1,19 +1,21 @@
-/*
- * Copyright 2013 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.api.builder.model;
 
 import java.util.List;
@@ -25,6 +27,7 @@ import org.kie.api.conf.DeclarativeAgendaOption;
 import org.kie.api.conf.EqualityBehaviorOption;
 import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.conf.KieBaseMutabilityOption;
+import org.kie.api.conf.PrototypesOption;
 import org.kie.api.conf.SequentialOption;
 import org.kie.api.conf.SessionsPoolOption;
 
@@ -109,6 +112,17 @@ public interface KieBaseModel {
     KieBaseModel setEqualsBehavior(EqualityBehaviorOption equalsBehaviour);
 
     /**
+     * Sets the PrototypesOption for this KieBaseModel.
+     * Default is PrototypesOption.DISABLED
+     */
+    PrototypesOption getPrototypes();
+
+    /**
+     * Returns the PrototypesOption of this KieBaseModel
+     */
+    KieBaseModel setPrototypes(PrototypesOption prototypes);
+
+    /**
      * Returns the KieBaseMutabilityOption of this KieBaseModel
      */
     KieBaseMutabilityOption getMutability();
@@ -181,7 +195,7 @@ public interface KieBaseModel {
 
     /**
      * Returns the CDI scope of this KieBaseModel
-     * Default is javax.enterprise.context.ApplicationScoped
+     * Default is jakarta.enterprise.context.ApplicationScoped
      */
     String getScope();
 

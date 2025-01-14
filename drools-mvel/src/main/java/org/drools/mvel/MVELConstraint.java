@@ -1,17 +1,21 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel;
 
 import java.io.Externalizable;
@@ -28,32 +32,36 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.drools.base.base.ValueResolver;
-import org.drools.compiler.rule.builder.EvaluatorWrapper;;
-import org.drools.base.base.ObjectType;
+import org.drools.base.RuleBase;
+import org.drools.base.RuleBuildContext;
 import org.drools.base.base.DroolsQuery;
+import org.drools.base.base.ObjectType;
+import org.drools.base.base.ValueResolver;
 import org.drools.base.common.DroolsObjectInputStream;
 import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.definitions.rule.impl.RuleImpl;
-import org.drools.core.impl.KnowledgeBaseImpl;
 import org.drools.base.reteoo.BaseTuple;
 import org.drools.base.reteoo.PropertySpecificUtil;
 import org.drools.base.rule.ContextEntry;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.IndexableConstraint;
 import org.drools.base.rule.MutableTypeConstraint;
+import org.drools.base.rule.Pattern;
 import org.drools.base.rule.accessor.AcceptsReadAccessor;
 import org.drools.base.rule.accessor.FieldValue;
 import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.rule.accessor.RightTupleValueExtractor;
 import org.drools.base.rule.accessor.TupleValueExtractor;
 import org.drools.base.rule.constraint.Constraint;
-import org.drools.base.util.FieldIndex;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.base.util.IndexedValueReader;
 import org.drools.base.util.index.ConstraintTypeOperator;
+import org.drools.compiler.rule.builder.EvaluatorWrapper;
+import org.drools.core.impl.KnowledgeBaseImpl;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.mvel.ConditionAnalyzer.CombinedCondition;
 import org.drools.mvel.ConditionAnalyzer.Condition;
@@ -66,10 +74,9 @@ import org.drools.mvel.ConditionAnalyzer.SingleCondition;
 import org.drools.mvel.accessors.ClassFieldReader;
 import org.drools.mvel.expr.MVELCompilationUnit;
 import org.drools.mvel.extractors.MVELObjectClassFieldReader;
+import org.drools.util.bitmask.BitMask;
 import org.drools.wiring.api.classloader.ProjectClassLoader;
 import org.kie.api.KieBaseConfiguration;
-import org.drools.base.RuleBase;
-import org.drools.base.RuleBuildContext;
 import org.kie.api.runtime.rule.FactHandle;
 import org.kie.api.runtime.rule.Variable;
 import org.kie.internal.concurrent.ExecutorProviderFactory;
@@ -93,7 +100,7 @@ import static org.drools.util.StringUtils.extractFirstIdentifier;
 import static org.drools.util.StringUtils.lookAheadIgnoringSpaces;
 import static org.drools.util.StringUtils.skipBlanks;
 
-public class MVELConstraint extends MutableTypeConstraint implements IndexableConstraint, AcceptsReadAccessor {
+public class MVELConstraint extends MutableTypeConstraint<ContextEntry> implements IndexableConstraint, AcceptsReadAccessor {
     protected static final boolean TEST_JITTING = false;
 
     private static final Logger logger = LoggerFactory.getLogger(MVELConstraint.class);
@@ -105,9 +112,13 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
     protected String expression;
     private ConstraintTypeOperator constraintType = ConstraintTypeOperator.UNKNOWN;
     private Declaration[] declarations;
-    private EvaluatorWrapper[] operators;
-    private TupleValueExtractor indexingDeclaration;
-    private ReadAccessor extractor;
+    private EvaluatorWrapper[]  operators;
+    private TupleValueExtractor leftIndexingDeclaration;
+
+    private TupleValueExtractor rightIndexingDeclaration;
+    private ReadAccessor        extractor;
+
+
     private boolean isUnification;
     protected boolean isDynamic;
     private FieldValue fieldValue;
@@ -163,17 +174,17 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
                           EvaluatorWrapper[] operators,
                           MVELCompilationUnit compilationUnit,
                           ConstraintTypeOperator constraintType,
-                          TupleValueExtractor indexingDeclaration,
+                          TupleValueExtractor leftIndexingDeclaration,
                           ReadAccessor extractor,
                           boolean isUnification) {
         this.packageNames = new LinkedHashSet<>(packageNames);
         this.expression = expression;
-        this.compilationUnit = compilationUnit;
-        this.constraintType = indexingDeclaration != null ? constraintType : ConstraintTypeOperator.UNKNOWN;
-        this.declarations = declarations == null ? EMPTY_DECLARATIONS : declarations;
-        this.operators = operators == null ? EMPTY_OPERATORS : operators;
-        this.indexingDeclaration = indexingDeclaration;
-        this.extractor = extractor;
+        this.compilationUnit         = compilationUnit;
+        this.constraintType          = leftIndexingDeclaration != null ? constraintType : ConstraintTypeOperator.UNKNOWN;
+        this.declarations            = declarations == null ? EMPTY_DECLARATIONS : declarations;
+        this.operators               = operators == null ? EMPTY_OPERATORS : operators;
+        this.leftIndexingDeclaration = leftIndexingDeclaration;
+        this.extractor               = extractor;
         this.isUnification = isUnification;
     }
 
@@ -216,7 +227,7 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
         isUnification = false;
     }
 
-    public boolean isIndexable(short nodeType, KieBaseConfiguration config) {
+    public boolean isIndexable(int nodeType, KieBaseConfiguration config) {
         return getConstraintType().isIndexableForNode(nodeType, this, config);
     }
 
@@ -375,7 +386,7 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
         return mvelEvaluator;
     }
 
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         if (declarations.length == 0) return null;
         ContextEntry contextEntry = new MvelContextEntry(declarations);
         if (isUnification) {
@@ -384,8 +395,10 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
         return contextEntry;
     }
 
-    public FieldIndex getFieldIndex() {
-        return new FieldIndex(extractor, indexingDeclaration);
+
+
+    public IndexedValueReader getFieldIndex() {
+        return new IndexedValueReader(leftIndexingDeclaration, getRightIndexExtractor());
     }
 
     public ReadAccessor getFieldExtractor() {
@@ -393,8 +406,16 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
     }
 
     @Override
-    public TupleValueExtractor getIndexExtractor() {
-        return indexingDeclaration;
+    public TupleValueExtractor getRightIndexExtractor() {
+        if (rightIndexingDeclaration == null) {
+            rightIndexingDeclaration = new RightTupleValueExtractor(extractor);
+        }
+        return rightIndexingDeclaration;
+    }
+
+    @Override
+    public TupleValueExtractor getLeftIndexExtractor() {
+        return leftIndexingDeclaration;
     }
 
     public Declaration[] getRequiredDeclarations() {
@@ -413,17 +434,17 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
                 }
                 declarations[i] = newDecl;
 
-                if (indexingDeclaration != null && i == 0) {
+                if (leftIndexingDeclaration != null && i == 0) {
                     // indexed MVELConstraints currently only have a single required declaration.
                     // So this is a hack that works for this limited scenario.
                     // It needs to clone first, due to unification otherwise you
                     // might change the pattern incorrectly for other nodes.
-                    if (!indexingDeclaration.equals(oldDecl)) {
+                    if (!leftIndexingDeclaration.equals(oldDecl)) {
                         // This is true for synthetic declarations
-                        indexingDeclaration = indexingDeclaration.clone();
-                        ((Declaration) indexingDeclaration).setPattern(newDecl.getPattern());
+                        leftIndexingDeclaration = leftIndexingDeclaration.clone();
+                        ((Declaration) leftIndexingDeclaration).setPattern(newDecl.getPattern());
                     } else {
-                        indexingDeclaration = newDecl;
+                        leftIndexingDeclaration = newDecl;
                     }
                 }
                 break;
@@ -434,13 +455,16 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
     // Slot specific
 
     @Override
-    public BitMask getListenedPropertyMask(ObjectType modifiedType, List<String> settableProperties) {
+    public BitMask getListenedPropertyMask(Optional<Pattern> pattern, ObjectType modifiedType, List<String> settableProperties) {
         return analyzedCondition != null ?
                 calculateMask(modifiedType, settableProperties) :
-                calculateMaskFromExpression(settableProperties);
+                calculateMaskFromExpression(pattern, settableProperties);
     }
 
-    private BitMask calculateMaskFromExpression(List<String> settableProperties) {
+    /*
+     * if pattern is empty, bind variables are considered to be declared in the same pattern. It should be fine for alpha constraints
+     */
+    private BitMask calculateMaskFromExpression(Optional<Pattern> pattern, List<String> settableProperties) {
         BitMask mask = getEmptyPropertyReactiveMask(settableProperties.size());
         String[] simpleExpressions = expression.split("\\Q&&\\E|\\Q||\\E");
 
@@ -451,6 +475,11 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
             }
             boolean firstProp = true;
             for (String propertyName : properties) {
+                String originalPropertyName = propertyName;
+                if (firstProp && pattern.map(p -> p.getDeclaration() != null && originalPropertyName.equals(p.getDeclaration().getBindingName())).orElse(false)) {
+                    // drop first property part if it is (redundantly) equal to the declared pattern binding name
+                    continue;
+                }
                 if (propertyName == null || propertyName.equals("this") || propertyName.length() == 0) {
                     return allSetButTraitBitMask();
                 }
@@ -460,7 +489,7 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
                         propertyName = propertyName.substring(0, 1).toLowerCase() + propertyName.substring(1);
                         pos = settableProperties.indexOf(propertyName);
                     } else {
-                        propertyName = findBoundVariable(propertyName);
+                        propertyName = findBoundVariable(propertyName, pattern);
                         if (propertyName != null) {
                             pos = settableProperties.indexOf(propertyName);
                         }
@@ -471,6 +500,16 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
                 } else {
                     // if it is not able to find the property name it could be a function invocation so property reactivity shouldn't filter anything
                     if (firstProp) {
+                        if (simpleExpression.indexOf(" contains ") > simpleExpression.indexOf(originalPropertyName)) {
+                            // A contains expression could be a rewritten memberOf so give a change also to the part of expression
+                            // after the 'contains' keyword to be analyzed before emitting a warning and consider the constraint as class reactive
+                            continue;
+                        }
+                        if (isBoundVariableFromDifferentPattern(originalPropertyName, pattern)) {
+                            logger.warn("{} is not relevant to this pattern, so it causes class reactivity." +
+                                        " Consider placing this constraint in the original pattern if possible : {}",
+                                        originalPropertyName, simpleExpression);
+                        }
                         return allSetBitMask();
                     }
                 }
@@ -481,9 +520,9 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
         return mask;
     }
 
-    private String findBoundVariable(String variable) {
+    private String findBoundVariable(String variable, Optional<Pattern> pattern) {
         for (Declaration declaration : declarations) {
-            if (declaration.getIdentifier().equals(variable)) {
+            if (declaration.getIdentifier().equals(variable) && (!pattern.isPresent() || declaration.getPattern().equals(pattern.get()))) { // if pattern is not given, assume it's the same pattern
                 ReadAccessor accessor = declaration.getExtractor();
                 if (accessor instanceof ClassFieldReader) {
                     return ((ClassFieldReader) accessor).getFieldName();
@@ -491,6 +530,18 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
             }
         }
         return null;
+    }
+
+    private boolean isBoundVariableFromDifferentPattern(String variable, Optional<Pattern> pattern) {
+        if (!pattern.isPresent()) {
+            return false;
+        }
+        for (Declaration declaration : declarations) {
+            if (declaration.getIdentifier().equals(variable) && !declaration.getPattern().equals(pattern.get())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private List<String> getPropertyNamesFromSimpleExpression(String expression) {
@@ -502,7 +553,7 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
     private int nextPropertyName(String expression, List<String> names, int cursor) {
         StringBuilder propertyNameBuilder = new StringBuilder();
         cursor = extractFirstIdentifier(expression, propertyNameBuilder, cursor);
-        if (propertyNameBuilder.length() == 0) {
+        if (propertyNameBuilder.isEmpty()) {
             return cursor;
         }
 
@@ -636,7 +687,7 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
             out.writeObject(extractor);
         }
 
-        out.writeObject(indexingDeclaration);
+        out.writeObject(leftIndexingDeclaration);
         out.writeObject(declarations);
         out.writeObject(constraintType);
         out.writeBoolean(isUnification);
@@ -658,8 +709,8 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
             extractor = (ReadAccessor) in.readObject();
         }
 
-        indexingDeclaration = (Declaration) in.readObject();
-        declarations = (Declaration[]) in.readObject();
+        leftIndexingDeclaration = (Declaration) in.readObject();
+        declarations            = (Declaration[]) in.readObject();
         constraintType = (ConstraintTypeOperator) in.readObject();
         isUnification = in.readBoolean();
         isDynamic = in.readBoolean();
@@ -694,8 +745,8 @@ public class MVELConstraint extends MutableTypeConstraint implements IndexableCo
         clone.constraintType = constraintType;
         clone.declarations = clonedDeclarations;
         clone.operators = operators;
-        if (indexingDeclaration != null) {
-            clone.indexingDeclaration = indexingDeclaration.clone();
+        if (leftIndexingDeclaration != null) {
+            clone.leftIndexingDeclaration = leftIndexingDeclaration.clone();
         }
         clone.extractor = extractor;
         clone.isUnification = isUnification;

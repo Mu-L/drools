@@ -1,17 +1,20 @@
-/*
- * Copyright 2011 Red Hat Inc.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.drools.persistence.map.impl;
 
@@ -19,7 +22,8 @@ import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.io.ByteArrayResource;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.drools.persistence.jpa.marshaller.JPAPlaceholderResolverStrategy;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
@@ -38,20 +42,22 @@ public abstract class MapPersistenceTest {
 
     private static Logger logger = LoggerFactory.getLogger(JPAPlaceholderResolverStrategy.class);
     
-    @Test
-    public void createPersistentSession() {
+    @ParameterizedTest(name="{0}")
+    @MethodSource("parameters")
+    public void createPersistentSession(String locking) {
         KieBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         
-        KieSession crmPersistentSession = createSession( kbase );
+        KieSession crmPersistentSession = createSession( locking, kbase );
         crmPersistentSession.fireAllRules();
 
-        crmPersistentSession = createSession( kbase );
+        crmPersistentSession = createSession( locking, kbase );
         assertThat(crmPersistentSession).isNotNull();
     }
 
 
-    @Test
-    public void createPersistentSessionWithRules() {
+    @ParameterizedTest(name="{0}")
+    @MethodSource("parameters")
+    public void createPersistentSessionWithRules(String locking) {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory
                 .newKnowledgeBuilder();
 
@@ -77,7 +83,7 @@ public abstract class MapPersistenceTest {
         InternalKnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         kbase.addPackages( kbuilder.getKnowledgePackages() );
 
-        KieSession ksession = createSession( kbase );
+        KieSession ksession = createSession(locking, kbase );
 
         FactHandle buddyFactHandle = ksession.insert( new Buddy() );
         ksession.fireAllRules();
@@ -95,13 +101,14 @@ public abstract class MapPersistenceTest {
 
     }
 
-    @Test
-    public void dontCreateMoreSessionsThanNecessary() {
+    @ParameterizedTest(name="{0}")
+    @MethodSource("parameters")
+    public void dontCreateMoreSessionsThanNecessary(String locking) {
         long initialNumberOfSavedSessions = getSavedSessionsCount();
         
         KieBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
 
-        KieSession crmPersistentSession = createSession(kbase);
+        KieSession crmPersistentSession = createSession(locking, kbase);
 
         long ksessionId = crmPersistentSession.getIdentifier();
         crmPersistentSession.fireAllRules();
@@ -122,11 +129,12 @@ public abstract class MapPersistenceTest {
     }
 
 
-    @Test
-    public void insertObjectIntoKsessionAndRetrieve() {
+    @ParameterizedTest(name="{0}")
+    @MethodSource("parameters")
+    public void insertObjectIntoKsessionAndRetrieve(String locking) {
         KieBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         
-        KieSession crmPersistentSession = createSession(kbase);
+        KieSession crmPersistentSession = createSession(locking, kbase);
         Buddy bestBuddy = new Buddy("john");
         crmPersistentSession.insert(bestBuddy);
 
@@ -139,7 +147,7 @@ public abstract class MapPersistenceTest {
         crmPersistentSession.dispose();
     }
 
-    protected abstract KieSession createSession(KieBase kbase);
+    protected abstract KieSession createSession(String locking, KieBase kbase);
     
     protected abstract KieSession disposeAndReloadSession(KieSession crmPersistentSession,
                                                                         KieBase kbase);

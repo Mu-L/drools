@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
 import java.sql.Timestamp;
@@ -35,7 +37,8 @@ import org.drools.model.codegen.execmodel.domain.DateTimeHolder;
 import org.drools.model.codegen.execmodel.domain.StockFact;
 import org.drools.model.codegen.execmodel.domain.StockTick;
 import org.drools.model.codegen.execmodel.domain.StockTickEx;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieServices;
 import org.kie.api.builder.model.KieModuleModel;
 import org.kie.api.conf.EventProcessingOption;
@@ -51,9 +54,6 @@ import static org.drools.modelcompiler.util.EvaluationUtil.convertDate;
 
 public class CepTest extends BaseModelTest {
 
-    public CepTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
 
     public static KieModuleModel getCepKieModuleModel() {
         KieModuleModel kproj = KieServices.get().newKieModuleModel();
@@ -65,8 +65,9 @@ public class CepTest extends BaseModelTest {
         return kproj;
     }
 
-    @Test
-    public void testAfter() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfter(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -76,7 +77,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ) );
@@ -91,8 +92,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testNegatedAfter() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNegatedAfter(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -102,7 +104,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ) );
@@ -117,8 +119,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testAfterWithEntryPoints() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterWithEntryPoints(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -128,7 +131,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.getEntryPoint( "ep1" ).insert( new StockTick( "DROO" ) );
@@ -146,8 +149,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testSlidingWindow() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSlidingWindow(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
                         "rule R when\n" +
@@ -156,7 +160,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         clock.advanceTime( 1, TimeUnit.SECONDS );
@@ -171,8 +175,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testNotAfter() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNotAfter(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                 "rule R when\n" +
@@ -182,7 +187,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println(\"fired\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick("DROO") );
@@ -200,8 +205,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testDeclaredSlidingWindow() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDeclaredSlidingWindow(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
                 "declare window DeclaredWindow\n" +
@@ -213,7 +219,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println($a.getCompany());\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         clock.advanceTime( 2, TimeUnit.SECONDS );
@@ -228,8 +234,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testDeclaredSlidingWindowWithEntryPoint() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDeclaredSlidingWindowWithEntryPoint(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
                 "declare window DeclaredWindow\n" +
@@ -241,7 +248,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println($a.getCompany());\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         EntryPoint ep = ksession.getEntryPoint("ticks");
@@ -258,8 +265,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testDeclaredSlidingWindowOnEventInTypeDeclaration() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDeclaredSlidingWindowOnEventInTypeDeclaration(RUN_TYPE runType) throws Exception {
         String str =
                 "declare String\n" +
                 "  @role( event )\n" +
@@ -273,7 +281,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println($a);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( "ACME" );
@@ -282,8 +290,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testDeclaredSlidingWindowOnDeclaredType() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDeclaredSlidingWindowOnDeclaredType(RUN_TYPE runType) throws Exception {
         String str =
                 "declare MyEvent\n" +
                 "  @role( event )\n" +
@@ -301,13 +310,14 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println($a);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testDeclaredSlidingWindowWith2Arguments() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDeclaredSlidingWindowWith2Arguments(RUN_TYPE runType) throws Exception {
         String str =
                 "declare String\n" +
                 "  @role( event )\n" +
@@ -321,7 +331,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println($a);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( "ACME" );
@@ -330,8 +340,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testWithDeclaredEvent() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWithDeclaredEvent(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockFact.class.getCanonicalName() + ";\n" +
                 "declare StockFact @role( event ) end;\n" +
@@ -342,7 +353,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println(\"fired\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockFact( "DROO" ) );
@@ -357,8 +368,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testExpireEventOnEndTimestamp() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testExpireEventOnEndTimestamp(RUN_TYPE runType) throws Exception {
         String str =
                 "package org.drools.compiler;\n" +
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
@@ -372,7 +384,7 @@ public class CepTest extends BaseModelTest {
                 "       resultsAfter.add( $b );\n" +
                 "end";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         List<StockTick> resultsAfter = new ArrayList<StockTick>();
@@ -391,8 +403,9 @@ public class CepTest extends BaseModelTest {
         assertThat(resultsAfter.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testExpireEventOnEndTimestampWithDeclaredEvent() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testExpireEventOnEndTimestampWithDeclaredEvent(RUN_TYPE runType) throws Exception {
         String str =
                 "package org.drools.compiler;\n" +
                 "import " + StockFact.class.getCanonicalName() + ";\n" +
@@ -411,7 +424,7 @@ public class CepTest extends BaseModelTest {
                 "       resultsAfter.add( $b );\n" +
                 "end";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         List<StockTick> resultsAfter = new ArrayList<StockTick>();
@@ -430,8 +443,9 @@ public class CepTest extends BaseModelTest {
         assertThat(resultsAfter.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testExpires() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testExpires(RUN_TYPE runType) throws Exception {
         String str =
                 "package org.drools.compiler;\n" +
                 "import " + StockFact.class.getCanonicalName() + ";\n" +
@@ -447,7 +461,7 @@ public class CepTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert(new StockFact("DROO"));
@@ -461,8 +475,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.getObjects().size()).isEqualTo(0);
     }
     
-    @Test
-    public void testDeclareAndExpires() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDeclareAndExpires(RUN_TYPE runType) throws Exception {
         String str =
                 "package org.drools.compiler;\n" +
                 "declare StockFact\n" +
@@ -478,7 +493,7 @@ public class CepTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         FactType stockFactType = ksession.getKieBase().getFactType("org.drools.compiler", "StockFact");
@@ -496,8 +511,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.getObjects().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testNoEvent() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNoEvent(RUN_TYPE runType) {
         String str =
                 "declare BaseEvent\n" +
                 "  @role(event)\n" +
@@ -524,12 +540,13 @@ public class CepTest extends BaseModelTest {
                 "\n" +
                 "end";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testIntervalTimer() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testIntervalTimer(RUN_TYPE runType) throws Exception {
         String str = "";
         str += "package org.simple \n";
         str += "global java.util.List list \n";
@@ -540,7 +557,7 @@ public class CepTest extends BaseModelTest {
         str += "  list.add(\"fired\"); \n";
         str += "end  \n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         List list = new ArrayList();
@@ -574,8 +591,9 @@ public class CepTest extends BaseModelTest {
         assertThat(list.size()).isEqualTo(3);
     }
 
-    @Test
-    public void testAfterWithAnd() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterWithAnd(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                 "rule R when\n" +
@@ -585,7 +603,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println(\"fired\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ) );
@@ -600,8 +618,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testAfterOnLongFields() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterOnLongFields(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                 "rule R when\n" +
@@ -611,7 +630,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println(\"fired\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ).setTimeField( 0 ) );
@@ -624,8 +643,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testAfterOnDateFields() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterOnDateFields(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                 "rule R when\n" +
@@ -635,7 +655,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println(\"fired\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ).setTimeField( 0 ) );
@@ -648,8 +668,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testAfterOnDateFieldsWithBinding() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterOnDateFieldsWithBinding(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                 "rule R when\n" +
@@ -659,7 +680,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println(\"fired\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         clock.advanceTime( 100, TimeUnit.MILLISECONDS );
@@ -673,8 +694,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testAfterOnFactAndField() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterOnFactAndField(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                 "rule R when\n" +
@@ -684,7 +706,7 @@ public class CepTest extends BaseModelTest {
                 "  System.out.println(\"fired\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ).setTimeField( 0 ) );
@@ -699,8 +721,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testComplexTimestamp() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testComplexTimestamp(RUN_TYPE runType) {
         final String str =
                 "import " + Message.class.getCanonicalName() + "\n" +
                 "declare " + Message.class.getCanonicalName() + "\n" +
@@ -709,7 +732,7 @@ public class CepTest extends BaseModelTest {
                 "   @duration( getProperties().get( 'duration' ) + 1 ) \n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
 
         try {
             final Message msg = new Message();
@@ -757,8 +780,9 @@ public class CepTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testTimerWithMillisPrecision() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testTimerWithMillisPrecision(RUN_TYPE runType) {
         final String drl = "import " + MyEvent.class.getCanonicalName() + "\n" +
                 "import " + AtomicInteger.class.getCanonicalName() + "\n" +
                 "declare MyEvent\n" +
@@ -779,7 +803,7 @@ public class CepTest extends BaseModelTest {
                 "        }\n" +
                 "end";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), drl);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), drl);
 
         try {
             final long now = 1000;
@@ -909,8 +933,9 @@ public class CepTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testCollectWithDeclaredWindow() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testCollectWithDeclaredWindow(RUN_TYPE runType) {
         // DROOLS-4492
         final String drl =
                 "import " + Quote.class.getCanonicalName() + "\n" +
@@ -940,7 +965,7 @@ public class CepTest extends BaseModelTest {
                 "    }\n" +
                 "end";
 
-        KieSession ksession = getKieSession( getCepKieModuleModel(), drl );
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), drl );
 
         try {
             ksession.insert( new Quote("RHT", 10.0) );
@@ -955,8 +980,9 @@ public class CepTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testAfterBindingFirst() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterBindingFirst(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -966,7 +992,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "ACME" ) );
@@ -981,8 +1007,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testAfterOnLongFieldsBindingFirst() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterOnLongFieldsBindingFirst(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
                      "declare StockTick @timestamp(timeFieldAsLong) end\n" +
@@ -993,7 +1020,7 @@ public class CepTest extends BaseModelTest {
                      "  System.out.println(\"fired\");\n" +
                      "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert(new StockTick("ACME").setTimeField(0));
@@ -1006,8 +1033,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testBefore() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBefore(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -1017,7 +1045,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "ACME" ) );
@@ -1032,8 +1060,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testBeforeBindingFirst() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBeforeBindingFirst(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -1043,7 +1072,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ) );
@@ -1058,8 +1087,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testBeforeOnLongFields() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBeforeOnLongFields(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
                      "declare StockTick @timestamp(timeFieldAsLong) end\n" +
@@ -1070,7 +1100,7 @@ public class CepTest extends BaseModelTest {
                      "  System.out.println(\"fired\");\n" +
                      "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert(new StockTick("ACME").setTimeField(0));
@@ -1083,8 +1113,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testBeforeOnLongFieldsBindingFirst() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBeforeOnLongFieldsBindingFirst(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
                      "declare StockTick @timestamp(timeFieldAsLong) end\n" +
@@ -1095,7 +1126,7 @@ public class CepTest extends BaseModelTest {
                      "  System.out.println(\"fired\");\n" +
                      "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert(new StockTick("DROO").setTimeField(0));
@@ -1108,8 +1139,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testBeforeOnLongFieldsWithDifferentMethod() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBeforeOnLongFieldsWithDifferentMethod(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
                      "import " + StockTickEx.class.getCanonicalName() + ";\n" +
@@ -1122,7 +1154,7 @@ public class CepTest extends BaseModelTest {
                      "  System.out.println(\"fired\");\n" +
                      "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert(new StockTick("ACME").setTimeField(0));
@@ -1135,8 +1167,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testAfterOnLongFieldsBindingFirstWithDifferentMethod() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAfterOnLongFieldsBindingFirstWithDifferentMethod(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";\n" +
                      "import " + StockTickEx.class.getCanonicalName() + ";\n" +
@@ -1149,7 +1182,7 @@ public class CepTest extends BaseModelTest {
                      "  System.out.println(\"fired\");\n" +
                      "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert(new StockTick("ACME").setTimeField(0));
@@ -1162,8 +1195,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testLiteral() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testLiteral(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                      "declare StockTick @timestamp(timeFieldAsLong) end\n" +
@@ -1173,7 +1207,7 @@ public class CepTest extends BaseModelTest {
                      "  System.out.println(\"fired\");\n" +
                      "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
 
         long time = LocalDateTime.of(2020, 1, 1, 0, 0, 0).atZone(ZoneId.of("UTC")).toInstant().getEpochSecond() * 1000;
         ksession.insert(new StockTick("DROO").setTimeField(time));
@@ -1181,8 +1215,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testZonedDateTime() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testZonedDateTime(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + DateTimeHolder.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -1191,7 +1226,7 @@ public class CepTest extends BaseModelTest {
                         "then\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new DateTimeHolder( ZonedDateTime.now() ) );
@@ -1200,8 +1235,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testCalendarsWithCronAndStartAndEnd() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testCalendarsWithCronAndStartAndEnd(RUN_TYPE runType) throws Exception {
         final Locale defaultLoc = Locale.getDefault();
         try {
             Locale.setDefault(Locale.UK); // Because of the date strings in the DRL, fixable with JBRULES-3444
@@ -1218,7 +1254,7 @@ public class CepTest extends BaseModelTest {
                             "  list.add(\"fired\"); \n" +
                             "end  \n";
 
-            KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+            KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
             try {
                 final List list = new ArrayList();
                 final PseudoClockScheduler timeService = ksession.getSessionClock();
@@ -1261,8 +1297,9 @@ public class CepTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testNegate() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNegate(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -1272,7 +1309,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ) );
@@ -1287,8 +1324,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testNegateFromCollect() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNegateFromCollect(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + StockTick.class.getCanonicalName() + ";" +
                         "import " + List.class.getCanonicalName() + ";" +
@@ -1299,7 +1337,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert( new StockTick( "DROO" ) );
@@ -1314,8 +1352,9 @@ public class CepTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testNegateFromCollectWithDeclaredTimestamp() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNegateFromCollectWithDeclaredTimestamp(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + TransactionHistory.class.getCanonicalName() + ";" +
                         "import " + List.class.getCanonicalName() + ";" +
@@ -1330,7 +1369,7 @@ public class CepTest extends BaseModelTest {
                         "  System.out.println(\"fired\");\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession(getCepKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getCepKieModuleModel(), str);
         SessionPseudoClock clock = ksession.getSessionClock();
 
         ksession.insert(new TransactionHistory(10, toEpochMilliYMD(2022, 5, 12)));

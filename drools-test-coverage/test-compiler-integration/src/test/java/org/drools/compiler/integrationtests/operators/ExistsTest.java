@@ -1,55 +1,50 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests.operators;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.model.AFact;
 import org.drools.testcoverage.common.model.Cheese;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class ExistsTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public ExistsTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testExistsIterativeModifyBug() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testExistsIterativeModifyBug(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-2809
         // This bug occurs when a tuple is modified, the remove/add puts it onto the memory end
         // However before this was done it would attempt to find the next tuple, starting from itself
@@ -110,8 +105,9 @@ public class ExistsTest {
         }
     }
 
-    @Test
-    public void testNodeSharingNotExists() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNodeSharingNotExists(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.operators;\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -153,8 +149,9 @@ public class ExistsTest {
         }
     }
 
-    @Test
-    public void testLastMemoryEntryExistsBug() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testLastMemoryEntryExistsBug(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-2809
         // This occurs when a blocker is the last in the node's memory, or if there is only one fact in the node
         // And it gets no opportunity to rematch with itself
@@ -205,8 +202,9 @@ public class ExistsTest {
         }
     }
 
-    @Test
-    public void testExistsWithOrAndSubnetwork() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testExistsWithOrAndSubnetwork(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6550
         final String drl =
             "package org.drools.compiler.integrationtests.operators;\n" +
@@ -242,8 +240,9 @@ public class ExistsTest {
         }
     }
 
-    @Test
-    public void testSharedExistsWithNot() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSharedExistsWithNot(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6710
         final String drl =
             "package org.drools.compiler.integrationtests.operators;\n" +
@@ -284,5 +283,191 @@ public class ExistsTest {
         } finally {
             ksession.dispose();
         }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void existsAndNotWithSingleCoercion_shouldNotMatchExists(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // KIE-766
+        final String drl =
+                "package org.drools.compiler.integrationtests.operators;\n" +
+                           "import " + StringHolder.class.getCanonicalName() + "\n" +
+                           "import " + BDHolder.class.getCanonicalName() + "\n" +
+                           "global java.util.List list \n" +
+                           "rule R1\n" +
+                           "  when\n" +
+                           "    $stringHolder : StringHolder( $value1 : value1 )\n" +
+                           "    exists BDHolder( $value1 == value1 )\n" +
+                           "  then\n" +
+                           "    list.add(\"R1\");\n" +
+                           "end\n" +
+                           "rule R2\n" +
+                           "  when\n" +
+                           "    $stringHolder : StringHolder( $value1 : value1 )\n" +
+                           "    not BDHolder( $value1 == value1 )\n" +
+                           "  then\n" +
+                           "    list.add(\"R2\");\n" +
+                           "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("exists-test",
+                                                                         kieBaseTestConfiguration,
+                                                                         drl);
+        final KieSession ksession = kbase.newKieSession();
+        try {
+            final List<String> list = new ArrayList<>();
+            ksession.setGlobal("list", list);
+
+            ksession.insert(new StringHolder("9999", "567"));
+            ksession.insert(new BDHolder(new BigDecimal("0"), new BigDecimal("567")));
+            ksession.fireAllRules();
+
+            assertThat(list).hasSize(1);
+            assertThat(list).as("BDHolder shouldn't match the exists constraints").containsExactly("R2");
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void existsAndNotWithMultipleCoercion_shouldNotMatchExists(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // KIE-766
+        final String drl =
+                "package org.drools.compiler.integrationtests.operators;\n" +
+                           "import " + StringHolder.class.getCanonicalName() + "\n" +
+                           "import " + BDHolder.class.getCanonicalName() + "\n" +
+                           "global java.util.List list \n" +
+                           "rule R1\n" +
+                           "  when\n" +
+                           "    $stringHolder : StringHolder( $value1 : value1, $value2 : value2 )\n" +
+                           "    exists BDHolder( $value1 == value1, $value2 == value2 )\n" +
+                           "  then\n" +
+                           "    list.add(\"R1\");\n" +
+                           "end\n" +
+                           "rule R2\n" +
+                           "  when\n" +
+                           "    $stringHolder : StringHolder( $value1 : value1, $value2 : value2 )\n" +
+                           "    not BDHolder( $value1 == value1, $value2 == value2 )\n" +
+                           "  then\n" +
+                           "    list.add(\"R2\");\n" +
+                           "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("exists-test",
+                                                                         kieBaseTestConfiguration,
+                                                                         drl);
+        final KieSession ksession = kbase.newKieSession();
+        try {
+            final List<String> list = new ArrayList<>();
+            ksession.setGlobal("list", list);
+
+            ksession.insert(new StringHolder("9999", "567"));
+            ksession.insert(new BDHolder(new BigDecimal("0"), new BigDecimal("567")));
+            ksession.fireAllRules();
+
+            assertThat(list).hasSize(1);
+            assertThat(list).as("BDHolder shouldn't match the exists constraints").containsExactly("R2");
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void existsAndNotWithBigDecimals_shouldNotMatchExists(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // KIE-766
+        final String drl =
+                "package org.drools.compiler.integrationtests.operators;\n" +
+                           "import " + BDHolder.class.getCanonicalName() + "\n" +
+                           "global java.util.List list \n" +
+                           "rule R1\n" +
+                           "  when\n" +
+                           "    $bdHolder1 : BDHolder( $value1 : value1, $value2 : value2 )\n" +
+                           "    exists BDHolder( this != $bdHolder1, $value1 == value1, $value2 == value2 )\n" +
+                           "  then\n" +
+                           "    list.add(\"R1\");\n" +
+                           "end\n" +
+                           "rule R2\n" +
+                           "  when\n" +
+                           "    $bdHolder1 : BDHolder( $value1 : value1, $value2 : value2 )\n" +
+                           "    not BDHolder( this != $bdHolder1, $value1 == value1, $value2 == value2 )\n" +
+                           "  then\n" +
+                           "    list.add(\"R2\");\n" +
+                           "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("exists-test",
+                                                                         kieBaseTestConfiguration,
+                                                                         drl);
+        final KieSession ksession = kbase.newKieSession();
+        try {
+            final List<String> list = new ArrayList<>();
+            ksession.setGlobal("list", list);
+
+            ksession.insert(new BDHolder(new BigDecimal("9999"), new BigDecimal("567")));
+            ksession.insert(new BDHolder(new BigDecimal("0"), new BigDecimal("567")));
+            ksession.fireAllRules();
+
+            assertThat(list).hasSize(2);
+            assertThat(list).as("BDHolder shouldn't match the exists constraints. R2 fires twice because 2 objects can match as $bdHolder1")
+                            .containsExactly("R2", "R2");
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    public static class StringHolder {
+
+        private String value1;
+        private String value2;
+
+        public StringHolder(String value1, String value2) {
+            this.value1 = value1;
+            this.value2 = value2;
+        }
+
+        public String getValue1() {
+            return value1;
+        }
+
+        public void setValue1(String value1) {
+            this.value1 = value1;
+        }
+
+        public String getValue2() {
+            return value2;
+        }
+
+        public void setValue2(String value2) {
+            this.value2 = value2;
+        }
+
+    }
+
+    public static class BDHolder {
+
+        private BigDecimal value1;
+        private BigDecimal value2;
+
+        public BDHolder(BigDecimal value1, BigDecimal value2) {
+            super();
+            this.value1 = value1;
+            this.value2 = value2;
+        }
+
+        public BigDecimal getValue1() {
+            return value1;
+        }
+
+        public void setValue1(BigDecimal value1) {
+            this.value1 = value1;
+        }
+
+        public BigDecimal getValue2() {
+            return value2;
+        }
+
+        public void setValue2(BigDecimal value2) {
+            this.value2 = value2;
+        }
+
     }
 }

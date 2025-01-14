@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.compiler.kie.builder.impl;
 
 import java.io.ByteArrayInputStream;
@@ -29,14 +32,14 @@ import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.drools.base.RuleBase;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.impl.KnowledgePackageImpl;
 import org.drools.compiler.builder.InternalKnowledgeBuilder;
 import org.drools.compiler.builder.conf.DecisionTableConfigurationImpl;
 import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
 import org.drools.compiler.kproject.models.KieBaseModelImpl;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.base.definitions.InternalKnowledgePackage;
-import org.drools.base.definitions.impl.KnowledgePackageImpl;
-import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.io.ResourceConfigurationImpl;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
@@ -50,6 +53,7 @@ import org.kie.api.builder.model.KieBaseModel;
 import org.kie.api.builder.model.KieModuleModel;
 import org.kie.api.builder.model.RuleTemplateModel;
 import org.kie.api.conf.EventProcessingOption;
+import org.kie.api.conf.PrototypesOption;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceConfiguration;
@@ -217,7 +221,7 @@ public abstract class AbstractKieModule implements InternalKieModule, Serializab
             ((RuleBaseConfiguration)conf).setClassLoader(cl);
         }
 
-        InternalRuleBase kBase = RuleBaseFactory.newRuleBase(kBaseModel.getName(), conf);
+        RuleBase kBase = RuleBaseFactory.newRuleBase(kBaseModel.getName(), conf);
         kBase.addPackages( pkgs );
         return KnowledgeBaseFactory.newKnowledgeBase(kBase);
     }
@@ -247,11 +251,15 @@ public abstract class AbstractKieModule implements InternalKieModule, Serializab
     public KnowledgeBuilderConfiguration createBuilderConfiguration( KieBaseModel kBaseModel, ClassLoader classLoader) {
         KnowledgeBuilderConfigurationImpl pconf = newKnowledgeBuilderConfiguration(classLoader).as(KnowledgeBuilderConfigurationImpl.KEY);
         pconf.setCompilationCache(getCompilationCache(kBaseModel.getName()));
-        setModelPropsOnConf( ((KieBaseModelImpl) kBaseModel).getKModule(), pconf );
+        setModelPropsOnConf( kBaseModel, pconf );
         return pconf;
     }
 
-    static void setModelPropsOnConf( KieModuleModel kModuleModel, KnowledgeBuilderConfigurationImpl pconf ) {
+    private static void setModelPropsOnConf( KieBaseModel kBaseModel, KnowledgeBuilderConfigurationImpl pconf ) {
+        if (kBaseModel.getPrototypes() != null) {
+            pconf.setProperty(PrototypesOption.PROPERTY_NAME, kBaseModel.getPrototypes().toString());
+        }
+        KieModuleModel kModuleModel = ((KieBaseModelImpl) kBaseModel).getKModule();
         for (Map.Entry<String, String> entry : kModuleModel.getConfigurationProperties().entrySet()) {
             pconf.setProperty(entry.getKey(), entry.getValue());
         }

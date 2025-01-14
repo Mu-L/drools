@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.kiesession;
 
 import java.util.Arrays;
@@ -27,13 +30,13 @@ import org.drools.core.common.PhreakPropagationContextFactory;
 import org.drools.core.common.PropagationContextFactory;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.phreak.BuildtimeSegmentUtilities;
+import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.PathEndNode;
 import org.drools.core.reteoo.SegmentMemory.SegmentPrototype;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.core.phreak.PhreakNotNode;
 import org.drools.core.phreak.RuntimeSegmentUtilities;
-import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.BetaNode;
 import org.drools.core.reteoo.ExistsNode;
 import org.drools.core.reteoo.JoinNode;
@@ -49,7 +52,7 @@ import org.drools.core.reteoo.builder.BuildContext;
 import org.drools.core.common.PropagationContext;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.drools.kiesession.session.StatefulKnowledgeSessionImpl;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -248,16 +251,16 @@ public class NodeSegmentUnlinkingTest {
         Arrays.stream(protos).forEach( p -> p.setPathEndNodes( new PathEndNode[0]));
         createSegmentMemory( n2, ksession );
 
-        BetaMemory bm = (BetaMemory) ksession.getNodeMemory( n1 );
+        BetaMemory bm = (BetaMemory) ksession.getNodeMemory(n1);
         assertThat(bm.getSegmentMemory()).isNull();
 
-        bm = (BetaMemory) ksession.getNodeMemory( n3 );
+        bm = (BetaMemory) ksession.getNodeMemory(n3);
         assertThat(bm.getSegmentMemory()).isNull();
 
-        bm = (BetaMemory) ksession.getNodeMemory( n4 );
+        bm = (BetaMemory) ksession.getNodeMemory(n4);
         assertThat(bm.getSegmentMemory()).isNull();
 
-        bm = (BetaMemory) ksession.getNodeMemory( n2 );
+        bm = (BetaMemory) ksession.getNodeMemory(n2);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(1);
     }
@@ -277,7 +280,7 @@ public class NodeSegmentUnlinkingTest {
         assertThat(liaMem.getNodePosMaskBit()).isEqualTo(1);
         assertThat(liaMem.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(3); 
         
-        BetaMemory bm1 = (BetaMemory) ksession.getNodeMemory( n1 );
+        BetaMemory bm1 = (BetaMemory) ksession.getNodeMemory(n1);
         assertThat(bm1.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm1.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(3);         
         
@@ -291,7 +294,7 @@ public class NodeSegmentUnlinkingTest {
         assertThat(liaMem.getNodePosMaskBit()).isEqualTo(1);
         assertThat(liaMem.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(3); 
         
-        bm1 = (BetaMemory) ksession.getNodeMemory( n1 );
+        bm1 = (BetaMemory) ksession.getNodeMemory(n1);
         assertThat(bm1.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm1.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(3);           
     }
@@ -311,7 +314,7 @@ public class NodeSegmentUnlinkingTest {
         assertThat(liaMem.getNodePosMaskBit()).isEqualTo(1);
         assertThat(liaMem.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(3); 
         
-        BetaMemory bm1 = (BetaMemory) ksession.getNodeMemory( n1 );
+        BetaMemory bm1 = (BetaMemory) ksession.getNodeMemory(n1);
         assertThat(bm1.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm1.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(3);
 
@@ -350,22 +353,22 @@ public class NodeSegmentUnlinkingTest {
 
         createSegmentMemory(n3, ksession);
 
-        BetaMemory bm = (BetaMemory) ksession.getNodeMemory( n1 );
+        BetaMemory bm = (BetaMemory) ksession.getNodeMemory(n1);
         assertThat(bm.getSegmentMemory()).isNull();
 
-        bm = (BetaMemory) ksession.getNodeMemory( n3 );
+        bm = (BetaMemory) ksession.getNodeMemory(n3);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n4 );
+        bm = (BetaMemory) ksession.getNodeMemory(n4);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n5 );
+        bm = (BetaMemory) ksession.getNodeMemory(n5);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(4);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n6 );
+        bm = (BetaMemory) ksession.getNodeMemory(n6);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(8);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
@@ -374,22 +377,22 @@ public class NodeSegmentUnlinkingTest {
 
         bm = createSegmentMemory( n4, ksession );
 
-        bm = (BetaMemory) ksession.getNodeMemory( n1 );
+        bm = (BetaMemory) ksession.getNodeMemory(n1);
         assertThat(bm.getSegmentMemory()).isNull();
 
-        bm = (BetaMemory) ksession.getNodeMemory( n3 );
+        bm = (BetaMemory) ksession.getNodeMemory(n3);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n4 );
+        bm = (BetaMemory) ksession.getNodeMemory(n4);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n5 );
+        bm = (BetaMemory) ksession.getNodeMemory(n5);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(4);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n6 );
+        bm = (BetaMemory) ksession.getNodeMemory(n6);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(8);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
@@ -398,22 +401,22 @@ public class NodeSegmentUnlinkingTest {
 
         createSegmentMemory( n5, ksession );
 
-        bm = (BetaMemory) ksession.getNodeMemory( n1 );
+        bm = (BetaMemory) ksession.getNodeMemory(n1);
         assertThat(bm.getSegmentMemory()).isNull();
 
-        bm = (BetaMemory) ksession.getNodeMemory( n3 );
+        bm = (BetaMemory) ksession.getNodeMemory(n3);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n4 );
+        bm = (BetaMemory) ksession.getNodeMemory(n4);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n5 );
+        bm = (BetaMemory) ksession.getNodeMemory(n5);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(4);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n6 );
+        bm = (BetaMemory) ksession.getNodeMemory(n6);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(8);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
@@ -422,22 +425,22 @@ public class NodeSegmentUnlinkingTest {
 
         createSegmentMemory( n6, ksession );
 
-        bm = (BetaMemory) ksession.getNodeMemory( n1 );
+        bm = (BetaMemory) ksession.getNodeMemory(n1);
         assertThat(bm.getSegmentMemory()).isNull();
 
-        bm = (BetaMemory) ksession.getNodeMemory( n3 );
+        bm = (BetaMemory) ksession.getNodeMemory(n3);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n4 );
+        bm = (BetaMemory) ksession.getNodeMemory(n4);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n5 );
+        bm = (BetaMemory) ksession.getNodeMemory(n5);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(4);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
 
-        bm = (BetaMemory) ksession.getNodeMemory( n6 );
+        bm = (BetaMemory) ksession.getNodeMemory(n6);
         assertThat(bm.getNodePosMaskBit()).isEqualTo(8);
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(15);
     }
@@ -453,7 +456,7 @@ public class NodeSegmentUnlinkingTest {
         DefaultFactHandle f1 = (DefaultFactHandle) ksession.insert( "test1" );
         n3.assertObject( f1, context, ksession );
 
-        BetaMemory bm = (BetaMemory) ksession.getNodeMemory( n3 );
+        BetaMemory bm = (BetaMemory) ksession.getNodeMemory(n3);
         assertThat(bm.getSegmentMemory().isSegmentLinked()).isFalse();
 
         n4.assertObject( f1, context, ksession );
@@ -477,7 +480,7 @@ public class NodeSegmentUnlinkingTest {
         DefaultFactHandle f1 = (DefaultFactHandle) ksession.insert( "test1" );
         n3.assertObject( f1, context, ksession );
 
-        BetaMemory bm = (BetaMemory) ksession.getNodeMemory( n3 );
+        BetaMemory bm = (BetaMemory) ksession.getNodeMemory(n3);
         assertThat(bm.getSegmentMemory().isSegmentLinked()).isFalse();
 
         n4.assertObject( f1, context, ksession );
@@ -492,7 +495,7 @@ public class NodeSegmentUnlinkingTest {
 
     private static BetaMemory createSegmentMemory(BetaNode node,
                                                   InternalWorkingMemory wm) {
-        BetaMemory betaMemory = (BetaMemory) wm.getNodeMemory( node );
+        BetaMemory betaMemory = (BetaMemory) wm.getNodeMemory(node);
         if ( betaMemory.getSegmentMemory() == null ) {
             RuntimeSegmentUtilities.getOrCreateSegmentMemory(node, wm);
         }
@@ -508,7 +511,7 @@ public class NodeSegmentUnlinkingTest {
 
         StatefulKnowledgeSessionImpl ksession = (StatefulKnowledgeSessionImpl)kBase.newKieSession();
 
-        BetaMemory bm = (BetaMemory) ksession.getNodeMemory( n3 );
+        BetaMemory bm = (BetaMemory) ksession.getNodeMemory(n3);
         createSegmentMemory( n3, ksession );
         assertThat(bm.getSegmentMemory().isSegmentLinked()).isTrue(); // not nodes start off linked
 

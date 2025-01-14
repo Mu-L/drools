@@ -1,25 +1,27 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests;
 
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieModule;
 import org.kie.api.builder.KieRepository;
@@ -34,13 +36,16 @@ public class KieRepositoryTest {
         // DROOLS-1335
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{this.getClass().getResource( "/kie-project-simple-1.0.0.jar" )} );
+        URL simpleKjar = this.getClass().getResource("/kie-project-simple-1.0.0.jar");
+        assertThat(simpleKjar).as("Make sure to build drools-test-coverage-jars first")
+                .isNotNull();
+        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{simpleKjar} );
         Thread.currentThread().setContextClassLoader( urlClassLoader );
 
         try {
             KieServices ks = KieServices.Factory.get();
             KieRepository kieRepository = ks.getRepository();
-            ReleaseId releaseId = ks.newReleaseId( "org.test", "kie-project-simple", "1.0.0" );
+            ReleaseId releaseId = ks.newReleaseId( "org.drools.testcoverage", "kie-project-simple", "1.0.0" );
             KieModule kieModule = kieRepository.getKieModule( releaseId );
             assertThat(kieModule).isNotNull();
             assertThat(kieModule.getReleaseId()).isEqualTo(releaseId);
@@ -54,13 +59,16 @@ public class KieRepositoryTest {
         // DROOLS-1335
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{this.getClass().getResource( "/kie-project-simple-1.0.0.jar" )} );
+        URL simpleKjar = this.getClass().getResource("/kie-project-simple-1.0.0.jar");
+        assertThat(simpleKjar).as("Make sure to build drools-test-coverage-jars first")
+                .isNotNull();
+        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{simpleKjar} );
         Thread.currentThread().setContextClassLoader( urlClassLoader );
 
         try {
             KieServices ks = KieServices.Factory.get();
             KieRepository kieRepository = ks.getRepository();
-            ReleaseId releaseId = ks.newReleaseId( "org.test", "kie-project-simple", "1.0.1" );
+            ReleaseId releaseId = ks.newReleaseId( "org.drools.testcoverage", "kie-project-simple", "1.0.1" );
             KieModule kieModule = kieRepository.getKieModule( releaseId );
             assertThat(kieModule).isNull();
         } finally {
@@ -73,13 +81,16 @@ public class KieRepositoryTest {
         // DROOLS-1351
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{this.getClass().getResource( "/only-jar-pojo-not-kjar-no-kmodule-1.0.0.jar" )} );
+        URL pojoJar = this.getClass().getResource("/only-jar-pojo-not-kjar-no-kmodule-1.0.0.jar");
+        assertThat(pojoJar).as("Make sure to build drools-test-coverage-jars first")
+                .isNotNull();
+        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{pojoJar} );
         Thread.currentThread().setContextClassLoader( urlClassLoader );
 
         try {
             KieServices ks = KieServices.Factory.get();
             KieRepository kieRepository = ks.getRepository();
-            ReleaseId releaseId = ks.newReleaseId( "org.test", "only-jar-pojo-not-kjar-no-kmodule", "1.0.0" );
+            ReleaseId releaseId = ks.newReleaseId( "org.drools.testcoverage", "only-jar-pojo-not-kjar-no-kmodule", "1.0.0" );
             KieModule kieModule = kieRepository.getKieModule( releaseId );
             assertThat(kieModule).isNull();
         } finally {

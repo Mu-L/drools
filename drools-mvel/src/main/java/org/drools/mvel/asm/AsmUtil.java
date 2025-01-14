@@ -1,17 +1,21 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.asm;
 
 import java.util.ArrayList;
@@ -28,7 +32,6 @@ import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.FunctionDescr;
 import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.compiler.rule.builder.RuleBuildContext;
-import org.drools.mvel.java.JavaAnalysisResult;
 import org.drools.compiler.rule.builder.dialect.java.parser.JavaBlockDescr;
 import org.drools.compiler.rule.builder.dialect.java.parser.JavaInterfacePointsDescr;
 import org.drools.compiler.rule.builder.dialect.java.parser.JavaLocalDeclarationDescr;
@@ -39,10 +42,11 @@ import org.drools.base.rule.Declaration;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.util.ClassUtils;
-import org.drools.core.util.bitmask.AllSetBitMask;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.AllSetBitMask;
+import org.drools.util.bitmask.BitMask;
 import org.drools.mvel.builder.MVELAnalysisResult;
 import org.drools.mvel.builder.MVELDialect;
+import org.drools.mvel.java.JavaAnalysisResult;
 import org.kie.api.definition.type.FactField;
 import org.mvel2.CompileException;
 import org.mvel2.asm.MethodVisitor;
@@ -58,7 +62,8 @@ import static org.drools.util.ClassUtils.setter2property;
 import static org.drools.util.StringUtils.extractFirstIdentifier;
 import static org.drools.util.StringUtils.findEndOfMethodArgsIndex;
 import static org.drools.util.StringUtils.splitArgumentsList;
-import static org.drools.util.StringUtils.splitStatements;
+import static org.drools.util.StringUtils.splitStatementsAcrossBlocks;
+
 
 public final class AsmUtil {
     private static final Pattern LINE_BREAK_FINDER = Pattern.compile( "\\r\\n|\\r|\\n" );
@@ -268,7 +273,7 @@ public final class AsmUtil {
 
         switch (d.getType()) {
             case MODIFY:
-                rewriteModifyDescr(context, d, originalBlock, consequence, declr, obj);
+                rewriteModifyDescr(context, d, analysis, originalBlock, consequence, declr, obj);
                 break;
             case UPDATE:
                 rewriteUpdateDescr(context, d, analysis, consequence, declr, obj);
@@ -281,6 +286,7 @@ public final class AsmUtil {
 
     private static void rewriteModifyDescr( RuleBuildContext context,
                                             JavaBlockDescr d,
+                                            JavaAnalysisResult analysis,
                                             String originalBlock,
                                             StringBuilder consequence,
                                             Declaration declr,
@@ -301,7 +307,8 @@ public final class AsmUtil {
         }
         BitMask modificationMask = isPropertyReactive ? getEmptyPropertyReactiveMask(settableProperties.size()) : allSetButTraitBitMask();
         if (isPropertyReactive) {
-            modificationMask = getModificationMask( consequence, obj, modificationMask, typeDeclaration, settableProperties, statement, false );
+            // collect modification outside modify block
+            modificationMask = getModificationMask( analysis.getAnalyzedExpr(), obj, modificationMask, typeDeclaration, settableProperties, statement, false );
         }
 
         int end = originalBlock.indexOf("{");
@@ -327,6 +334,7 @@ public final class AsmUtil {
             start = end + exprStr.length();
 
             if (typeDeclaration != null) {
+                // collect modification inside modify block
                 modificationMask = parseModifiedProperties(statement, settableProperties, typeDeclaration, isPropertyReactive, modificationMask, exprStr);
             }
         }
@@ -365,17 +373,17 @@ public final class AsmUtil {
             context.getRule().getConsequenceMetaData().addStatement(statement);
 
             if (isPropertyReactive) {
-                modificationMask = getModificationMask( consequence, obj, modificationMask, typeDeclaration, settableProperties, statement, true );
+                modificationMask = getModificationMask( analysis.getAnalyzedExpr(), obj, modificationMask, typeDeclaration, settableProperties, statement, true );
             }
         }
 
         appendUpdateStatement(consequence, declr, obj, modificationMask, typeClass);
     }
 
-    private static BitMask getModificationMask( StringBuilder consequence, String obj, BitMask modificationMask, TypeDeclaration typeDeclaration, List<String> settableProperties, ConsequenceMetaData.Statement statement, boolean isUpdate ) {
+    private static BitMask getModificationMask( String originalConsequence, String obj, BitMask modificationMask, TypeDeclaration typeDeclaration, List<String> settableProperties, ConsequenceMetaData.Statement statement, boolean isUpdate ) {
         boolean parsedExprOnce = false;
         // a late optimization to include this for-loop within this if
-        for (String expr : splitStatements( consequence )) {
+        for (String expr : splitStatementsAcrossBlocks( originalConsequence )) {
             String updateExpr = expr.replaceFirst("^\\Q" + obj + "\\E\\s*\\.", "");
             if (!updateExpr.equals(expr)) {
                 parsedExprOnce = true;

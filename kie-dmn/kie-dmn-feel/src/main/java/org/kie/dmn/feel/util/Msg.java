@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.util;
 
 /**
@@ -36,7 +38,7 @@ public final class Msg {
     public static final Message2 INDEX_OUT_OF_BOUND = new Message2("Index out of bound: list of %s elements, index %s; will evaluate as FEEL null");
     public static final Message2 X_TYPE_INCOMPATIBLE_WITH_Y_TYPE = new Message2("%s type incompatible with %s type");
     public static final Message1 INCOMPATIBLE_TYPE_FOR_RANGE = new Message1("Type %s can not be used in a range unary test");
-    public static final Message1 VALUE_X_NOT_A_VALID_ENDPOINT_FOR_RANGE_BECAUSE_NOT_A_NUMBER = new Message1("Value %s is not a valid endpoint for range, because not a feel:number");
+    public static final Message1 VALUE_X_NOT_A_VALID_ENDPOINT_FOR_RANGE_BECAUSE_NOT_A_NUMBER_NOT_A_DATE = new Message1("Value %s is not a valid endpoint for range, because neither a feel:number nor a feel:date");
     public static final Message1 EVALUATED_TO_NULL = new Message1("%s evaluated to null");
     public static final Message1 IS_NULL = new Message1("%s is null");
     public static final Message0 BASE_NODE_EVALUATE_CALLED = new Message0("BaseNode evaluate called");

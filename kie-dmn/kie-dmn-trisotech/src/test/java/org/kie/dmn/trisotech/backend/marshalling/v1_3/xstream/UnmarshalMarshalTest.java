@@ -1,19 +1,21 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.trisotech.backend.marshalling.v1_3.xstream;
 
 import java.io.File;
@@ -31,7 +33,7 @@ import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.marshalling.DMNMarshaller;
 import org.kie.dmn.model.api.Definitions;
 import org.kie.dmn.model.v1_3.KieDMNModelInstrumentedBase;
@@ -59,17 +61,17 @@ public class UnmarshalMarshalTest {
     protected static final Logger LOG = LoggerFactory.getLogger(UnmarshalMarshalTest.class);
 
     @Test
-    public void testV13_conditional() throws Exception {
+    void v13Conditional() throws Exception {
         testRoundTripV13("org/kie/dmn/trisotech/backend/marshalling/v1_3/", "conditional.dmn");
     }
 
     @Test
-    public void testV13_iterator() throws Exception {
+    void v13Iterator() throws Exception {
         testRoundTripV13("org/kie/dmn/trisotech/backend/marshalling/v1_3/", "iterator.dmn");
     }
 
     @Test
-    public void testV13_filter() throws Exception {
+    void v13Filter() throws Exception {
         testRoundTripV13("org/kie/dmn/trisotech/backend/marshalling/v1_3/", "filter.dmn");
     }
 
@@ -210,6 +212,7 @@ public class UnmarshalMarshalTest {
                                                                                                return outcome;
                                                                                            })))
                                        .ignoreWhitespace()
+                                       .ignoreComments()
                                        .checkForSimilar()
                                        .build();
         checkSimilar.getDifferences().forEach(m -> LOG.error("{}", m));

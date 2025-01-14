@@ -1,31 +1,32 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -41,18 +42,10 @@ import org.kie.internal.io.ResourceFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class QueryCepTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public QueryCepTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseStreamConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseStreamConfigurations(true).stream();
     }
     
     private KieSession ksession;
@@ -61,8 +54,7 @@ public class QueryCepTest {
     
     private EntryPoint firstEntryPoint, secondEntryPoint;
 
-    @Before
-    public void prepare() {
+    public void prepare(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.integrationtests\n" +
                 "import " + TestEvent.class.getCanonicalName() + "\n" +
                 "declare TestEvent\n" +
@@ -99,14 +91,18 @@ public class QueryCepTest {
         clock = ksession.getSessionClock();
     }
 
-    @Test
-    public void noResultTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void noResultTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+    	prepare(kieBaseTestConfiguration);
         QueryResults results = ksession.getQueryResults("EventsFromStream");
         assertThat(results.size()).isEqualTo(0);
     }
     
-    @Test
-    public void withResultTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void withResultTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+    	prepare(kieBaseTestConfiguration);
         secondEntryPoint.insert(new TestEvent("minusOne"));
         clock.advanceTime(5, TimeUnit.SECONDS);
 
@@ -123,8 +119,10 @@ public class QueryCepTest {
         assertThat(results.size()).isEqualTo(1);
     }
     
-    @Test
-    public void withNoResultTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void withNoResultTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+    	prepare(kieBaseTestConfiguration);
         secondEntryPoint.insert(new TestEvent("minusOne"));
         clock.advanceTime(5, TimeUnit.SECONDS);
 
@@ -142,7 +140,7 @@ public class QueryCepTest {
         assertThat(results.size()).isEqualTo(0);
     }
     
-    @After
+    @AfterEach
     public void cleanup() {
         
         if (ksession != null) {

@@ -1,21 +1,37 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.model.codegen.execmodel.variables;
 
 import java.util.Collection;
 
 import org.drools.model.codegen.execmodel.BaseModelTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.Test;
 import org.kie.api.runtime.KieSession;
 
 public class VariablesTest extends BaseModelTest {
-
-    public VariablesTest(RUN_TYPE testRunType) {
-        super(testRunType);
-    }
-
-    @Test
-    public void testThreeVariables() {
+    
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testThreeVariables(BaseModelTest.RUN_TYPE testRunType) {
 
         String str = "import " + SimpleObject.class.getCanonicalName() + ";\n" +
                 "import " + Result.class.getCanonicalName() + ";\n" +
@@ -28,7 +44,7 @@ public class VariablesTest extends BaseModelTest {
                 "insert (new Result($id, $v1 + $v2));\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         SimpleObject m1 = new SimpleObject("id", 1);
         SimpleObject m2 = new SimpleObject("id", 2);
@@ -42,8 +58,9 @@ public class VariablesTest extends BaseModelTest {
         assertThat(results.iterator().next().getValue()).isEqualTo(3);
     }
 
-    @Test
-    public void testFourVariables() {
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testFourVariables(BaseModelTest.RUN_TYPE testRunType) {
 
         String str = "import " + SimpleObject.class.getCanonicalName() + ";\n" +
                 "import " + Result.class.getCanonicalName() + ";\n" +
@@ -57,7 +74,7 @@ public class VariablesTest extends BaseModelTest {
                 "insert (new Result($id, $v1 + $v2 + $v3));\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         SimpleObject m1 = new SimpleObject("id", 1);
         SimpleObject m2 = new SimpleObject("id", 2);
@@ -73,8 +90,9 @@ public class VariablesTest extends BaseModelTest {
         assertThat(results.iterator().next().getValue()).isEqualTo(6);
     }
 
-    @Test
-    public void testFiveVariables() {
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testFiveVariables(BaseModelTest.RUN_TYPE testRunType) {
 
         String str = "import " + SimpleObject.class.getCanonicalName() + ";\n" +
                 "import " + Result.class.getCanonicalName() + ";\n" +
@@ -89,7 +107,7 @@ public class VariablesTest extends BaseModelTest {
                 "insert (new Result($id, $v1 + $v2 + $v3 + $v4));\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         SimpleObject m1 = new SimpleObject("id", 1);
         SimpleObject m2 = new SimpleObject("id", 2);
@@ -107,8 +125,9 @@ public class VariablesTest extends BaseModelTest {
         assertThat(results.iterator().next().getValue()).isEqualTo(10);
     }
 
-    @Test
-    public void testSixVariables() {
+    @ParameterizedTest
+    @MethodSource("parameters")
+    public void testSixVariables(BaseModelTest.RUN_TYPE testRunType) {
 
         String str = "import " + SimpleObject.class.getCanonicalName() + ";\n" +
                 "import " + Result.class.getCanonicalName() + ";\n" +
@@ -124,7 +143,7 @@ public class VariablesTest extends BaseModelTest {
                 "insert (new Result($id, $v1 + $v2 + $v3 + $v4 + $v5));\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(testRunType, str);
 
         SimpleObject m1 = new SimpleObject("id", 1);
         SimpleObject m2 = new SimpleObject("id", 2);

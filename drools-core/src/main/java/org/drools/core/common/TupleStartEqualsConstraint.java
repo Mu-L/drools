@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.common;
 
 import java.io.IOException;
@@ -22,11 +24,11 @@ import java.io.ObjectOutput;
 
 import org.drools.base.base.ValueResolver;
 import org.drools.base.reteoo.BaseTuple;
-import org.drools.core.reteoo.LeftTuple;
 import org.drools.base.rule.ContextEntry;
 import org.drools.base.rule.Declaration;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.core.reteoo.Tuple;
+import org.drools.core.reteoo.TupleImpl;
 import org.kie.api.runtime.rule.FactHandle;
 
 /**
@@ -50,7 +52,7 @@ import org.kie.api.runtime.rule.FactHandle;
  */
 public class TupleStartEqualsConstraint
     implements
-    BetaNodeFieldConstraint {
+    BetaConstraint<ContextEntry> {
 
     private static final long                       serialVersionUID = 510l;
 
@@ -86,7 +88,7 @@ public class TupleStartEqualsConstraint
         return false;
     }
 
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         return new TupleStartEqualsConstraintContextEntry();
     }
 
@@ -100,7 +102,7 @@ public class TupleStartEqualsConstraint
 
     public boolean isAllowedCachedRight(final BaseTuple tuple,
                                         final ContextEntry context) {
-        LeftTuple nonEmptyLeftTuple = (LeftTuple) tuple.skipEmptyHandles();
+        TupleImpl nonEmptyLeftTuple = (TupleImpl) tuple.skipEmptyHandles();
         return nonEmptyLeftTuple.equals( ((TupleStartEqualsConstraintContextEntry) context).rightTuple.getSubTuple(nonEmptyLeftTuple.size()));
     }
 
@@ -172,7 +174,7 @@ public class TupleStartEqualsConstraint
                                          final FactHandle handle) {
             // if it is not a rete tuple, then there is a bug in the engine...
             // it MUST be a rete tuple
-            this.rightTuple = ((LeftTuple) handle.getObject()).skipEmptyHandles();
+            this.rightTuple = ((TupleImpl) handle.getObject()).skipEmptyHandles();
         }
 
         public void resetTuple() {
@@ -188,7 +190,7 @@ public class TupleStartEqualsConstraint
         return ConstraintType.BETA;
     }
 
-    public BetaNodeFieldConstraint cloneIfInUse() {
+    public BetaConstraint cloneIfInUse() {
         return this;
     }
 }

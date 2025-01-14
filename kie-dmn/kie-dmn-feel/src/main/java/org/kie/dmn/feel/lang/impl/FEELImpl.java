@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.lang.impl;
 
 import java.util.Collection;
@@ -34,18 +36,16 @@ import org.kie.dmn.feel.codegen.feel11.ProcessedUnaryTest;
 import org.kie.dmn.feel.lang.CompiledExpression;
 import org.kie.dmn.feel.lang.CompilerContext;
 import org.kie.dmn.feel.lang.EvaluationContext;
+import org.kie.dmn.feel.lang.FEELDialect;
 import org.kie.dmn.feel.lang.FEELProfile;
 import org.kie.dmn.feel.lang.Type;
 import org.kie.dmn.feel.parser.feel11.profiles.DoCompileFEELProfile;
 import org.kie.dmn.feel.runtime.FEELFunction;
 import org.kie.dmn.feel.runtime.UnaryTest;
-import org.kie.dmn.feel.util.ClassLoaderUtil;
-import org.kie.dmn.model.api.GwtIncompatible;
 
 /**
  * Language runtime entry point
  */
-@GwtIncompatible
 public class FEELImpl
         implements FEEL {
 
@@ -59,22 +59,9 @@ public class FEELImpl
     private final Optional<ExecutionFrameImpl> customFrame;
     private final Collection<FEELFunction> customFunctions;
     private final boolean doCompile;
+    private final FEELDialect feelDialect;
 
-    public FEELImpl() {
-        this(ClassLoaderUtil.findDefaultClassLoader(), Collections.emptyList());
-    }
-
-    @GwtIncompatible
-    public FEELImpl(ClassLoader cl) {
-        this(cl, Collections.emptyList());
-    }
-
-    public FEELImpl(List<FEELProfile> profiles) {
-        this(ClassLoaderUtil.findDefaultClassLoader(), profiles);
-    }
-
-    @GwtIncompatible
-    public FEELImpl(ClassLoader cl, List<FEELProfile> profiles) {
+    FEELImpl(ClassLoader cl, List<FEELProfile> profiles, FEELDialect feelDialect) {
         this.classLoader = cl;
         this.profiles = Collections.unmodifiableList(profiles);
         ExecutionFrameImpl frame = null;
@@ -97,6 +84,7 @@ public class FEELImpl
         doCompile = profiles.stream().anyMatch(DoCompileFEELProfile.class::isInstance);
         customFrame = Optional.ofNullable(frame);
         customFunctions = Collections.unmodifiableCollection(functions.values());
+        this.feelDialect = feelDialect;
     }
 
     @Override
@@ -114,14 +102,11 @@ public class FEELImpl
 
     @Override
     public CompiledExpression compile(String expression, CompilerContext ctx) {
-        return new ProcessedExpression(
-                expression,
-                ctx,
-                ProcessedFEELUnit.DefaultMode.of(doCompile || ctx.isDoCompile()),
-                profiles).getResult();
+        return processExpression(expression, ctx).asCompiledFEELExpression();
     }
 
-    public ProcessedExpression compileExpression(String expression, CompilerContext ctx) {
+    @Override
+    public ProcessedExpression processExpression(String expression, CompilerContext ctx) {
         return new ProcessedExpression(
                 expression,
                 ctx,
@@ -130,7 +115,7 @@ public class FEELImpl
     }
 
     @Override
-    public ProcessedUnaryTest compileUnaryTests(String expressions, CompilerContext ctx) {
+    public ProcessedUnaryTest processUnaryTests(String expressions, CompilerContext ctx) {
         return new ProcessedUnaryTest(expressions, ctx, profiles);
     }
 
@@ -167,7 +152,8 @@ public class FEELImpl
     @Override
     public Object evaluate(CompiledExpression expr, Map<String, Object> inputVariables) {
         CompiledFEELExpression e = (CompiledFEELExpression) expr;
-        return e.apply(newEvaluationContext(Collections.EMPTY_SET, inputVariables));
+        EvaluationContextImpl evaluationContext = newEvaluationContext(Collections.EMPTY_SET, inputVariables); // split to simplify debug
+        return e.apply(evaluationContext);
     }
     
     @Override
@@ -188,7 +174,7 @@ public class FEELImpl
      */
     public EvaluationContextImpl newEvaluationContext(ClassLoader cl, Collection<FEELEventListener> listeners, Map<String, Object> inputVariables) {
         FEELEventListenersManager eventsManager = getEventsManager(listeners);
-        EvaluationContextImpl ctx = new EvaluationContextImpl(cl, eventsManager, inputVariables.size());
+        EvaluationContextImpl ctx = new EvaluationContextImpl(cl, eventsManager, inputVariables.size(), feelDialect);
         if (customFrame.isPresent()) {
             ExecutionFrameImpl globalFrame = (ExecutionFrameImpl) ctx.pop();
             ExecutionFrameImpl interveawedFrame = customFrame.get();
@@ -213,7 +199,7 @@ public class FEELImpl
             ctx.addInputVariableType( e.getKey(), e.getValue() );
         }
 
-        return compileUnaryTests(expression, ctx)
+        return processUnaryTests(expression, ctx)
                 .apply(newEvaluationContext(ctx.getListeners(), EMPTY_INPUT));
     }
 

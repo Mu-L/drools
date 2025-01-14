@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.impl;
 
 import java.lang.reflect.Type;
@@ -34,17 +36,26 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.drools.core.KieBaseConfigurationImpl;
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.SessionConfiguration;
-import org.drools.core.base.ClassFieldAccessorCache;
 import org.drools.base.base.ClassObjectType;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.ReteEvaluator;
+import org.drools.base.common.PartitionsManager;
 import org.drools.base.common.RuleBasePartitionId;
 import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.factmodel.ClassDefinition;
+import org.drools.base.rule.DialectRuntimeRegistry;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.Function;
+import org.drools.base.rule.ImportDeclaration;
+import org.drools.base.rule.InvalidPatternException;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.rule.WindowDeclaration;
+import org.drools.base.ruleunit.RuleUnitDescriptionRegistry;
+import org.drools.core.KieBaseConfigurationImpl;
+import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.SessionConfiguration;
+import org.drools.core.base.ClassFieldAccessorCache;
+import org.drools.core.common.InternalWorkingMemory;
+import org.drools.core.common.ReteEvaluator;
 import org.drools.core.management.DroolsManagementAgent;
 import org.drools.core.phreak.BuildtimeSegmentUtilities;
 import org.drools.core.phreak.EagerPhreakBuilder.Add;
@@ -65,16 +76,8 @@ import org.drools.core.reteoo.SegmentMemory.SegmentPrototype;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.reteoo.builder.BuildContext;
 import org.drools.core.reteoo.builder.NodeFactory;
-import org.drools.base.rule.DialectRuntimeRegistry;
-import org.drools.base.rule.EntryPointId;
-import org.drools.base.rule.Function;
-import org.drools.base.rule.ImportDeclaration;
-import org.drools.base.rule.InvalidPatternException;
 import org.drools.core.rule.JavaDialectRuntimeData;
-import org.drools.base.rule.TypeDeclaration;
-import org.drools.base.rule.WindowDeclaration;
 import org.drools.core.rule.accessor.FactHandleFactory;
-import org.drools.base.ruleunit.RuleUnitDescriptionRegistry;
 import org.drools.wiring.api.classloader.ProjectClassLoader;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.builder.ReleaseId;
@@ -95,12 +98,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.drools.core.phreak.PhreakBuilder.isEagerSegmentCreation;
-import static org.drools.util.BitMaskUtil.isSet;
 import static org.drools.util.ClassUtils.convertClassToResourcePath;
+import static org.drools.util.bitmask.BitMaskUtil.isSet;
 
 public class KnowledgeBaseImpl implements InternalRuleBase {
 
-    protected static final transient Logger logger = LoggerFactory.getLogger(KnowledgeBaseImpl.class);
+    protected static final Logger logger = LoggerFactory.getLogger(KnowledgeBaseImpl.class);
+
+    private static final KieWeavers WEAVERS = KieService.load( KieWeavers.class );
 
     private Set<EntryPointNode> addedEntryNodeCache;
     private Set<EntryPointNode> removedEntryNodeCache;
@@ -148,6 +153,10 @@ public class KnowledgeBaseImpl implements InternalRuleBase {
     private boolean mutable = true;
 
     private boolean hasMultipleAgendaGroups = false;
+
+    private final PartitionsManager partitionsManager = new PartitionsManager();
+
+    private boolean partitioned;
 
     public KnowledgeBaseImpl() { }
 
@@ -438,17 +447,34 @@ public class KnowledgeBaseImpl implements InternalRuleBase {
             }
 
             if ( ! newPkg.getResourceTypePackages().isEmpty() ) {
-                KieWeavers weavers = KieService.load( KieWeavers.class );
                 for ( ResourceTypePackage rtkKpg : newPkg.getResourceTypePackages().values() ) {
-                    weavers.weave( newPkg, rtkKpg );
+                    WEAVERS.weave( newPkg, rtkKpg );
                 }
             }
 
             ruleUnitDescriptionRegistry.add(newPkg.getRuleUnitDescriptionLoader());
         }
 
-        if (ruleBaseConfig.isMultithreadEvaluation() && !hasMultiplePartitions()) {
-            disableMultithreadEvaluation("The rete network cannot be partitioned: disabling multithread evaluation");
+        if (ruleBaseConfig.isParallelEvaluation()) {
+            setupParallelEvaluation();
+        }
+    }
+
+    private void setupParallelEvaluation() {
+        if (!partitionsManager.hasParallelEvaluation()) {
+            disableParallelEvaluation("The rete network cannot be partitioned: disabling multithread evaluation");
+            return;
+        }
+        partitionsManager.init();
+        this.partitioned = true;
+
+        if (ruleBaseConfig.isParallelExecution()) {
+            for (EntryPointNode epn : rete.getEntryPointNodes().values()) {
+                epn.setupParallelExecution(this);
+                for (ObjectTypeNode otn : epn.getObjectTypeNodes().values()) {
+                    otn.setupParallelExecution(this);
+                }
+            }
         }
     }
 
@@ -476,41 +502,28 @@ public class KnowledgeBaseImpl implements InternalRuleBase {
         }
     }
 
-    private void checkMultithreadedEvaluation( RuleImpl rule ) {
-        if (ruleBaseConfig.isMultithreadEvaluation()) {
+    private void checkParallelEvaluation(RuleImpl rule) {
+        if (ruleBaseConfig.isParallelEvaluation()) {
             if (!rule.isMainAgendaGroup()) {
-                disableMultithreadEvaluation( "Agenda-groups are not supported with multithread evaluation: disabling it" );
+                disableParallelEvaluation( "Agenda-groups are not supported with parallel execution: disabling it" );
             } else if (rule.getActivationGroup() != null) {
-                disableMultithreadEvaluation( "Activation-groups are not supported with multithread evaluation: disabling it" );
-            } else if (!rule.getSalience().isDefault()) {
-                disableMultithreadEvaluation( "Salience is not supported with multithread evaluation: disabling it" );
+                disableParallelEvaluation( "Activation-groups are not supported with parallel execution: disabling it" );
+            } else if (!rule.getSalience().isDefault() && ruleBaseConfig.isParallelExecution()) {
+                disableParallelEvaluation( "Salience is not supported with parallel execution: disabling it" );
             } else if (rule.isQuery()) {
-                disableMultithreadEvaluation( "Queries are not supported with multithread evaluation: disabling it" );
+                disableParallelEvaluation( "Queries are not supported with parallel execution: disabling it" );
             }
         }
-    }
-
-    private boolean hasMultiplePartitions() {
-        for (EntryPointNode entryPointNode : rete.getEntryPointNodes().values()) {
-            for ( ObjectTypeNode otn : entryPointNode.getObjectTypeNodes().values() ) {
-                ObjectSinkPropagator sink = otn.getObjectSinkPropagator();
-                if (sink instanceof CompositePartitionAwareObjectSinkAdapter && ( (CompositePartitionAwareObjectSinkAdapter) sink ).getUsedPartitionsCount() > 1) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     public boolean hasMultipleAgendaGroups() {
         return hasMultipleAgendaGroups;
     }
 
-    private void disableMultithreadEvaluation(String warningMessage) {
+    private void disableParallelEvaluation(String warningMessage) {
         ruleBaseConfig.enforceSingleThreadEvaluation();
         logger.warn( warningMessage );
         for (EntryPointNode entryPointNode : rete.getEntryPointNodes().values()) {
-            entryPointNode.setPartitionsEnabled( false );
             for (ObjectTypeNode otn : entryPointNode.getObjectTypeNodes().values()) {
                 ObjectSinkPropagator sink = otn.getObjectSinkPropagator();
                 if (sink instanceof CompositePartitionAwareObjectSinkAdapter) {
@@ -805,12 +818,11 @@ public class KnowledgeBaseImpl implements InternalRuleBase {
         }
 
         if ( ! newPkg.getResourceTypePackages().isEmpty() ) {
-            KieWeavers weavers = KieService.load(KieWeavers.class);
-            if (weavers == null) {
+            if (WEAVERS == null) {
                 throw new IllegalStateException("Unable to find KieWeavers implementation");
             }
             for ( ResourceTypePackage rtkKpg : newPkg.getResourceTypePackages().values() ) {
-                weavers.merge( pkg, rtkKpg );
+                WEAVERS.merge( pkg, rtkKpg );
             }
         }
     }
@@ -840,7 +852,6 @@ public class KnowledgeBaseImpl implements InternalRuleBase {
         // always add the default entry point
         EntryPointNode epn = nodeFactory.buildEntryPointNode(this.reteooBuilder.getNodeIdsGenerator().getNextId(),
                                                              RuleBasePartitionId.MAIN_PARTITION,
-                                                             ruleBaseConfig.isMultithreadEvaluation(),
                                                              this.rete,
                                                              EntryPointId.DEFAULT);
         epn.attach();
@@ -869,7 +880,9 @@ public class KnowledgeBaseImpl implements InternalRuleBase {
     }
 
     public void registeRremovedEntryNodeCache(EntryPointNode node) {
-        if (removedEntryNodeCache == null) removedEntryNodeCache = new HashSet<>();
+        if (removedEntryNodeCache == null) {
+            removedEntryNodeCache = new HashSet<>();
+        }
         removedEntryNodeCache.add(node);
     }
 
@@ -1027,7 +1040,7 @@ public class KnowledgeBaseImpl implements InternalRuleBase {
 
         for (Rule r : rules) {
             RuleImpl rule = (RuleImpl) r;
-            checkMultithreadedEvaluation( rule );
+            checkParallelEvaluation( rule );
             this.hasMultipleAgendaGroups |= !rule.isMainAgendaGroup();
             terminalNodes.addAll(this.reteooBuilder.addRule(rule, wms));
         }
@@ -1176,8 +1189,19 @@ public class KnowledgeBaseImpl implements InternalRuleBase {
         this.reloadPackageCompilationData.offer( registry );
     }
 
+    @Override
     public RuleBasePartitionId createNewPartitionId() {
-        return RuleBasePartitionId.createPartition();
+        return partitionsManager.createNewPartitionId();
+    }
+
+    @Override
+    public boolean isPartitioned() {
+        return partitioned;
+    }
+
+    @Override
+    public int getParallelEvaluationSlotsCount() {
+        return partitionsManager.getParallelEvaluationSlotsCount();
     }
 
     public FactType getFactType(String packageName, String typeName) {

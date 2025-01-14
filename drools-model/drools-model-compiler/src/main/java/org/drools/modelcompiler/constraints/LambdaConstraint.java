@@ -1,26 +1,28 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler.constraints;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
+import java.util.Optional;
 
 import org.drools.base.base.ObjectType;
 import org.drools.base.base.ValueResolver;
@@ -30,13 +32,14 @@ import org.drools.base.reteoo.BaseTuple;
 import org.drools.base.reteoo.PropertySpecificUtil;
 import org.drools.base.rule.ContextEntry;
 import org.drools.base.rule.Declaration;
+import org.drools.base.rule.Pattern;
 import org.drools.base.rule.accessor.FieldValue;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.accessor.TupleValueExtractor;
 import org.drools.base.time.Interval;
-import org.drools.base.util.FieldIndex;
+import org.drools.base.util.IndexedValueReader;
 import org.drools.base.util.index.ConstraintTypeOperator;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.BitMask;
 import org.drools.model.AlphaIndex;
 import org.drools.model.BetaIndex;
 import org.drools.model.BetaIndex2;
@@ -63,7 +66,9 @@ public class LambdaConstraint extends AbstractConstraint {
 
     private FieldValue field;
     private ReadAccessor readAccessor;
-    private AbstractIndexValueExtractor indexExtractor;
+
+    private TupleValueExtractor rightIndexExtractor;
+    private AbstractIndexValueExtractor leftIndexExtractor;
 
     public LambdaConstraint(ConstraintEvaluator evaluator,
                             PredicateInformation predicateInformation) {
@@ -80,16 +85,43 @@ public class LambdaConstraint extends AbstractConstraint {
         return evaluator;
     }
 
+    public static class LambdaRightTupleValueExtractor implements TupleValueExtractor {
+        private ValueType valueType;
+
+        private Function1 extractor;
+
+        public LambdaRightTupleValueExtractor(ValueType valueType, Function1 extractor) {
+            this.valueType  = valueType;
+            this.extractor = extractor;
+        }
+
+        @Override
+        public ValueType getValueType() {
+            return valueType;
+        }
+
+        @Override
+        public Object getValue(ValueResolver valueResolver, BaseTuple tuple) {
+            return extractor.apply(tuple.getFactHandle().getObject());
+        }
+
+        @Override
+        public TupleValueExtractor clone() {
+            return new LambdaRightTupleValueExtractor(valueType, extractor);
+        }
+    }
+
     private void initIndexes() {
         Index index = evaluator.getIndex();
         if (index != null) {
-            this.readAccessor = new LambdaReadAccessor( index.getIndexId(), index.getIndexedClass(), index.getLeftOperandExtractor() );
             switch (index.getIndexType()) {
                 case ALPHA:
                     this.field = new ObjectFieldImpl( ( ( AlphaIndex ) index).getRightValue() );
+                    this.readAccessor = new LambdaReadAccessor(index.getIndexId(), index.getIndexedClass(), index.getLeftOperandExtractor());
                     break;
                 case BETA:
-                    this.indexExtractor = initBetaIndex( ( BetaIndexN ) index );
+                    this.leftIndexExtractor = initBetaIndex( ( BetaIndexN ) index );
+                    this.rightIndexExtractor = new LambdaRightTupleValueExtractor(ValueType.determineValueType(index.getIndexedClass()), index.getLeftOperandExtractor());
                     break;
             }
         }
@@ -126,20 +158,23 @@ public class LambdaConstraint extends AbstractConstraint {
     @Override
     public void replaceDeclaration(Declaration oldDecl, Declaration newDecl) {
         evaluator.replaceDeclaration( oldDecl, newDecl );
-        if ( indexExtractor != null ) {
-            indexExtractor.replaceDeclaration( oldDecl, newDecl );
+        if ( leftIndexExtractor != null ) {
+            leftIndexExtractor.replaceDeclaration( oldDecl, newDecl );
         }
     }
 
+    /*
+     * pattern is not used in this method because reactOnProperties are already filtered by ExpressionTyper.addReactOnPropertyForArgument
+     */
     @Override
-    public BitMask getListenedPropertyMask( ObjectType objectType, List<String> settableProperties ) {
+    public BitMask getListenedPropertyMask( Optional<Pattern> pattern, ObjectType objectType, List<String> settableProperties ) {
         BitMask mask = adaptBitMask( evaluator.getReactivityBitMask() );
         if (mask != null) {
             return mask;
         }
 
         if (evaluator.getReactiveProps().length == 0) {
-            return super.getListenedPropertyMask( objectType, settableProperties );
+            return super.getListenedPropertyMask( pattern, objectType, settableProperties );
         }
 
         mask = getEmptyPropertyReactiveMask(settableProperties.size());
@@ -201,7 +236,7 @@ public class LambdaConstraint extends AbstractConstraint {
     }
 
     @Override
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         return new LambdaContextEntry();
     }
 
@@ -211,7 +246,7 @@ public class LambdaConstraint extends AbstractConstraint {
     }
 
     @Override
-    public boolean isIndexable( short nodeType, KieBaseConfiguration config) {
+    public boolean isIndexable(int nodeType, KieBaseConfiguration config) {
         return getConstraintType().isIndexableForNode(nodeType, this, config);
     }
 
@@ -245,8 +280,8 @@ public class LambdaConstraint extends AbstractConstraint {
     }
 
     @Override
-    public FieldIndex getFieldIndex() {
-        return new FieldIndex(readAccessor, indexExtractor );
+    public IndexedValueReader getFieldIndex() {
+        return new IndexedValueReader(leftIndexExtractor, rightIndexExtractor);
     }
 
     @Override
@@ -255,8 +290,13 @@ public class LambdaConstraint extends AbstractConstraint {
     }
 
     @Override
-    public TupleValueExtractor getIndexExtractor() {
-        return indexExtractor;
+    public TupleValueExtractor getRightIndexExtractor() {
+        return rightIndexExtractor;
+    }
+
+    @Override
+    public TupleValueExtractor getLeftIndexExtractor() {
+        return leftIndexExtractor;
     }
 
     @Override

@@ -1,36 +1,37 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.testcoverage.functional.oopath;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.model.Message;
 import org.drools.testcoverage.common.model.MessageEvent;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieSessionUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
@@ -44,7 +45,6 @@ import static org.drools.mvel.compiler.TestUtil.assertDrlHasCompilationError;
 /**
  * Tests usage of OOPath expressions with CEP (events, event windows, event streams).
  */
-@RunWith(Parameterized.class)
 public class OOPathCepTest {
 
     private static final String MODULE_GROUP_ID = "oopath-cep-test";
@@ -56,18 +56,11 @@ public class OOPathCepTest {
     private List<MessageEvent> events;
     private List<Message> messages;
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public OOPathCepTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseStreamConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseStreamConfigurations(true);
-    }
-
-    @After
+    @AfterEach
     public void disposeKieSession() {
         if (this.kieSession != null) {
             this.kieSession.dispose();
@@ -78,8 +71,9 @@ public class OOPathCepTest {
         }
     }
 
-    @Test
-    public void testEventWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEventWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -100,8 +94,9 @@ public class OOPathCepTest {
         this.populateAndVerifyEventCase(this.kieSession);
     }
 
-    @Test
-    public void testEntryPointWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEntryPointWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -134,8 +129,9 @@ public class OOPathCepTest {
         assertThat(this.messages).containsExactlyInAnyOrder(helloMessage);
     }
 
-    @Test
-    public void testTemporalOperatorAfterWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorAfterWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -167,8 +163,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorBeforeWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorBeforeWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -200,8 +197,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorCoincidesWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorCoincidesWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -233,8 +231,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorDuringWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorDuringWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -267,8 +266,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorFinishesWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorFinishesWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -301,8 +301,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorFinishedByWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorFinishedByWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -335,8 +336,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorIncludesWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorIncludesWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -369,8 +371,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorMeetsWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorMeetsWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -402,8 +405,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorMetByWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorMetByWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -435,8 +439,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorOverlapsWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorOverlapsWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -470,8 +475,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorOverlappedByWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorOverlappedByWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -504,8 +510,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorStartsWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorStartsWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -538,8 +545,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testTemporalOperatorStartedByWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTemporalOperatorStartedByWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -572,8 +580,9 @@ public class OOPathCepTest {
         assertThat(this.messages).as("The last event should make the rule fire").containsExactlyInAnyOrder(pongMessage);
     }
 
-    @Test
-    public void testLengthWindowWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLengthWindowWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -593,8 +602,9 @@ public class OOPathCepTest {
         this.populateAndVerifyLengthWindowCase(kieBase);
     }
 
-    @Test
-    public void testDeclaredLengthWindowWithOOPathInRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclaredLengthWindowWithOOPathInRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -618,8 +628,9 @@ public class OOPathCepTest {
         this.populateAndVerifyLengthWindowCase(kieBase);
     }
 
-    @Test
-    public void testOOPathNotAllowedInDeclaredWindow() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testOOPathNotAllowedInDeclaredWindow(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -668,8 +679,9 @@ public class OOPathCepTest {
         assertThat(this.events).as("The rule should have fired for ping event only").contains(ping4Event);
     }
 
-    @Test
-    public void testTimeWindowWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTimeWindowWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -689,8 +701,9 @@ public class OOPathCepTest {
         this.populateAndVerifyTimeWindowCase(kieBase);
     }
 
-    @Test
-    public void testDeclaredTimeWindowWithOOPathInRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclaredTimeWindowWithOOPathInRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +
@@ -747,8 +760,9 @@ public class OOPathCepTest {
         assertThat(this.events).as("The rule should have fired for ping event only").contains(ping4Event);
     }
 
-    @Test
-    public void testEventExplicitExpirationWithOOPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEventExplicitExpirationWithOOPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import org.drools.testcoverage.common.model.Message;\n" +
                 "import org.drools.testcoverage.common.model.MessageEvent;\n" +

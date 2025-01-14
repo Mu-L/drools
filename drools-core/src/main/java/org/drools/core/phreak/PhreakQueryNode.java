@@ -1,22 +1,26 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.phreak;
 
 import org.drools.core.base.DroolsQueryImpl;
 import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.TupleSets;
 import org.drools.core.reteoo.LeftInputAdapterNode;
@@ -25,16 +29,17 @@ import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.QueryElementNode;
 import org.drools.core.reteoo.QueryElementNode.QueryElementNodeMemory;
 import org.drools.core.reteoo.SegmentMemory;
-import org.drools.core.common.PropagationContext;
+import org.drools.core.reteoo.TupleImpl;
+import org.drools.core.util.index.TupleList;
 
 public class PhreakQueryNode {
     public void doNode(QueryElementNode queryNode,
                        QueryElementNodeMemory qmem,
                        StackEntry stackEntry,
                        ReteEvaluator reteEvaluator,
-                       TupleSets<LeftTuple> srcLeftTuples,
-                       TupleSets<LeftTuple> trgLeftTuples,
-                       TupleSets<LeftTuple> stagedLeftTuples) {
+                       TupleSets srcLeftTuples,
+                       TupleSets trgLeftTuples,
+                       TupleSets stagedLeftTuples) {
 
         if (srcLeftTuples.getDeleteFirst() != null) {
             doLeftDeletes(qmem, reteEvaluator, srcLeftTuples, trgLeftTuples, stagedLeftTuples);
@@ -55,9 +60,9 @@ public class PhreakQueryNode {
                               QueryElementNodeMemory qmem,
                               StackEntry stackEntry,
                               ReteEvaluator reteEvaluator,
-                              TupleSets<LeftTuple> srcLeftTuples) {
-        for (LeftTuple leftTuple = srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
-            LeftTuple next = leftTuple.getStagedNext();
+                              TupleSets srcLeftTuples) {
+        for (TupleImpl leftTuple = srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
+            TupleImpl next = leftTuple.getStagedNext();
 
             PropagationContext pCtx = leftTuple.getPropagationContext();
 
@@ -82,9 +87,9 @@ public class PhreakQueryNode {
     public void doLeftUpdates(QueryElementNode queryNode,
                               QueryElementNodeMemory qmem,
                               ReteEvaluator reteEvaluator,
-                              TupleSets<LeftTuple> srcLeftTuples) {
-        for (LeftTuple leftTuple = srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
-            LeftTuple next = leftTuple.getStagedNext();
+                              TupleSets srcLeftTuples) {
+        for (TupleImpl leftTuple = srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+            TupleImpl next = leftTuple.getStagedNext();
 
             InternalFactHandle fh = (InternalFactHandle) leftTuple.getContextObject();
             DroolsQueryImpl dquery = (DroolsQueryImpl) fh.getObject();
@@ -94,7 +99,7 @@ public class PhreakQueryNode {
             LeftInputAdapterNode lian = (LeftInputAdapterNode) qsmem.getRootNode();
             LiaNodeMemory lmem = (LiaNodeMemory) qsmem.getNodeMemories()[0];
             if (dquery.isOpen()) {
-                LeftTuple childLeftTuple = fh.getFirstLeftTuple(); // there is only one, all other LTs are peers
+                TupleImpl childLeftTuple = fh.getFirstLeftTuple(); // there is only one, all other LTs are peers
                 LeftInputAdapterNode.doUpdateObject(childLeftTuple, childLeftTuple.getPropagationContext(), reteEvaluator, lian, false, lmem, qmem.getQuerySegmentMemory());
             } else {
                 if (fh.getFirstLeftTuple() != null) {
@@ -111,23 +116,23 @@ public class PhreakQueryNode {
 
     public void doLeftDeletes(QueryElementNodeMemory qmem,
                               ReteEvaluator reteEvaluator,
-                              TupleSets<LeftTuple> srcLeftTuples,
-                              TupleSets<LeftTuple> trgLeftTuples,
-                              TupleSets<LeftTuple> stagedLeftTuples) {
-        for (LeftTuple leftTuple = srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
-            LeftTuple next = leftTuple.getStagedNext();
+                              TupleSets srcLeftTuples,
+                              TupleSets trgLeftTuples,
+                              TupleSets stagedLeftTuples) {
+        for (TupleImpl leftTuple = srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+            TupleImpl next = leftTuple.getStagedNext();
 
             InternalFactHandle fh = (InternalFactHandle) leftTuple.getContextObject();
             DroolsQueryImpl dquery = (DroolsQueryImpl) fh.getObject();
             if (dquery.isOpen()) {
                 LeftInputAdapterNode lian = (LeftInputAdapterNode) qmem.getQuerySegmentMemory().getRootNode();
                 LiaNodeMemory lm = (LiaNodeMemory) qmem.getQuerySegmentMemory().getNodeMemories()[0];
-                LeftTuple childLeftTuple = fh.getFirstLeftTuple(); // there is only one, all other LTs are peers
+                TupleImpl childLeftTuple = fh.getFirstLeftTuple(); // there is only one, all other LTs are peers
                 LeftInputAdapterNode.doDeleteObject(childLeftTuple, childLeftTuple.getPropagationContext(), qmem.getQuerySegmentMemory(), reteEvaluator, lian, false, lm);
             } else {
-                LeftTuple childLeftTuple = leftTuple.getFirstChild();
+                TupleImpl childLeftTuple = leftTuple.getFirstChild();
                 while (childLeftTuple != null) {
-                    LeftTuple nextChild = childLeftTuple.getHandleNext();
+                    TupleImpl nextChild = childLeftTuple.getHandleNext();
                     RuleNetworkEvaluator.unlinkAndDeleteChildLeftTuple( childLeftTuple, trgLeftTuples, stagedLeftTuples );
                     childLeftTuple = nextChild;
                 }

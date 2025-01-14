@@ -1,19 +1,21 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.testcoverage.memory;
 
 import java.io.IOException;
@@ -26,38 +28,35 @@ import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.MavenUtil;
 import org.drools.testcoverage.common.util.TestConstants;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.Ignore;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieModule;
 import org.kie.api.builder.KieScanner;
 import org.kie.api.builder.ReleaseId;
 import org.kie.api.runtime.KieContainer;
 import org.kie.scanner.KieMavenRepository;
-import org.kie.test.testcategory.TurtleTestCategory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Ignore("DROOLS-3628 Ignoring, because it can be useful when run locally, however due to unpredictable GC behaviour, unstable in automation.")
-@Category(TurtleTestCategory.class)
+@Disabled("DROOLS-3628 Ignoring, because it can be useful when run locally, however due to unpredictable GC behaviour, unstable in automation.")
 public class KieScannerMemoryTest {
 
     private static final Logger logger = LoggerFactory.getLogger(KieScannerMemoryTest.class);
 
     private FileManager fileManager;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.fileManager = new FileManager();
         this.fileManager.setUp();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         this.fileManager.tearDown();
     }

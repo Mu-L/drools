@@ -1,20 +1,66 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.kiesession.rulebase;
+
+import org.drools.base.RuleBase;
+import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.InvalidPatternException;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.ruleunit.RuleUnitDescriptionRegistry;
+import org.drools.core.KieBaseConfigurationImpl;
+import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.SessionConfiguration;
+import org.drools.core.base.ClassFieldAccessorCache;
+import org.drools.core.common.InternalWorkingMemory;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.impl.EnvironmentFactory;
+import org.drools.core.impl.InternalKieContainer;
+import org.drools.core.impl.KieBaseUpdate;
+import org.drools.core.impl.KnowledgeBaseImpl;
+import org.drools.core.impl.RuleBaseFactory;
+import org.drools.core.management.DroolsManagementAgent;
+import org.drools.core.reteoo.AsyncReceiveNode;
+import org.drools.core.reteoo.EntryPointNode;
+import org.drools.core.reteoo.LeftTupleNode;
+import org.drools.core.reteoo.LeftTupleSource;
+import org.drools.core.reteoo.Rete;
+import org.drools.core.reteoo.ReteooBuilder;
+import org.drools.core.reteoo.RuntimeComponentFactory;
+import org.drools.core.reteoo.SegmentMemory;
+import org.drools.core.reteoo.SegmentMemory.SegmentPrototype;
+import org.drools.core.rule.accessor.FactHandleFactory;
+import org.kie.api.KieBaseConfiguration;
+import org.kie.api.builder.ReleaseId;
+import org.kie.api.definition.KiePackage;
+import org.kie.api.definition.process.Process;
+import org.kie.api.definition.rule.Query;
+import org.kie.api.definition.rule.Rule;
+import org.kie.api.definition.type.FactType;
+import org.kie.api.event.kiebase.KieBaseEventListener;
+import org.kie.api.io.Resource;
+import org.kie.api.runtime.Environment;
+import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.KieSessionConfiguration;
+import org.kie.api.runtime.KieSessionsPool;
+import org.kie.api.runtime.StatelessKieSession;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -31,50 +77,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.drools.core.KieBaseConfigurationImpl;
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.SessionConfiguration;
-import org.drools.core.base.ClassFieldAccessorCache;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.base.common.RuleBasePartitionId;
-import org.drools.base.definitions.InternalKnowledgePackage;
-import org.drools.base.definitions.rule.impl.RuleImpl;
-import org.drools.core.impl.EnvironmentFactory;
-import org.drools.core.impl.InternalKieContainer;
-import org.drools.core.impl.InternalRuleBase;
-import org.drools.core.impl.KieBaseUpdate;
-import org.drools.core.impl.KnowledgeBaseImpl;
-import org.drools.core.impl.RuleBaseFactory;
-import org.drools.core.management.DroolsManagementAgent;
-import org.drools.core.reteoo.AsyncReceiveNode;
-import org.drools.core.reteoo.EntryPointNode;
-import org.drools.core.reteoo.LeftTupleNode;
-import org.drools.core.reteoo.LeftTupleSource;
-import org.drools.core.reteoo.Rete;
-import org.drools.core.reteoo.ReteooBuilder;
-import org.drools.core.reteoo.RuntimeComponentFactory;
-import org.drools.core.reteoo.SegmentMemory;
-import org.drools.core.reteoo.SegmentMemory.SegmentPrototype;
-import org.drools.base.rule.InvalidPatternException;
-import org.drools.base.rule.TypeDeclaration;
-import org.drools.core.rule.accessor.FactHandleFactory;
-import org.drools.base.ruleunit.RuleUnitDescriptionRegistry;
-import org.kie.api.KieBaseConfiguration;
-import org.kie.api.builder.ReleaseId;
-import org.kie.api.definition.KiePackage;
-import org.kie.api.definition.process.Process;
-import org.kie.api.definition.rule.Query;
-import org.kie.api.definition.rule.Rule;
-import org.kie.api.definition.type.FactType;
-import org.kie.api.event.kiebase.KieBaseEventListener;
-import org.kie.api.io.Resource;
-import org.kie.api.runtime.Environment;
-import org.kie.api.runtime.KieSession;
-import org.kie.api.runtime.KieSessionConfiguration;
-import org.kie.api.runtime.KieSessionsPool;
-import org.kie.api.runtime.StatelessKieSession;
 
 public class SessionsAwareKnowledgeBase implements InternalKnowledgeBase {
 
@@ -106,7 +108,7 @@ public class SessionsAwareKnowledgeBase implements InternalKnowledgeBase {
         this(RuleBaseFactory.newRuleBase(kbaseConfiguration));
     }
 
-    public SessionsAwareKnowledgeBase(InternalRuleBase delegate) {
+    public SessionsAwareKnowledgeBase(RuleBase delegate) {
         this.delegate = (KnowledgeBaseImpl) delegate;
 
         if (this.delegate.getRuleBaseConfiguration().getSessionPoolSize() > 0) {
@@ -759,6 +761,16 @@ public class SessionsAwareKnowledgeBase implements InternalKnowledgeBase {
     @Override
     public RuleBasePartitionId createNewPartitionId() {
         return delegate.createNewPartitionId();
+    }
+
+    @Override
+    public boolean isPartitioned() {
+        return delegate.isPartitioned();
+    }
+
+    @Override
+    public int getParallelEvaluationSlotsCount() {
+        return delegate.getParallelEvaluationSlotsCount();
     }
 
     @Override

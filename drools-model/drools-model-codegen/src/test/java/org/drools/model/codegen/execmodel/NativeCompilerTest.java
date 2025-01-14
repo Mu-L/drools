@@ -1,24 +1,28 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
 import org.drools.compiler.compiler.JavaDialectConfiguration;
 import org.drools.model.codegen.execmodel.domain.Person;
-import org.junit.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.runtime.KieSession;
 import org.kie.memorycompiler.JavaConfiguration;
 
@@ -26,12 +30,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class NativeCompilerTest extends BaseModelTest {
 
-    public NativeCompilerTest(RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test(timeout = 5000)
-    public void testPropertyReactivity() {
+	@ParameterizedTest
+	@MethodSource("parameters")
+    @Timeout(5000)
+    public void testPropertyReactivity(RUN_TYPE runType) {
         // DROOLS-6580
         // Since ecj is transitively imported by drools-compiler (we may want to review this with drools 8)
         // by default the executable model compiler always use it. This test also tries it with the native compiler.
@@ -48,7 +50,7 @@ public class NativeCompilerTest extends BaseModelTest {
                     "  modify($p) { setAge($p.getAge()+1) }\n" +
                     "end";
 
-            KieSession ksession = getKieSession(str);
+            KieSession ksession = getKieSession(runType, str);
 
             Person me = new Person("Mario", 40);
             ksession.insert(me);

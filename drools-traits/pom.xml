@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
@@ -6,7 +26,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>drools-build-parent</artifactId>
-    <version>8.40.0-SNAPSHOT</version>
+    <version>999-SNAPSHOT</version>
     <relativePath>../build-parent/pom.xml</relativePath>
   </parent>
 
@@ -16,12 +36,11 @@
   <name>Drools :: Traits</name>
 
   <properties>
-    <java.module.name>org.drools.core.traits</java.module.name>
+    <java.module.name>org.drools.traits</java.module.name>
     <surefire.forkCount>2</surefire.forkCount>
 
     <!-- These are properties used in the database profiles. Some of them must be initialized
      to be empty so that Maven applies their values via filtering to the resources. -->
-    <maven.hibernate.dialect>org.hibernate.dialect.H2Dialect</maven.hibernate.dialect>
     <maven.datasource.classname>org.h2.jdbcx.JdbcDataSource</maven.datasource.classname>
     <maven.jdbc.driver.class>org.h2.Driver</maven.jdbc.driver.class>
     <maven.jdbc.db.name/>
@@ -108,6 +127,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency><!-- For unit test logging: configure in src/test/resources/logback-test.xml -->
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
@@ -133,34 +157,18 @@
     </dependency>
     <dependency>
       <groupId>org.jboss</groupId>
-      <artifactId>jboss-transaction-spi-jakarta</artifactId>
+      <artifactId>jboss-transaction-spi</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.openjpa</groupId>
+      <artifactId>openjpa</artifactId>
       <scope>test</scope>
     </dependency>
 
-    <!-- Hibernate -->
     <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-core</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.glassfish.jaxb</groupId>
-          <artifactId>jaxb-runtime</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jboss</groupId>
-          <artifactId>jandex</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>${jandex.group-id}</groupId>
+      <groupId>io.smallrye</groupId>
       <artifactId>jandex</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-entitymanager</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -176,18 +184,17 @@
     </dependency>
 
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
-    </dependency>
+    </dependency>    
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
-
-
   </dependencies>
+
 
   <build>
     <resources>
@@ -200,6 +207,16 @@
       </resource>
     </resources>
 
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>-javaagent:${settings.localRepository}/org/apache/openjpa/openjpa/${version.org.apache.openjpa}/openjpa-${version.org.apache.openjpa}.jar</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+
     <testResources>
       <testResource>
         <directory>src/test/resources</directory>
@@ -210,21 +227,5 @@
         <filtering>true</filtering>
       </testResource>
     </testResources>
-
-
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <!-- Hack/workaround for https://bugs.openjdk.java.net/browse/JDK-8061305. The Javadoc generation fails for
-               this class, so needs to be excluded. It seems the issue is fixed only in JDK 9+. -->
-          <sourceFileExcludes>
-            <sourceFileExclude>**/MetaProperty.java</sourceFileExclude>
-          </sourceFileExcludes>
-        </configuration>
-      </plugin>
-
-    </plugins>
   </build>
 </project>

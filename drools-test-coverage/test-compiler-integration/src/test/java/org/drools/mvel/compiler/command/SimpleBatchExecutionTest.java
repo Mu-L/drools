@@ -1,17 +1,20 @@
-/*
- * Copyright 2011 Red Hat Inc.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.drools.mvel.compiler.command;
 
@@ -19,15 +22,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.command.Command;
 import org.kie.api.runtime.ExecutionResults;
@@ -37,7 +39,6 @@ import org.kie.internal.command.CommandFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class SimpleBatchExecutionTest {
 
     private KieSession ksession;
@@ -50,24 +51,17 @@ public class SimpleBatchExecutionTest {
         + "    then\n"
         + "end\n";
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
 
-    public SimpleBatchExecutionTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Before
-    public void createKSession() throws Exception {
+    public void createKSession(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, ruleString);
         ksession = kbase.newKieSession();
     }
     
-    @After
+    @AfterEach
     public void disposeKSession() throws Exception {
         if( ksession != null ) { 
             ksession.dispose();
@@ -75,9 +69,11 @@ public class SimpleBatchExecutionTest {
         }
     }
     
-    @Test 
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void testInsertObjectCommand() throws Exception {
+    public void testInsertObjectCommand(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createKSession(kieBaseTestConfiguration);
         
         String expected_1 = "expected_1";
         String expected_2 = "expected_2";
@@ -106,9 +102,11 @@ public class SimpleBatchExecutionTest {
         assertThat(expectedList.isEmpty()).as("Retrieved object list did not contain expected objects.").isTrue();
     }
     
-    @Test 
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void testInsertElementsCommand() throws Exception {
+    public void testInsertElementsCommand(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createKSession(kieBaseTestConfiguration);
         
         String expected_1 = "expected_1";
         String expected_2 = "expected_2";
@@ -135,9 +133,11 @@ public class SimpleBatchExecutionTest {
         assertThat(expectedList.isEmpty()).as("Retrieved object list did not contain expected objects.").isTrue();
     }
 
-    @Test 
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void testSetGlobalCommand() throws Exception {
+    public void testSetGlobalCommand(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createKSession(kieBaseTestConfiguration);
         
         ksession.insert(new Integer(5));
         ksession.insert(new Integer(7));
@@ -155,9 +155,11 @@ public class SimpleBatchExecutionTest {
         assertThat(global).isEqualTo("France");
     }
 
-    @Test 
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void testGetGlobalCommand() throws Exception {
+    public void testGetGlobalCommand(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createKSession(kieBaseTestConfiguration);
         
         ksession.insert(new Integer(5));
         ksession.insert(new Integer(7));
@@ -175,9 +177,11 @@ public class SimpleBatchExecutionTest {
         assertThat(global).as("Retrieved global is not equal to 'France'.").isEqualTo("France");
     }
    
-    @Test 
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void testGetObjectCommand() throws Exception {
+    public void testGetObjectCommand(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createKSession(kieBaseTestConfiguration);
         
         String expected_1 = "expected_1";
         String expected_2 = "expected_2";
@@ -201,9 +205,11 @@ public class SimpleBatchExecutionTest {
         assertThat(result.getValue("out_2")).isEqualTo(expected_2);
     }
     
-    @Test 
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void testGetObjectsCommand() throws Exception {
+    public void testGetObjectsCommand(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+    	createKSession(kieBaseTestConfiguration);
         
         String expected_1 = "expected_1";
         String expected_2 = "expected_2";

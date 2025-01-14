@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.stronglytyped;
 
 import java.lang.reflect.Field;
@@ -26,7 +28,9 @@ import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.dmn.api.core.DMNContext;
 import org.kie.dmn.api.core.DMNModel;
 import org.kie.dmn.api.core.DMNResult;
@@ -46,13 +50,11 @@ public class AnnotationsTest extends BaseVariantTest {
     public static final Logger LOG = LoggerFactory.getLogger(AnnotationsTest.class);
     private boolean strongly;
 
-    public AnnotationsTest(VariantTestConf testConfig) {
-        super(testConfig);
+    @ParameterizedTest
+    @MethodSource("params")
+    void nswe(VariantTestConf conf) throws Exception {
+        testConfig = conf;
         strongly = testConfig.isTypeSafe();
-    }
-
-    @Test
-    public void testNSWE() throws Exception {
         final DMNRuntime runtime = createRuntime("NSEW.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("https://kiegroup.org/dmn/_FBA17BF4-BC04-4C16-9305-40E8B4B2FECB", "NSEW");
         assertThat(dmnModel).isNotNull();
@@ -83,8 +85,11 @@ public class AnnotationsTest extends BaseVariantTest {
         }
     }
 
-    @Test
-    public void testOneOfEachType() throws Exception {
+    @ParameterizedTest
+    @MethodSource("params")
+    void oneOfEachType(VariantTestConf conf) throws Exception {
+        testConfig = conf;
+        strongly = testConfig.isTypeSafe();
         final DMNRuntime runtime = createRuntime("OneOfEachType.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_4f5608e9-4d74-4c22-a47e-ab657257fc9c", "OneOfEachType");
         assertThat(dmnModel).isNotNull();
@@ -120,8 +125,11 @@ public class AnnotationsTest extends BaseVariantTest {
         }
     }
 
-    @Test
-    public void testNextDays() throws Exception {
+    @ParameterizedTest
+    @MethodSource("params")
+    void nextDays(VariantTestConf conf) throws Exception {
+        testConfig = conf;
+        strongly = testConfig.isTypeSafe();
         final DMNRuntime runtime = createRuntime("nextDays.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("https://kiegroup.org/dmn/_8A1F9719-02AA-4517-97D4-5C4F5D22FE82", "nextDays");
         assertThat(dmnModel).isNotNull();

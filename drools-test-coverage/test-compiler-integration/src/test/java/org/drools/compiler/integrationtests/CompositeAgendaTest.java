@@ -1,45 +1,48 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
+
+import org.drools.testcoverage.common.model.A;
+import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.kie.api.KieBase;
+import org.kie.api.KieBaseConfiguration;
+import org.kie.api.io.ResourceType;
+import org.kie.api.runtime.KieSession;
+import org.kie.internal.conf.ParallelExecutionOption;
+import org.kie.internal.utils.KieHelper;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
-import org.drools.testcoverage.common.model.A;
-import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.kie.api.KieBase;
-import org.kie.api.KieBaseConfiguration;
-import org.kie.api.io.ResourceType;
-import org.kie.api.runtime.KieSession;
-import org.kie.internal.conf.MultithreadEvaluationOption;
-import org.kie.internal.utils.KieHelper;
-import org.kie.test.testcategory.TurtleTestCategory;
-
 import static org.assertj.core.api.Assertions.fail;
 
-@Category(TurtleTestCategory.class)
+@EnabledIfSystemProperty(named = "runTurtleTests", matches = "true")
 public class CompositeAgendaTest {
 
-    @Test @Ignore
+    @Test 
+    @Disabled
     public void testInALoop() {
         for (int i = 0; i < 100; i++) {
             testCreateHaltDisposeAgenda();
@@ -47,7 +50,8 @@ public class CompositeAgendaTest {
         }
     }
 
-    @Test(timeout = 600_000)
+    @Test
+    @Timeout(600000)
     public void testCreateHaltDisposeAgenda() {
         final String drl = " import " + A.class.getCanonicalName() + ";\n" +
                 " declare A @role( event ) end\n" +
@@ -94,7 +98,7 @@ public class CompositeAgendaTest {
                 " end";
 
         final KieBaseConfiguration kieBaseConfiguration = KieBaseTestConfiguration.STREAM_IDENTITY.getKieBaseConfiguration();
-        kieBaseConfiguration.setOption(MultithreadEvaluationOption.YES);
+        kieBaseConfiguration.setOption(ParallelExecutionOption.FULLY_PARALLEL);
         final KieBase kieBase = new KieHelper().addContent(drl, ResourceType.DRL).build(kieBaseConfiguration);
         final KieSession kieSession = kieBase.newKieSession();
 

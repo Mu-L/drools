@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.internal.utils;
 
 import java.util.ArrayDeque;
@@ -39,7 +41,7 @@ import org.kie.dmn.feel.runtime.functions.DateAndTimeFunction;
 import org.kie.dmn.feel.runtime.functions.DateFunction;
 import org.kie.dmn.feel.runtime.functions.DurationFunction;
 import org.kie.dmn.feel.runtime.functions.TimeFunction;
-import org.kie.dmn.feel.util.EvalHelper;
+import org.kie.dmn.feel.util.NumberEvalHelper;
 import org.kie.dmn.typesafe.DMNTypeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,19 +182,19 @@ public class DynamicDMNContextBuilder {
                 case UNKNOWN:
                     return value;
                 case DATE:
-                    return new DateFunction().invoke((String) value).getOrElseThrow(FailedConversionException::new);
+                    return DateFunction.INSTANCE.invoke((String) value).getOrElseThrow(FailedConversionException::new);
                 case TIME:
-                    return new TimeFunction().invoke((String) value).getOrElseThrow(FailedConversionException::new);
+                    return TimeFunction.INSTANCE.invoke((String) value).getOrElseThrow(FailedConversionException::new);
                 case DATE_TIME:
-                    return new DateAndTimeFunction().invoke((String) value).getOrElseThrow(FailedConversionException::new);
+                    return DateAndTimeFunction.INSTANCE.invoke((String) value).getOrElseThrow(FailedConversionException::new);
                 case BOOLEAN:
                     return value;
                 case NUMBER:
-                    return EvalHelper.getBigDecimalOrNull(value);
+                    return NumberEvalHelper.getBigDecimalOrNull(value);
                 case STRING:
                     return value;
                 case DURATION:
-                    return new DurationFunction().invoke((String) value).getOrElseThrow(FailedConversionException::new);
+                    return DurationFunction.INSTANCE.invoke((String) value).getOrElseThrow(FailedConversionException::new);
                 default:
                     throw new IllegalArgumentException();
             }

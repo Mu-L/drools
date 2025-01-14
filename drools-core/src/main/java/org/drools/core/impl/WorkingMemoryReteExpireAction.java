@@ -1,42 +1,48 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.impl;
 
+import java.io.Externalizable;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
-import org.drools.core.common.DefaultFactHandle;
 import org.drools.core.common.DefaultEventHandle;
-import org.drools.core.common.InternalWorkingMemoryEntryPoint;
+import org.drools.core.common.DefaultFactHandle;
+import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.WorkingMemoryAction;
 import org.drools.core.marshalling.MarshallerReaderContext;
 import org.drools.core.phreak.PropagationEntry;
 import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.common.PropagationContext;
+import org.drools.core.reteoo.RightTuple;
 
 import static org.drools.core.common.PhreakPropagationContextFactory.createPropagationContextForFact;
 
 public class WorkingMemoryReteExpireAction
         extends PropagationEntry.AbstractPropagationEntry
-        implements WorkingMemoryAction {
+        implements WorkingMemoryAction, Externalizable {
 
     protected DefaultEventHandle factHandle;
     protected ObjectTypeNode node;
 
-    protected WorkingMemoryReteExpireAction() { }
+    public WorkingMemoryReteExpireAction() { }
 
     public WorkingMemoryReteExpireAction(final DefaultEventHandle factHandle) {
         this.factHandle = factHandle;
@@ -81,23 +87,18 @@ public class WorkingMemoryReteExpireAction
 
         factHandle.forEachLeftTuple( ObjectTypeNode::expireLeftTuple );
         factHandle.forEachRightTuple( rt -> {
-            rt.setExpired(reteEvaluator, context);
+            ((RightTuple)rt).setExpired(reteEvaluator, context);
             ObjectTypeNode.expireRightTuple(rt);
         } );
 
-        expireFactHandle( reteEvaluator, factHandle );
+        expireFactHandle( factHandle );
     }
 
-    private static void expireFactHandle( ReteEvaluator reteEvaluator, DefaultEventHandle factHandle) {
+    private static void expireFactHandle( DefaultEventHandle factHandle) {
         factHandle.decreaseOtnCount();
-        if (factHandle.getOtnCount() == 0) {
+        if (factHandle.getOtnCount() <= 0) {
             factHandle.setExpired( true );
-            if (factHandle.getActivationsCount() == 0) {
-                String epId = factHandle.getEntryPointName();
-                ( (InternalWorkingMemoryEntryPoint) reteEvaluator.getEntryPoint( epId ) ).removeFromObjectStore( factHandle );
-            } else {
-                factHandle.setPendingRemoveFromStore( true );
-            }
+            factHandle.setPendingRemoveFromStore( true );
         }
     }
 
@@ -114,6 +115,16 @@ public class WorkingMemoryReteExpireAction
     @Override
     public String toString() {
         return "Expiration of " + factHandle.getObject();
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(new DefaultEventHandle(factHandle.getId(), factHandle.getEntryPointId())); // only for STORES_ONLY strategy. Just keep id and entryPointId to be rewired
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        this.factHandle = (DefaultEventHandle) in.readObject();
     }
 
     public static class PartitionAwareWorkingMemoryReteExpireAction extends PropagationEntry.AbstractPartitionedPropagationEntry {
@@ -138,12 +149,12 @@ public class WorkingMemoryReteExpireAction
             DefaultFactHandle.CompositeLinkedTuples linkedTuples = ( (DefaultFactHandle.CompositeLinkedTuples) factHandle.getLinkedTuples() );
             linkedTuples.forEachLeftTuple( partition, ObjectTypeNode::expireLeftTuple );
             linkedTuples.forEachRightTuple( partition, rt -> {
-                rt.setExpired(reteEvaluator, context);
+                ((RightTuple)rt).setExpired(reteEvaluator, context);
                 ObjectTypeNode.expireRightTuple(rt);
             });
 
             if (isMainPartition()) {
-                expireFactHandle( reteEvaluator, factHandle );
+                expireFactHandle( factHandle );
             }
         }
 

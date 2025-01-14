@@ -1,39 +1,39 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.ancompiler;
 
 import java.util.ArrayList;
 
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class MultipleIndexableConstraintsTest extends BaseModelTest {
 
-    public MultipleIndexableConstraintsTest(RUN_TYPE testRunType) {
-        super(testRunType);
-    }
-
     /* Currently we don't support multiple indexable constraints in the ANC, so this test will pass because
         it disables the switch generation and the inlining. See DROOLS-5947
      */
-    @Test
-    public void testMultipleIndexedConstraintTest() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testMultipleIndexedConstraintTest(RUN_TYPE testRunType) {
         final StringBuilder rule =
                 new StringBuilder("global java.util.List results;\n" +
                                           "import " + Person.class.getCanonicalName() + ";\n");
@@ -43,21 +43,18 @@ public class MultipleIndexableConstraintsTest extends BaseModelTest {
             rule.append(ruleWithIndex(i));
         }
 
-        KieSession ksession = getKieSession(rule.toString());
-        ArrayList<Object> results = new ArrayList<>();
-        ksession.setGlobal("results", results);
-        Person a = new Person("a", 1);
-        Person b = new Person("b", 0);
-        Person c = new Person("a", 7);
-        ksession.insert(a);
-        ksession.insert(b);
-        ksession.insert(c);
+        try (KieSession ksession = getKieSession(testRunType, rule.toString())) {
+            ArrayList<Object> results = new ArrayList<>();
+            ksession.setGlobal("results", results);
+            Person a = new Person("a", 1);
+            Person b = new Person("b", 0);
+            Person c = new Person("a", 7);
+            ksession.insert(a);
+            ksession.insert(b);
+            ksession.insert(c);
 
-        try {
             ksession.fireAllRules();
             assertThat(results).contains(a, b, c);
-        } finally {
-            ksession.dispose();
         }
     }
 

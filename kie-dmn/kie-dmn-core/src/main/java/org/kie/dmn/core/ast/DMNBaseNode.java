@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.ast;
 
 import java.util.Collections;
@@ -22,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.xml.namespace.QName;
 
@@ -43,17 +46,21 @@ public abstract class DMNBaseNode implements DMNNode {
 
     private Map<String, QName> importAliases = new HashMap<>();
 
+    private final String id;
+
     public DMNBaseNode() {
+        id = UUID.randomUUID().toString();
     }
 
     public DMNBaseNode(NamedElement source) {
         this.source = source;
+        id = source != null && source.getId() != null ? source.getId() : UUID.randomUUID().toString();
     }
 
     public abstract DMNType getType();
 
     public String getId() {
-        return source != null ? source.getId() : null;
+        return id;
     }
 
     public String getName() {
@@ -86,7 +93,7 @@ public abstract class DMNBaseNode implements DMNNode {
 
     public String getIdentifierString() {
         String identifier = "[unnamed]";
-        if( source != null ) {
+        if (source != null) {
             identifier = source.getName() != null ? source.getName() : source.getId();
         }
         return identifier;
@@ -105,11 +112,11 @@ public abstract class DMNBaseNode implements DMNNode {
     }
 
     public void addDependency(String name, DMNNode dependency) {
-        this.dependencies.put( name, dependency );
+        this.dependencies.put(name, dependency);
     }
 
     public List<InformationRequirement> getInformationRequirement() {
-        if ( source instanceof Decision ) {
+        if (source instanceof Decision) {
             return ((Decision) source).getInformationRequirement();
         } else {
             return Collections.emptyList();
@@ -117,9 +124,9 @@ public abstract class DMNBaseNode implements DMNNode {
     }
 
     public List<KnowledgeRequirement> getKnowledgeRequirement() {
-        if ( source instanceof Decision ) {
+        if (source instanceof Decision) {
             return ((Decision) source).getKnowledgeRequirement();
-        } else if( source instanceof BusinessKnowledgeModel ) {
+        } else if (source instanceof BusinessKnowledgeModel) {
             return ((BusinessKnowledgeModel) source).getKnowledgeRequirement();
         } else {
             return Collections.emptyList();
@@ -146,5 +153,4 @@ public abstract class DMNBaseNode implements DMNNode {
         builder.append("]");
         return builder.toString();
     }
-
 }

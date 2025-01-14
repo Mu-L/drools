@@ -1,25 +1,27 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.PropagationContext;
 
-public class EvalNodeLeftTuple extends AbstractLeftTuple {
+public class EvalNodeLeftTuple extends LeftTuple {
 
     private static final long serialVersionUID = 540l;
 
@@ -45,12 +47,12 @@ public class EvalNodeLeftTuple extends AbstractLeftTuple {
     }
 
     public EvalNodeLeftTuple(final InternalFactHandle factHandle,
-                             final LeftTuple leftTuple,
+                             final TupleImpl leftTuple,
                              final Sink sink) {
         super( factHandle, leftTuple, sink );
     }
 
-    public EvalNodeLeftTuple(final LeftTuple leftTuple,
+    public EvalNodeLeftTuple(final TupleImpl leftTuple,
                              final Sink sink,
                              final PropagationContext pctx,
                              final boolean leftTupleMemoryEnabled) {
@@ -60,16 +62,16 @@ public class EvalNodeLeftTuple extends AbstractLeftTuple {
               leftTupleMemoryEnabled);
     }
 
-    public EvalNodeLeftTuple(final LeftTuple leftTuple,
-                             RightTuple rightTuple,
+    public EvalNodeLeftTuple(final TupleImpl leftTuple,
+                             TupleImpl rightTuple,
                              Sink sink) {
         super(leftTuple,
               rightTuple,
               sink);
     }
 
-    public EvalNodeLeftTuple(final LeftTuple leftTuple,
-                             final RightTuple rightTuple,
+    public EvalNodeLeftTuple(final TupleImpl leftTuple,
+                             final TupleImpl rightTuple,
                              final Sink sink,
                              final boolean leftTupleMemoryEnabled) {
         this(leftTuple,
@@ -80,10 +82,10 @@ public class EvalNodeLeftTuple extends AbstractLeftTuple {
              leftTupleMemoryEnabled);
     }
 
-    public EvalNodeLeftTuple(final LeftTuple leftTuple,
-                             final RightTuple rightTuple,
-                             final LeftTuple currentLeftChild,
-                             final LeftTuple currentRightChild,
+    public EvalNodeLeftTuple(final TupleImpl leftTuple,
+                             final TupleImpl rightTuple,
+                             final TupleImpl currentLeftChild,
+                             final TupleImpl currentRightChild,
                              final Sink sink,
                              final boolean leftTupleMemoryEnabled) {
         super(leftTuple,

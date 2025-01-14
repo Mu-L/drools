@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
 import java.lang.reflect.Method;
@@ -23,7 +25,8 @@ import java.util.List;
 import org.drools.model.codegen.execmodel.domain.InputDataTypes;
 import org.drools.model.codegen.execmodel.domain.Person;
 import org.drools.model.codegen.execmodel.domain.Result;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.Message;
 import org.kie.api.builder.Results;
@@ -34,12 +37,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class GlobalTest extends BaseModelTest {
 
-    public GlobalTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test
-    public void testGlobalInConsequence() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalInConsequence(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -51,7 +51,7 @@ public class GlobalTest extends BaseModelTest {
                 " globalResult.setValue($p1.getName() + \" is \" + $p1.getAge());\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Result result = new Result();
         ksession.setGlobal("globalResult", result);
@@ -65,8 +65,9 @@ public class GlobalTest extends BaseModelTest {
         assertThat(result.getValue()).isEqualTo("Mark is 37");
     }
 
-    @Test
-    public void testGlobalInConstraint() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalInConstraint(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -79,7 +80,7 @@ public class GlobalTest extends BaseModelTest {
                 " resultG.setValue($p1.getName() + \" is \" + $p1.getAge());\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.setGlobal("nameG", "Mark");
 
@@ -162,8 +163,9 @@ public class GlobalTest extends BaseModelTest {
 
     }
 
-    @Test
-    public void testGlobalBooleanFunction() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalBooleanFunction(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -177,7 +179,7 @@ public class GlobalTest extends BaseModelTest {
                 " resultG.setValue($p1.getName() + \" is \" + $p1.getAge());\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.setGlobal("functions", new Functions());
 
@@ -193,8 +195,9 @@ public class GlobalTest extends BaseModelTest {
         assertThat(result.getValue()).isEqualTo("Mark is 37");
     }
 
-    @Test
-    public void testGlobalFunctionOnLeft() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalFunctionOnLeft(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -208,7 +211,7 @@ public class GlobalTest extends BaseModelTest {
                 " resultG.setValue($p1.getName() + \" is \" + $p1.getAge());\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.setGlobal("functions", new Functions());
 
@@ -224,8 +227,9 @@ public class GlobalTest extends BaseModelTest {
         assertThat(result.getValue()).isEqualTo("Mark is 37");
     }
 
-    @Test
-    public void testGlobalFunctionOnRight() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalFunctionOnRight(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -239,7 +243,7 @@ public class GlobalTest extends BaseModelTest {
                 " resultG.setValue($p1.getName() + \" is \" + $p1.getAge());\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.setGlobal("functions", new Functions());
 
@@ -261,8 +265,9 @@ public class GlobalTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testComplexGlobalFunction() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testComplexGlobalFunction(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                         "import " + Family.class.getCanonicalName() + ";" +
@@ -275,15 +280,16 @@ public class GlobalTest extends BaseModelTest {
                         "then\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         ksession.setGlobal("functions", new Functions());
         ksession.insert(new Family());
 
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testComplexGlobalFunctionWithShort() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testComplexGlobalFunctionWithShort(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                         "import " + Family.class.getCanonicalName() + ";" +
@@ -296,15 +302,16 @@ public class GlobalTest extends BaseModelTest {
                         "then\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         ksession.setGlobal("functions", new Functions());
         ksession.insert(new Family());
 
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testComplexGlobalFunctionWithShortEvalOnJoin() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testComplexGlobalFunctionWithShortEvalOnJoin(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                         "import " + Family.class.getCanonicalName() + ";" +
@@ -318,7 +325,7 @@ public class GlobalTest extends BaseModelTest {
                         "then\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         ksession.setGlobal("functions", new Functions());
         ksession.insert(new Family());
         ksession.insert("test");
@@ -326,8 +333,9 @@ public class GlobalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testComplexGlobalFunctionWithShortNotFiring() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testComplexGlobalFunctionWithShortNotFiring(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                         "import " + Family.class.getCanonicalName() + ";" +
@@ -340,7 +348,7 @@ public class GlobalTest extends BaseModelTest {
                         "then\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         ksession.setGlobal("functions", new Functions());
         ksession.insert(new Family());
 
@@ -348,17 +356,19 @@ public class GlobalTest extends BaseModelTest {
     }
 
 
-    @Test
-    public void testGlobalOnTypeDeclaration() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalOnTypeDeclaration(RUN_TYPE runType) throws Exception {
         String str =
                 "declare MyObject end\n" +
                 "global MyObject event;";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
     }
 
-    @Test
-    public void testGlobalFunctionWithArrayInput() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalFunctionWithArrayInput(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                         "import " + InputDataTypes.class.getCanonicalName() + ";" +
@@ -382,15 +392,16 @@ public class GlobalTest extends BaseModelTest {
                         "  update($input);\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         ksession.setGlobal("functions", new Functions());
         ksession.insert(new InputDataTypes());
 
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testGlobalFunctionWithLargeArrayInput() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalFunctionWithLargeArrayInput(RUN_TYPE runType) {
         String str =
                 "package org.mypkg;" +
                         "import " + InputDataTypes.class.getCanonicalName() + ";" +
@@ -451,15 +462,16 @@ public class GlobalTest extends BaseModelTest {
                         "  update($input);\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType,  str);
         ksession.setGlobal("functions", new Functions());
         ksession.insert(new InputDataTypes());
 
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testGlobalInDifferentPackage() throws InstantiationException, IllegalAccessException {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalInDifferentPackage(RUN_TYPE runType) throws InstantiationException, IllegalAccessException {
         // DROOLS-6657
         String def =
                 "package org.drools.reproducer.definitions\n" +
@@ -480,7 +492,7 @@ public class GlobalTest extends BaseModelTest {
                 "    globalList.add(\"FOO matched\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( rule, def );
+        KieSession ksession = getKieSession(runType, rule, def);
         KieBase kb = ksession.getKieBase();
 
         assertThat(ksession.fireAllRules()).isEqualTo(0);
@@ -500,8 +512,9 @@ public class GlobalTest extends BaseModelTest {
         assertThat(globalList.get(0)).isEqualTo("FOO matched");
     }
 
-    @Test
-    public void testGenericOnGlobal() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGenericOnGlobal(RUN_TYPE runType) {
         // DROOLS-7155
         String def =
                 "package org.drools.reproducer\n" +
@@ -511,14 +524,15 @@ public class GlobalTest extends BaseModelTest {
                 "    globalList.add(\"test\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( def );
+        KieSession ksession = getKieSession(runType, def);
         ksession.setGlobal("globalList", new ArrayList<String>());
 
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testWrongGenericOnGlobal() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testWrongGenericOnGlobal(RUN_TYPE runType) {
         // DROOLS-7155
         String def =
                 "package org.drools.reproducer\n" +
@@ -528,7 +542,7 @@ public class GlobalTest extends BaseModelTest {
                 "    globalList.add(\"test\");\n" +
                 "end\n";
 
-        Results results = createKieBuilder(def).getResults();
+        Results results = createKieBuilder(runType, def).getResults();
         assertThat(results.getMessages(Message.Level.ERROR)).isNotEmpty();
         assertThat(results.getMessages(Message.Level.ERROR).stream().map(Message::getText)
                 .anyMatch(s -> s.contains("The method add(Integer) in the type List<Integer> is not applicable for the arguments (String)"))).isTrue();

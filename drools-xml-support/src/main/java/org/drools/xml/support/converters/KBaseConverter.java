@@ -1,24 +1,28 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.xml.support.converters;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import org.drools.compiler.kproject.KieModuleException;
 import org.drools.compiler.kproject.models.KieBaseModelImpl;
 import org.drools.compiler.kproject.models.KieSessionModelImpl;
 import org.drools.compiler.kproject.models.RuleTemplateModelImpl;
@@ -30,6 +34,7 @@ import org.kie.api.conf.DeclarativeAgendaOption;
 import org.kie.api.conf.EqualityBehaviorOption;
 import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.conf.KieBaseMutabilityOption;
+import org.kie.api.conf.PrototypesOption;
 import org.kie.api.conf.SequentialOption;
 import org.kie.api.conf.SessionsPoolOption;
 
@@ -49,6 +54,9 @@ public class KBaseConverter extends AbstractXStreamConverter {
         writer.addAttribute( "default", Boolean.toString(kBase.isDefault()) );
         if ( kBase.getEventProcessingMode() != null ) {
             writer.addAttribute( "eventProcessingMode", kBase.getEventProcessingMode().getMode() );
+        }
+        if ( kBase.getPrototypes() != null ) {
+            writer.addAttribute( "prototypes", kBase.getPrototypes().toString().toLowerCase() );
         }
         if ( kBase.getEqualsBehavior() != null ) {
             writer.addAttribute( "equalsBehavior", kBase.getEqualsBehavior().toString().toLowerCase() );
@@ -115,13 +123,23 @@ public class KBaseConverter extends AbstractXStreamConverter {
         final KieBaseModelImpl kBase = new KieBaseModelImpl();
 
         String kbaseName = reader.getAttribute( "name" );
-        kBase.setNameForUnmarshalling( kbaseName != null ? kbaseName : StringUtils.uuid() );
+        if (kbaseName == null) {
+            kbaseName = StringUtils.uuid();
+        } else if (kbaseName.isEmpty()) {
+            throw new KieModuleException("kbase name is empty in kmodule.xml");
+        }
+        kBase.setNameForUnmarshalling( kbaseName );
 
         kBase.setDefault( "true".equals(reader.getAttribute( "default" )) );
 
         String eventMode = reader.getAttribute( "eventProcessingMode" );
         if ( eventMode != null ) {
             kBase.setEventProcessingMode( EventProcessingOption.determineEventProcessingMode( eventMode ) );
+        }
+
+        String prototypes = reader.getAttribute( "prototypes" );
+        if ( prototypes != null ) {
+            kBase.setPrototypes( PrototypesOption.determinePrototypesOption(prototypes) );
         }
 
         String equalsBehavior = reader.getAttribute( "equalsBehavior" );

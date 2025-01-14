@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.compiler.integrationtests.incrementalcompilation;
 
 import java.util.ArrayList;
@@ -8,17 +26,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.kie.test.testcategory.TurtleTestCategory;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@Category(TurtleTestCategory.class)
 public abstract class AbstractAddRemoveGenerated2RulesTest {
 
-    private final String rule1;
-    private final String rule2;
+    private String rule1;
+    private String rule2;
 
-    public AbstractAddRemoveGenerated2RulesTest(final ConstraintsPair constraintsPair) {
+    private void generateRules(final ConstraintsPair constraintsPair) {
         final String rule1 = "package " + TestUtil.RULES_PACKAGE_NAME + ";" +
                 "global java.util.List list\n" +
                 "rule " + TestUtil.RULE1_NAME + " \n" +
@@ -41,11 +58,11 @@ public abstract class AbstractAddRemoveGenerated2RulesTest {
 
     // This takes only three different constraints - this is intentional, because it is needed to
     // keep the number of combinations at reasonable number.
-    public static Collection<ConstraintsPair[]> generateRulesConstraintsCombinations(final String constraint1,
+    public static Collection<ConstraintsPair> generateRulesConstraintsCombinations(final String constraint1,
                                                                                      final String constraint2,
                                                                                      final String constraint3) {
         final Set<ConstraintsPair> constraintsPairs = new HashSet<>();
-        final List<ConstraintsPair[]> result = new ArrayList<>();
+        final List<ConstraintsPair> result = new ArrayList<>();
 
         final List<String> constraintsList = new ArrayList<>();
         constraintsList.add(constraint1);
@@ -57,7 +74,7 @@ public abstract class AbstractAddRemoveGenerated2RulesTest {
             for (final String constraintsRule2 : constraintsCombinations) {
                 final ConstraintsPair constraintsPair = new ConstraintsPair(constraintsRule1, constraintsRule2);
                 if (constraintsPairs.add(constraintsPair)) {
-                    result.add(new ConstraintsPair[]{constraintsPair});
+                    result.add(constraintsPair);
                 }
             }
         }
@@ -80,57 +97,81 @@ public abstract class AbstractAddRemoveGenerated2RulesTest {
 
     /////////////////////////// TESTS //////////////////////////////////
 
-    @Test(timeout = 40000)
-    public void testInsertFactsFireRulesRemoveRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(40000)
+    public void testInsertFactsFireRulesRemoveRules(ConstraintsPair constraintsPair) {
+    	generateRules(constraintsPair);
         AddRemoveTestCases.insertFactsFireRulesRemoveRules1(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsFireRulesRemoveRules2(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsFireRulesRemoveRules3(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
     }
 
-    @Test(timeout = 40000)
-    public void testInsertFactsFireRulesRemoveRulesRevertedRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(40000)
+    public void testInsertFactsFireRulesRemoveRulesRevertedRules(ConstraintsPair constraintsPair) {
+    	generateRules(constraintsPair);
         AddRemoveTestCases.insertFactsFireRulesRemoveRules1(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsFireRulesRemoveRules2(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsFireRulesRemoveRules3(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
     }
 
-    @Test(timeout = 40000)
-    public void testFireRulesInsertFactsFireRulesRemoveRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(40000)
+    public void testFireRulesInsertFactsFireRulesRemoveRules(ConstraintsPair constraintsPair) {
+    	generateRules(constraintsPair);
         AddRemoveTestCases.fireRulesInsertFactsFireRulesRemoveRules1(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
         AddRemoveTestCases.fireRulesInsertFactsFireRulesRemoveRules2(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
         AddRemoveTestCases.fireRulesInsertFactsFireRulesRemoveRules3(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
     }
 
-    @Test(timeout = 40000)
-    public void testFireRulesInsertFactsFireRulesRemoveRulesRevertedRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(40000)
+    public void testFireRulesInsertFactsFireRulesRemoveRulesRevertedRules(ConstraintsPair constraintsPair) {
+    	generateRules(constraintsPair);
         AddRemoveTestCases.fireRulesInsertFactsFireRulesRemoveRules1(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
         AddRemoveTestCases.fireRulesInsertFactsFireRulesRemoveRules2(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
         AddRemoveTestCases.fireRulesInsertFactsFireRulesRemoveRules3(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
     }
 
-    @Test(timeout = 40000)
-    public void testInsertFactsRemoveRulesFireRulesRemoveRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(40000)
+    public void testInsertFactsRemoveRulesFireRulesRemoveRules(ConstraintsPair constraintsPair) {
+    	generateRules(constraintsPair);
         AddRemoveTestCases.insertFactsRemoveRulesFireRulesRemoveRules1(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsRemoveRulesFireRulesRemoveRules2(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsRemoveRulesFireRulesRemoveRules3(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
     }
 
-    @Test(timeout = 40000)
-    public void testInsertFactsRemoveRulesFireRulesRemoveRulesRevertedRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(40000)
+    public void testInsertFactsRemoveRulesFireRulesRemoveRulesRevertedRules(ConstraintsPair constraintsPair) {
+    	generateRules(constraintsPair);
         AddRemoveTestCases.insertFactsRemoveRulesFireRulesRemoveRules1(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsRemoveRulesFireRulesRemoveRules2(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsRemoveRulesFireRulesRemoveRules3(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
     }
 
-    @Test(timeout = 40000)
-    public void testInsertFactsFireRulesRemoveRulesReinsertRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(40000)
+    public void testInsertFactsFireRulesRemoveRulesReinsertRules(ConstraintsPair constraintsPair) {
+    	generateRules(constraintsPair);
         AddRemoveTestCases.insertFactsFireRulesRemoveRulesReinsertRules1(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsFireRulesRemoveRulesReinsertRules2(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsFireRulesRemoveRulesReinsertRules3(rule1, rule2, TestUtil.RULE1_NAME, TestUtil.RULE2_NAME, null, getFacts());
     }
 
-    @Test(timeout = 40000)
-    public void testInsertFactsFireRulesRemoveRulesReinsertRulesRevertedRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(40000)
+    public void testInsertFactsFireRulesRemoveRulesReinsertRulesRevertedRules(ConstraintsPair constraintsPair) {
+    	generateRules(constraintsPair);
         AddRemoveTestCases.insertFactsFireRulesRemoveRulesReinsertRules1(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsFireRulesRemoveRulesReinsertRules2(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());
         AddRemoveTestCases.insertFactsFireRulesRemoveRulesReinsertRules3(rule2, rule1, TestUtil.RULE2_NAME, TestUtil.RULE1_NAME, null, getFacts());

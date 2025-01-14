@@ -1,24 +1,26 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests.drl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.model.Cheese;
 import org.drools.testcoverage.common.model.Person;
@@ -26,10 +28,9 @@ import org.drools.testcoverage.common.model.Pet;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.event.rule.ObjectDeletedEvent;
@@ -44,22 +45,15 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@RunWith(Parameterized.class)
 public class ConsequenceTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public ConsequenceTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testConsequenceException() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testConsequenceException(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -88,8 +82,9 @@ public class ConsequenceTest {
         }
     }
 
-    @Test
-    public void testConsequenceBuilderException() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testConsequenceBuilderException(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "global java.util.List results;\n" +
                 "rule \"error compiling consequence\"\n" +
@@ -113,8 +108,9 @@ public class ConsequenceTest {
         assertThat(kieBuilder.getResults().getMessages()).isNotEmpty();
     }
 
-    @Test
-    public void testMetaConsequence() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMetaConsequence(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "global java.util.List results;\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -152,8 +148,9 @@ public class ConsequenceTest {
         }
     }
 
-    @Test
-    public void testMVELConsequenceWithMapsAndArrays() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMVELConsequenceWithMapsAndArrays(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
             "import java.util.ArrayList\n" +
             "import java.util.HashMap\n" +
@@ -184,8 +181,9 @@ public class ConsequenceTest {
         }
     }
 
-    @Test
-    public void testMVELConsequenceWithoutSemiColon1() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMVELConsequenceWithoutSemiColon1(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
             "package prg.drools.compiler.integrationtests.drl;\n" +
             "import " + Person.class.getCanonicalName() + ";\n" +

@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.reteoo;
 
 import java.util.ArrayList;
@@ -34,7 +37,7 @@ import org.drools.core.reteoo.QueryElementNode.QueryElementNodeMemory;
 import org.drools.core.reteoo.RightInputAdapterNode.RiaPathMemory;
 import org.drools.core.reteoo.TimerNode.TimerNodeMemory;
 import org.drools.core.util.LinkedList;
-import org.drools.core.util.LinkedListNode;
+import org.drools.core.util.DoubleLinkedEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +45,7 @@ import static org.drools.core.phreak.RuntimeSegmentUtilities.getQuerySegmentMemo
 
 public class SegmentMemory extends LinkedList<SegmentMemory>
         implements
-        LinkedListNode<SegmentMemory> {
+        DoubleLinkedEntry<SegmentMemory> {
 
     protected static final Logger log = LoggerFactory.getLogger(SegmentMemory.class);
     protected static final boolean IS_LOG_TRACE_ENABLED = log.isTraceEnabled();
@@ -50,7 +53,7 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
     private SegmentPrototype   proto;
     private Memory[]       nodeMemories;
     private final List<PathMemory>   pathMemories = new ArrayList<>(1);;
-    private final TupleSets<LeftTuple> stagedLeftTuples = new TupleSetsImpl<>();
+    private final TupleSets stagedLeftTuples = new TupleSetsImpl();
     private long linkedNodeMask;
     private long dirtyNodeMask;
     private long allLinkedMaskTest;
@@ -347,7 +350,7 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
         this.pos = pos;
     }
 
-    public TupleSets<LeftTuple> getStagedLeftTuples() {
+    public TupleSets getStagedLeftTuples() {
         return stagedLeftTuples;
     }
 
@@ -396,7 +399,7 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
         this.previous = previous;
     }
 
-    public void nullPrevNext() {
+    public void clear() {
         previous = null;
         next = null;
     }
@@ -595,7 +598,7 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
             sbuilder.append("nodeTypesInSegment " + nodeTypesInSegment + " ");
             sbuilder.append("nodes ");
             if (nodesInSegment != null) {
-                Arrays.stream(nodesInSegment).forEach(n -> sbuilder.append(n));
+                Arrays.stream(nodesInSegment).forEach(sbuilder::append);
             }
             sbuilder.append("]");
             return sbuilder.toString();
@@ -747,7 +750,7 @@ public class SegmentMemory extends LinkedList<SegmentMemory>
         @Override
         public void populateMemory(ReteEvaluator reteEvaluator, Memory mem) {
             QueryElementNodeMemory qmem = (QueryElementNodeMemory)  mem;
-            SegmentMemory querySmem = getQuerySegmentMemory(reteEvaluator, (LeftTupleSource)qmem.getSegmentMemory().getRootNode(), queryNode);
+            SegmentMemory querySmem = getQuerySegmentMemory(reteEvaluator, queryNode);
             qmem.setQuerySegmentMemory(querySmem);
             qmem.setNodePosMaskBit(nodePosMaskBit);
         }

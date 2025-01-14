@@ -1,9 +1,28 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.model.codegen.execmodel;
 
 import org.drools.compiler.kie.builder.impl.DrlProject;
 import org.drools.model.codegen.ExecutableModelProject;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.drools.io.ByteArrayResource;
-import org.junit.Test;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
@@ -31,9 +50,6 @@ public class DeclaredTypeDifferentKJarIncludesTest extends BaseModelTest {
     private final String SUPER_KBASE_PACKAGE = "org.superkbase";
     private final ReleaseIdImpl SUPER_RELEASE_ID = new ReleaseIdImpl(SUPER_KBASE_PACKAGE, "superkbase", "1.0.0");
 
-    public DeclaredTypeDifferentKJarIncludesTest(RUN_TYPE testRunType) {
-        super(testRunType);
-    }
 
     private static final String SUPER_RULE = "package org.superkbase;\n" +
             "\n" +
@@ -62,9 +78,10 @@ public class DeclaredTypeDifferentKJarIncludesTest extends BaseModelTest {
             "  delete($s);\n" +
             "end\n";
 
-    @Test
-    public void testChildIncludingSuper() {
-        KieBase kBase = createKieBase();
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testChildIncludingSuper(RUN_TYPE runType) {
+        KieBase kBase = createKieBase(runType);
 
         KieSession newSuperKieBase = kBase.newKieSession();
         newSuperKieBase.insert(10);
@@ -74,16 +91,16 @@ public class DeclaredTypeDifferentKJarIncludesTest extends BaseModelTest {
         assertThat(newSuperKieBase.getObjects().size()).isEqualTo(0);
     }
 
-    private KieBase createKieBase() {
+    private KieBase createKieBase(RUN_TYPE runType) {
         KieServices kieServices = KieServices.Factory.get();
 
-        superKieBase(kieServices);
-        childKieBase(kieServices);
+        superKieBase(kieServices, runType);
+        childKieBase(kieServices, runType);
 
         return kieServices.newKieContainer(CHILD_RELEASE_ID).getKieBase(CHILD_KBASE_NAME);
     }
 
-    private void superKieBase(KieServices kieServices) {
+    private void superKieBase(KieServices kieServices, RUN_TYPE runType) {
         KieModuleModel superKModule = kieServices.newKieModuleModel();
         KieBaseModel superKieBase = superKModule.newKieBaseModel(SUPER_KBASE_NAME);
 
@@ -98,10 +115,10 @@ public class DeclaredTypeDifferentKJarIncludesTest extends BaseModelTest {
         superFileSystem.writeKModuleXML(superKModule.toXML());
         superFileSystem.write("pom.xml", generatePomXmlWithDependencies(SUPER_RELEASE_ID));
 
-        kieServices.newKieBuilder(superFileSystem).buildAll(buildProjectClass());
+        kieServices.newKieBuilder(superFileSystem).buildAll(buildProjectClass(runType));
     }
 
-    private void childKieBase(KieServices kieServices) {
+    private void childKieBase(KieServices kieServices, RUN_TYPE runType) {
         KieModuleModel childKModule = kieServices.newKieModuleModel();
         KieBaseModel childKbase = childKModule.newKieBaseModel(CHILD_KBASE_NAME)
                 .setDefault(true)
@@ -117,7 +134,7 @@ public class DeclaredTypeDifferentKJarIncludesTest extends BaseModelTest {
         childFileSystem.writeKModuleXML(childKModule.toXML());
         childFileSystem.write("pom.xml", generatePomXmlWithDependencies(CHILD_RELEASE_ID, SUPER_RELEASE_ID));
 
-        kieServices.newKieBuilder(childFileSystem).buildAll(buildProjectClass());
+        kieServices.newKieBuilder(childFileSystem).buildAll(buildProjectClass(runType));
     }
 
     private static String generatePomXmlWithDependencies(ReleaseId releaseId, ReleaseId... dependencies) {
@@ -158,8 +175,8 @@ public class DeclaredTypeDifferentKJarIncludesTest extends BaseModelTest {
         sBuilder.append("</version> \n");
     }
 
-    private Class<? extends KieBuilder.ProjectType> buildProjectClass() {
-        if (asList(PATTERN_DSL, PATTERN_WITH_ALPHA_NETWORK).contains(testRunType)) {
+    private Class<? extends KieBuilder.ProjectType> buildProjectClass(RUN_TYPE runType) {
+        if (asList(PATTERN_DSL, PATTERN_WITH_ALPHA_NETWORK).contains(runType)) {
             return ExecutableModelProject.class;
         } else {
             return DrlProject.class;

@@ -1,24 +1,26 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.validation.dtanalysis;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.core.DMNMessage;
 import org.kie.dmn.api.core.DMNMessageType;
 import org.kie.dmn.validation.dtanalysis.model.Contraction;
@@ -27,10 +29,10 @@ import org.kie.dmn.validation.dtanalysis.model.DTAnalysis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.dmn.validation.DMNValidator.Validation.ANALYZE_DECISION_TABLE;
 
-public class Check2ndNFViolationTest extends AbstractDTAnalysisTest {
+class Check2ndNFViolationTest extends AbstractDTAnalysisTest {
 
     @Test
-    public void testCheck2ndNFViolation() {
+    void check2ndNFViolation() {
         List<DMNMessage> validate = validator.validate(getReader("DT2ndNFViolation.dmn"), ANALYZE_DECISION_TABLE);
 
         DTAnalysis analysis = getAnalysis(validate, "_4e358bae-7012-42dd-acea-e88b3aa3c8b2");
@@ -45,7 +47,7 @@ public class Check2ndNFViolationTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testCheck2ndNFViolation3combo() {
+    void check2ndNFViolation3combo() {
         List<DMNMessage> validate = validator.validate(getReader("DT2ndNF3combo.dmn"), ANALYZE_DECISION_TABLE);
 
         DTAnalysis analysis = getAnalysis(validate, "_BA703D04-803A-44AA-8A31-F5EEDD4FD54E");
@@ -54,7 +56,7 @@ public class Check2ndNFViolationTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testCheck2ndNFViolationWasADash() {
+    void check2ndNFViolationWasADash() {
         List<DMNMessage> validate = validator.validate(getReader("DT2ndNFWasADash.dmn"), ANALYZE_DECISION_TABLE);
 
         DTAnalysis analysis = getAnalysis(validate, "_C40525EF-9735-410B-A070-E0336E108268");
@@ -63,7 +65,7 @@ public class Check2ndNFViolationTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testCheck2ndNFViolationWasADash2() {
+    void check2ndNFViolationWasADash2() {
         List<DMNMessage> validate = validator.validate(getReader("DT2ndNFWasADash2.dmn"), ANALYZE_DECISION_TABLE);
 
         DTAnalysis analysis = getAnalysis(validate, "_D3F1D5B8-642B-446D-9099-DE4CB978CB94");

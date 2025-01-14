@@ -1,17 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
 package org.drools.compiler.trait.test;
 
@@ -60,16 +64,12 @@ when
     $core: Imp()
     not Person( age == 30 )
 then
-    System.out.println( " Rule trait is firing " );
-
     Person p = don( $core, Person.class );
 
     modify( p ) {
         setName( "john" ),
         setAge( 30 );
     }
-
-    System.out.println( " Done firing Rule trait " );
 end
 
 rule "Cloak"
@@ -77,7 +77,6 @@ no-loop
 when
     $p    : Person( $core : core, name == "john" )
 then
-    System.out.println( "John the Person is here >>> " + $p );
     list.add("OK");
 
     IRole role = don( $core, IRole.class );
@@ -85,8 +84,6 @@ then
     modify( role ) {
         setRoleName("myRole");
     }
-
-    System.out.println( "John the Role is here >>> " + role.getRoleName() );
 end
 
 
@@ -94,6 +91,5 @@ rule "Role"
 when
     $role : IRole( roleName == "myRole" )
 then
-    System.out.println( "John the Role is here >>> " + $role );
     list.add("OK2");
 end

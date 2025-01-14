@@ -1,17 +1,20 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.kie.pmml.models.regression.compiler.executor;
 
@@ -191,7 +194,7 @@ public class RegressionModelImplementationProvider implements ModelImplementatio
         if (targetFields.size() != 1) {
             throw new KiePMMLException("Expected one target field, retrieved " + targetFields.size());
         }
-        if (toValidate.getTargetField() != null && !(Objects.equals(toValidate.getTargetField().getValue(),
+        if (toValidate.getTargetField() != null && !(Objects.equals(toValidate.getTargetField(),
                                                                     targetFields.get(0).getName()))) {
             throw new KiePMMLException(String.format("Not-matching target fields: %s %s", toValidate.getTargetField()
                     , targetFields.get(0).getName()));
@@ -206,7 +209,7 @@ public class RegressionModelImplementationProvider implements ModelImplementatio
         return fields.stream()
                 .filter(DataField.class::isInstance)
                 .map(DataField.class::cast)
-                .filter(dataField -> Objects.equals(dataField.getName().getValue(), categoricalFieldName)).mapToDouble(dataField -> dataField.getValues().size())
+                .filter(dataField -> Objects.equals(dataField.getName(), categoricalFieldName)).mapToDouble(dataField -> dataField.getValues().size())
                 .findFirst().orElse(0) == 2;
     }
 
@@ -214,7 +217,7 @@ public class RegressionModelImplementationProvider implements ModelImplementatio
         List<KiePMMLNameOpType> targetFields = getTargetFields(fields, toValidate);
         final List<String> categoricalFields = fields.stream()
                 .filter(dataField -> OpType.CATEGORICAL.equals(dataField.getOpType()))
-                .map(dataField -> dataField.getName().getValue())
+                .map(dataField ->dataField.getName())
                 .collect(Collectors.toList());
         final List<KiePMMLNameOpType> categoricalNameTypes =
                 targetFields.stream().filter(targetField -> categoricalFields.contains(targetField.getName())).collect(Collectors.toList());

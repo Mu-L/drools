@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.base.rule.accessor;
 
 import java.io.Externalizable;
@@ -22,13 +24,13 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 
-import org.drools.base.base.ValueResolver;
 import org.drools.base.base.AcceptsClassObjectType;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
+import org.drools.base.base.ValueResolver;
 import org.drools.base.base.extractors.BaseObjectClassFieldReader;
-import org.drools.base.facttemplates.Fact;
 import org.drools.util.ClassUtils;
+import org.kie.api.prototype.PrototypeFactInstance;
 
 /**
  * This is a global variable extractor used to get a global variable value
@@ -86,20 +88,20 @@ public class GlobalExtractor extends BaseObjectClassFieldReader
 
     public Class< ? > getExtractToClass() {
         // @todo : this is a bit nasty, but does the trick
-        if ( this.objectType instanceof ClassObjectType ) {
-            return ((ClassObjectType) this.objectType).getClassType();
+        if ( this.objectType instanceof ClassObjectType cot ) {
+            return cot.getClassType();
         } else {
-            return Fact.class;
+            return PrototypeFactInstance.class;
         }
     }
 
     public String getExtractToClassName() {
         Class< ? > clazz;
         // @todo : this is a bit nasty, but does the trick
-        if ( this.objectType instanceof ClassObjectType ) {
-            clazz = ((ClassObjectType) this.objectType).getClassType();
+        if ( this.objectType instanceof ClassObjectType cot ) {
+            clazz = cot.getClassType();
         } else {
-            clazz = Fact.class;
+            clazz = PrototypeFactInstance.class;
         }
         return ClassUtils.canonicalName( clazz );
     }
@@ -130,6 +132,9 @@ public class GlobalExtractor extends BaseObjectClassFieldReader
             return false;
         }
         final GlobalExtractor other = (GlobalExtractor) obj;
+        if (!(this.identifier.equals(other.identifier))) {
+            return false;
+        }
         return this.objectType.equals( other.objectType );
     }
 
@@ -150,10 +155,6 @@ public class GlobalExtractor extends BaseObjectClassFieldReader
     }
 
     public Object getValue(Object object) {
-        throw new RuntimeException( "Can't extract a value from global " + identifier + " without a working memory reference" );
-    }
-
-    public boolean isNullValue(Object object) {
         throw new RuntimeException( "Can't extract a value from global " + identifier + " without a working memory reference" );
     }
 }

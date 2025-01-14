@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.impl;
 
 import java.util.Collection;
@@ -43,7 +45,7 @@ import org.kie.dmn.api.core.ast.InputDataNode;
 import org.kie.dmn.api.core.event.BeforeEvaluateDecisionEvent;
 import org.kie.dmn.api.core.event.DMNRuntimeEventListener;
 import org.kie.dmn.core.api.DMNFactory;
-import org.kie.dmn.core.api.EvaluatorResult;
+import org.kie.dmn.api.core.EvaluatorResult;
 import org.kie.dmn.core.ast.BusinessKnowledgeModelNodeImpl;
 import org.kie.dmn.core.ast.DMNBaseNode;
 import org.kie.dmn.core.ast.DMNDecisionServiceEvaluator;
@@ -63,6 +65,8 @@ import org.slf4j.LoggerFactory;
 import static org.kie.dmn.api.core.DMNDecisionResult.DecisionEvaluationStatus.EVALUATING;
 import static org.kie.dmn.api.core.DMNDecisionResult.DecisionEvaluationStatus.FAILED;
 import static org.kie.dmn.api.core.DMNDecisionResult.DecisionEvaluationStatus.SKIPPED;
+import static org.kie.dmn.core.compiler.UnnamedImportUtils.isInUnnamedImport;
+import static org.kie.dmn.core.util.CoerceUtil.coerceValue;
 
 public class DMNRuntimeImpl
         implements DMNRuntime {
@@ -457,7 +461,10 @@ public class DMNRuntimeImpl
     private boolean isNodeValueDefined(DMNResultImpl result, DMNNode callerNode, DMNNode node) {
         if (node.getModelNamespace().equals(result.getContext().scopeNamespace().orElse(result.getModel().getNamespace()))) {
             return result.getContext().isDefined(node.getName());
-        } else {
+        }  else if (isInUnnamedImport(node, (DMNModelImpl) result.getModel())) {
+            // the node is an unnamed import
+            return result.getContext().isDefined(node.getName());
+    } else {
             Optional<String> importAlias = callerNode.getModelImportAliasFor(node.getModelNamespace(), node.getModelName());
             if (importAlias.isPresent()) {
                 Object aliasContext = result.getContext().get(importAlias.get());
@@ -497,6 +504,9 @@ public class DMNRuntimeImpl
     private boolean walkIntoImportScope(DMNResultImpl result, DMNNode callerNode, DMNNode destinationNode) {
         if (result.getContext().scopeNamespace().isEmpty()) {
             if (destinationNode.getModelNamespace().equals(result.getModel().getNamespace())) {
+                return false;
+            } else if (isInUnnamedImport(destinationNode, (DMNModelImpl) result.getModel())) {
+                // the destinationNode is an unnamed import
                 return false;
             } else {
                 Optional<String> importAlias = callerNode.getModelImportAliasFor(destinationNode.getModelNamespace(), destinationNode.getModelName());
@@ -659,16 +669,9 @@ public class DMNRuntimeImpl
                 return false;
             }
             try {
-                EvaluatorResult er = decision.getEvaluator().evaluate( this, result );
+                EvaluatorResult er = decision.getEvaluator().evaluate( this, result);
                 if( er.getResultType() == EvaluatorResult.ResultType.SUCCESS ) {
-                    Object value = er.getResult();
-                    if( ! decision.getResultType().isCollection() && value instanceof Collection &&
-                        ((Collection)value).size()==1 ) {
-                        // spec defines that "a=[a]", i.e., singleton collections should be treated as the single element
-                        // and vice-versa
-                        value = ((Collection)value).toArray()[0];
-                    }
-
+                    Object value = coerceValue(decision.getResultType(), er.getResult());
                     try {
                         if (typeCheck && !d.getResultType().isAssignableValue(value)) {
                             DMNMessage message = MsgUtil.reportMessage( logger,

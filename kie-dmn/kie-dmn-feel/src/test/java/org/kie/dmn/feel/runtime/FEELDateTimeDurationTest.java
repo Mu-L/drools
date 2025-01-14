@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.runtime;
 
 import java.math.BigDecimal;
@@ -29,16 +31,28 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.dmn.api.feel.runtime.events.FEELEvent;
+import org.kie.dmn.feel.lang.FEELDialect;
 import org.kie.dmn.feel.lang.types.impl.ComparablePeriod;
+import org.kie.dmn.feel.runtime.custom.ZoneTime;
+
+import static org.kie.dmn.feel.runtime.functions.TimeFunction.timeStringWithSeconds;
 
 public class FEELDateTimeDurationTest extends BaseFEELTest {
 
-    @Parameterized.Parameters(name = "{3}: {0} ({1}) = {2}")
-    public static Collection<Object[]> data() {
+    @ParameterizedTest
+    @MethodSource("data")
+    protected void instanceTest(String expression, Object result, FEELEvent.Severity severity, FEEL_TARGET testFEELTarget, Boolean useExtendedProfile, FEELDialect feelDialect) {
+        expression( expression,  result, severity, testFEELTarget, useExtendedProfile, feelDialect);
+    }
+
+    private static Collection<Object[]> data() {
         final Object[][] cases = new Object[][] {
                 // date/time/duration function invocations
+                { "@\"2021-01-01\" + 10", null , FEELEvent.Severity.ERROR},
+                { "@\"2021-01-01T10:10:10\" + 10", null , FEELEvent.Severity.ERROR},
                 { "date(\"2016-07-29\")", DateTimeFormatter.ISO_DATE.parse( "2016-07-29", LocalDate::from ) , null},
                 { "@\"2016-07-29\"", DateTimeFormatter.ISO_DATE.parse( "2016-07-29", LocalDate::from ) , null},
                 { "date(\"-0105-07-29\")", DateTimeFormatter.ISO_DATE.parse( "-0105-07-29", LocalDate::from ) , null}, // 105 BC
@@ -78,6 +92,10 @@ public class FEELDateTimeDurationTest extends BaseFEELTest {
                 { "(@\"13:20:00@Europe/Rome\").timezone", "Europe/Rome" , null},
                 { "(@\"13:20:00@Etc/UTC\").timezone", "Etc/UTC" , null},
                 { "(@\"13:20:00@Etc/GMT\").timezone", "Etc/GMT" , null},
+                { "-duration( \"P2Y2M\" )", ComparablePeriod.parse( "-P2Y2M" ) , null},
+                {"@\"2023-10-10T10:31:00@Australia/Melbourne\"", DateTimeFormatter.ISO_DATE_TIME.parse("2023-10-10T10" +
+                                                                                                               ":31+11:00[Australia/Melbourne]", ZonedDateTime::from), null},
+                {"@\"10:15:00@Australia/Melbourne\"", ZoneTime.of(LocalTime.of(10, 15), ZoneId.of("Australia/Melbourne"), true), null},
 
                 // comparison operators
                 { "duration( \"P1Y6M\" ) = duration( \"P1Y6M\" )", Boolean.TRUE , null},
@@ -92,6 +110,10 @@ public class FEELDateTimeDurationTest extends BaseFEELTest {
                 { "duration( \"P1Y6M\" ) != null", Boolean.TRUE , null},
                 { "duration( \"P1Y6M\" ) > null", null , null},
                 { "duration( \"P1Y6M\" ) < null", null , null},
+                { "-duration( \"P1Y6M\" ) = (duration( \"P1Y6M\" )*-1) ", Boolean.TRUE , null},
+                { "-duration( \"P1Y8M\" ) < duration( \"P1Y6M\" )", Boolean.TRUE , null},
+                { "-duration( \"P1Y8M\" ) < -duration( \"P1Y6M\" )", Boolean.TRUE , null},
+                { "-duration( \"P1Y6M\" ) > -duration( \"P1Y8M\" )", Boolean.TRUE , null},
                 {"time(\"10:30:00@Europe/Rome\") = time(\"10:30:00@Europe/Rome\")", Boolean.TRUE, null},
                 {"time(\"10:30:00@Europe/Rome\") = time(\"10:30:00@Europe/Paris\")", Boolean.TRUE, null},
                 {"is(time(\"10:30:00@Europe/Rome\"), time(\"10:30:00@Europe/Paris\"))", Boolean.FALSE, null},
@@ -163,10 +185,33 @@ public class FEELDateTimeDurationTest extends BaseFEELTest {
                 { "duration( \"P1Y1M\" ) + date and time(\"2016-07-29T05:48:23\")", LocalDateTime.of(2017, 8, 29, 5, 48, 23, 0) , null},
                 { "duration( \"P1DT1H1M\" ) + date and time(\"2016-07-29T05:48:23Z\")", ZonedDateTime.of(2016, 7, 30, 6, 49, 23, 0, ZoneId.of("Z").normalized()) , null},
                 { "duration( \"P1DT1H1M\" ) + date and time(\"2016-07-29T05:48:23\")", LocalDateTime.of(2016, 7, 30, 6, 49, 23, 0) , null},
+                { "-duration( \"P1DT1H1M\" ) + date and time(\"2016-07-29T05:48:23\")", LocalDateTime.of(2016, 7, 28, 4, 47, 23, 0) , null},
                 { "time(\"22:57:00\") + duration( \"PT1H1M\" )", LocalTime.of(23, 58, 0) , null},
                 { "duration( \"PT1H1M\" ) + time(\"22:57:00\")", LocalTime.of(23, 58, 0) , null},
+                { "-duration( \"PT1H1M\" ) + time(\"22:57:00\")", LocalTime.of(21, 56, 0) , null},
                 { "time( 22, 57, 00, duration(\"PT5H\")) + duration( \"PT1H1M\" )", OffsetTime.of( 23, 58, 0, 0, ZoneOffset.ofHours( 5 ) ) , null},
                 { "duration( \"PT1H1M\" ) + time( 22, 57, 00, duration(\"PT5H\"))", OffsetTime.of( 23, 58, 0, 0, ZoneOffset.ofHours( 5 ) ) , null},
+
+                { "@\"P1D\" + @\"2023-10-10T10:31:00@Australia/Melbourne\"", DateTimeFormatter.ISO_DATE_TIME.parse("2023-10-11T10" +
+                                                                                                                             ":31+11:00[Australia/Melbourne]", ZonedDateTime::from), null},
+                { "@\"-P1D\" + @\"2023-10-10T10:31:00@Australia/Melbourne\"", DateTimeFormatter.ISO_DATE_TIME.parse("2023-10-09T10" +
+                                                                                                                             ":31+11:00[Australia/Melbourne]", ZonedDateTime::from), null},
+                { "@\"P1D\" + @\"10:15:00@Australia/Melbourne\"", getCorrectZoneTime("10:15", "Australia/Melbourne"), null},
+                { "@\"-P1D\" + @\"10:15:00@Australia/Melbourne\"", getCorrectZoneTime("10:15", "Australia/Melbourne"), null},
+                { "@\"PT1H\" + @\"10:15:00@Australia/Melbourne\"", getCorrectZoneTime("11:15", "Australia/Melbourne"), null},
+                { "@\"-PT1H\" + @\"10:15:00@Australia/Melbourne\"", getCorrectZoneTime("09:15", "Australia/Melbourne"), null},
+
+
+                { "@\"10:15:00@Australia/Melbourne\" + @\"P1D\"", getCorrectZoneTime("10:15", "Australia/Melbourne"), null},
+                { "@\"10:15:00@Australia/Melbourne\" - @\"P1D\"", getCorrectZoneTime("10:15", "Australia/Melbourne"), null},
+                { "@\"10:15:00@Australia/Melbourne\" + @\"-P1D\"", getCorrectZoneTime("10:15", "Australia/Melbourne"), null},
+                { "@\"10:15:00@Australia/Melbourne\" + @\"PT1H\"", getCorrectZoneTime("11:15", "Australia/Melbourne"), null},
+                { "@\"10:15:00@Australia/Melbourne\" - @\"PT1H\"", getCorrectZoneTime("09:15", "Australia/Melbourne"), null},
+                { "@\"10:15:00@Australia/Melbourne\" + @\"-PT1H\"", getCorrectZoneTime("09:15", "Australia/Melbourne"), null},
+
+                {"string(@\"10:10@Australia/Melbourne\" + @\"PT1H\")", "11:10@Australia/Melbourne", null},
+                {"string(@\"10:10:00@Australia/Melbourne\" + @\"PT1H\")", "11:10:00@Australia/Melbourne", null},
+
 
                 // TODO support for zones - fix when timezones solved out (currently returns ZonedDateTime)
 //                { "date and time(\"2016-07-29T05:48:23.765-05:00\") + duration( \"P1Y1M\" ) ", OffsetDateTime.of(2017, 8, 29, 5, 48, 23, 765000000, ZoneOffset.ofHours( -5 )), null},
@@ -184,11 +229,16 @@ public class FEELDateTimeDurationTest extends BaseFEELTest {
                 { "date and time(\"2016-07-29T05:48:23\") - duration( \"P1DT1H1M\" )", LocalDateTime.of(2016, 7, 28, 4, 47, 23, 0) , null},
                 { "date(\"2016-07-29\") - duration( \"P1D\" )", LocalDate.of(2016, 7, 28) , null},
                 { "date(\"2016-07-29\") - duration( \"P1Y1M\" )", LocalDate.of(2015, 6, 29) , null},
+                { "date(\"2016-07-29\") + (-duration( \"P1Y1M\" ))", LocalDate.of(2015, 6, 29) , null},
                 { "time(\"22:57:00\") - duration( \"PT1H1M\" )", LocalTime.of(21, 56, 0) , null},
                 { "time( 22, 57, 00, duration(\"PT5H\")) - duration( \"PT1H1M\" )", OffsetTime.of( 21, 56, 0, 0, ZoneOffset.ofHours( 5 ) ) , null},
 
+                { "duration( \"P2Y2M\" ) - (-duration( \"P1Y1M\" ))", ComparablePeriod.parse("P3Y3M"), null },
+                { "-duration( \"P2Y2M\" ) + duration( \"P1Y1M\" )", ComparablePeriod.parse("-P1Y1M"), null },
                 { "duration( \"P2Y2M\" ) * 2", ComparablePeriod.parse("P52M"), null },
                 { "2 * duration( \"P2Y2M\" )", ComparablePeriod.parse("P52M"), null },
+                { "-duration( \"P2Y2M\" ) * 2", ComparablePeriod.parse("-P52M"), null },
+                { "2 * -duration( \"P2Y2M\" )", ComparablePeriod.parse("-P52M"), null },
                 { "duration( \"P2Y2M\" ) * duration( \"P2Y2M\" )", null , FEELEvent.Severity.ERROR},
                 { "duration( \"P2DT20H14M\" ) * 2", Duration.parse( "P4DT40H28M" ) , null},
                 { "2 * duration( \"P2DT20H14M\" )", Duration.parse( "P4DT40H28M" ) , null},
@@ -284,4 +334,11 @@ public class FEELDateTimeDurationTest extends BaseFEELTest {
         };
         return addAdditionalParameters(cases, false);
     }
+
+    private static ZoneTime getCorrectZoneTime(String baseTime, String zone) {
+        LocalTime localTime = DateTimeFormatter.ISO_TIME.parse(baseTime, LocalTime::from );
+        ZoneId zoneId = ZoneId.of(zone);
+        return ZoneTime.of(localTime, zoneId, timeStringWithSeconds(baseTime));
+    }
+
 }

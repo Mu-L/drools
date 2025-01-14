@@ -1,36 +1,37 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.phreak;
 
 import java.util.Collection;
 
 import org.drools.base.phreak.ReactiveObject;
+import org.drools.base.reteoo.BaseTuple;
 import org.drools.core.common.BetaConstraints;
 import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.base.reteoo.BaseTuple;
-import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.LeftTupleSinkNode;
 import org.drools.core.reteoo.ReactiveFromNode;
 import org.drools.core.reteoo.ReactiveFromNodeLeftTuple;
-import org.drools.core.reteoo.RightTupleImpl;
-import org.drools.base.rule.ContextEntry;
-import org.drools.core.common.PropagationContext;
+import org.drools.core.reteoo.RightTuple;
 import org.drools.core.reteoo.Tuple;
+import org.drools.core.reteoo.TupleImpl;
 
 import static org.drools.core.phreak.PhreakFromNode.deleteChildLeftTuple;
 import static org.drools.core.phreak.PhreakFromNode.isAllowed;
@@ -53,7 +54,7 @@ public class ReactiveObjectUtil {
                 continue;
             }
             PropagationContext propagationContext = tuple.getPropagationContext();
-            ReactiveFromNode node = tuple.getTupleSink();
+            ReactiveFromNode node = (ReactiveFromNode) tuple.getSink();
 
             LeftTupleSinkNode sink = node.getSinkPropagator().getFirstLeftTupleSink();
             ReteEvaluator reteEvaluator =((InternalFactHandle) propagationContext.getFactHandle()).getReteEvaluator();
@@ -90,13 +91,13 @@ public class ReactiveObjectUtil {
             InternalFactHandle factHandle = node.createFactHandle( reteEvaluator, object );
 
             if ( type != ModificationType.REMOVE && isAllowed( factHandle, node.getAlphaConstraints(), reteEvaluator, mem ) ) {
-                ContextEntry[] context = mem.getBetaMemory().getContext();
+                Object context = mem.getBetaMemory().getContext();
                 BetaConstraints betaConstraints = node.getBetaConstraints();
                 betaConstraints.updateFromTuple( context, reteEvaluator, leftTuple );
 
                 propagate( sink,
                            leftTuple,
-                           new RightTupleImpl( factHandle ),
+                           new RightTuple(factHandle ),
                            betaConstraints,
                            propagationContext,
                            context,
@@ -104,9 +105,9 @@ public class ReactiveObjectUtil {
                            mem.getStagedLeftTuples(),
                            null );
             } else {
-                LeftTuple childLeftTuple = ((LeftTuple)leftTuple).getFirstChild();
+                TupleImpl childLeftTuple = leftTuple.getFirstChild();
                 while (childLeftTuple != null) {
-                    LeftTuple next = childLeftTuple.getHandleNext();
+                    TupleImpl next = childLeftTuple.getHandleNext();
                     if ( object == childLeftTuple.getFactHandle().getObject() ) {
                         deleteChildLeftTuple( propagationContext, mem.getStagedLeftTuples(), null, childLeftTuple );
                     }

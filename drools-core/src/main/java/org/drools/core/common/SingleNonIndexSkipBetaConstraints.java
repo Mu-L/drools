@@ -1,44 +1,50 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
+import java.util.Optional;
 
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.reteoo.BetaMemory;
-import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.base.base.ObjectType;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.reteoo.BaseTuple;
 import org.drools.base.rule.ContextEntry;
 import org.drools.base.rule.MutableTypeConstraint;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
-import org.drools.base.base.ObjectType;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.constraint.BetaConstraint;
+import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.Tuple;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.util.bitmask.BitMask;
 import org.kie.api.runtime.rule.FactHandle;
 
 public class SingleNonIndexSkipBetaConstraints 
     implements
-    BetaConstraints {
+    BetaConstraints<ContextEntry> {
     
     private SingleBetaConstraints constraints;
     
-    private BetaNodeFieldConstraint constraint;
+    private BetaConstraint constraint;
     
     public SingleNonIndexSkipBetaConstraints() {
 
@@ -56,11 +62,11 @@ public class SingleNonIndexSkipBetaConstraints
         this.constraint = constraints.getConstraint();
     }
 
-    public void init(BuildContext context, short betaNodeType) {
+    public void init(BuildContext context, int betaNodeType) {
         constraints.init(context, betaNodeType);
     }
 
-    public void initIndexes(int depth, short betaNodeType, RuleBaseConfiguration config) {
+    public void initIndexes(int depth, int betaNodeType, RuleBaseConfiguration config) {
         constraints.initIndexes(depth, betaNodeType, config);
     }
 
@@ -76,20 +82,20 @@ public class SingleNonIndexSkipBetaConstraints
         return this.constraints;
     }
 
-    public ContextEntry[] createContext() {
+    public ContextEntry createContext() {
         return constraints.createContext();
     }
 
-    public void updateFromTuple(ContextEntry[] context,
-                                ReteEvaluator reteEvaluator,
+    public void updateFromTuple(ContextEntry context,
+                                ValueResolver valueResolver,
                                 Tuple tuple) {
-        constraints.updateFromTuple( context, reteEvaluator, tuple );
+        constraints.updateFromTuple( context, valueResolver, tuple );
     }
 
-    public void updateFromFactHandle(ContextEntry[] context,
-                                     ReteEvaluator reteEvaluator,
+    public void updateFromFactHandle(ContextEntry context,
+                                     ValueResolver valueResolver,
                                      FactHandle handle) {
-        constraints.updateFromFactHandle( context, reteEvaluator, handle );
+        constraints.updateFromFactHandle( context, valueResolver, handle );
     }
 
     public boolean isIndexed() {
@@ -105,7 +111,7 @@ public class SingleNonIndexSkipBetaConstraints
     }
 
     public BetaMemory createBetaMemory(final RuleBaseConfiguration config,
-                                       final short nodeType) {
+                                       final int nodeType) {
         return constraints.createBetaMemory( config,
                                              nodeType );
     }
@@ -114,7 +120,7 @@ public class SingleNonIndexSkipBetaConstraints
         return constraints.hashCode();
     }
 
-    public BetaNodeFieldConstraint[] getConstraints() {
+    public BetaConstraint[] getConstraints() {
         return constraints.getConstraints();
     }
 
@@ -122,11 +128,11 @@ public class SingleNonIndexSkipBetaConstraints
         return object instanceof SingleNonIndexSkipBetaConstraints && constraints.equals( ((SingleNonIndexSkipBetaConstraints)object).constraints );
     }
 
-    public void resetFactHandle(ContextEntry[] context) {
+    public void resetFactHandle(ContextEntry context) {
         constraints.resetFactHandle( context );
     }
 
-    public void resetTuple(ContextEntry[] context) {
+    public void resetTuple(ContextEntry context) {
         constraints.resetTuple( context );
     }
 
@@ -134,19 +140,19 @@ public class SingleNonIndexSkipBetaConstraints
         return constraints.toString();
     }
 
-    public boolean isAllowedCachedLeft(final ContextEntry[] context,
+    public boolean isAllowedCachedLeft(final ContextEntry context,
                                        final FactHandle handle) {
-        return this.constraint.isAllowedCachedLeft( context[0],
+        return this.constraint.isAllowedCachedLeft( context,
                                                      handle );
     }
 
-    public boolean isAllowedCachedRight(ContextEntry[] context,
-                                        Tuple tuple) {
-        return this.constraints.isAllowedCachedRight( context, tuple );
+    public boolean isAllowedCachedRight(final BaseTuple tuple,
+                                        final ContextEntry context) {
+        return this.constraints.isAllowedCachedRight(tuple, context);
     }
 
-    public BitMask getListenedPropertyMask(ObjectType modifiedType, List<String> settableProperties) {
-        return constraint.getListenedPropertyMask(modifiedType, settableProperties);
+    public BitMask getListenedPropertyMask(Pattern pattern, ObjectType modifiedType, List<String> settableProperties) {
+        return constraint.getListenedPropertyMask(Optional.of(pattern), modifiedType, settableProperties);
     }
 
     public boolean isLeftUpdateOptimizationAllowed() {

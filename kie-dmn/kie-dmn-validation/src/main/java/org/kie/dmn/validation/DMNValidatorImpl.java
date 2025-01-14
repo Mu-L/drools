@@ -1,19 +1,21 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.validation;
 
 import java.io.File;
@@ -71,6 +73,7 @@ import org.kie.dmn.feel.util.ClassLoaderUtil;
 import org.kie.dmn.model.api.DMNModelInstrumentedBase;
 import org.kie.dmn.model.api.DecisionService;
 import org.kie.dmn.model.api.Definitions;
+import org.kie.dmn.model.api.Import;
 import org.kie.dmn.validation.dtanalysis.InternalDMNDTAnalyser;
 import org.kie.dmn.validation.dtanalysis.InternalDMNDTAnalyserFactory;
 import org.kie.dmn.validation.dtanalysis.model.DTAnalysis;
@@ -82,6 +85,7 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import static java.util.stream.Collectors.toList;
+import static org.kie.dmn.core.compiler.UnnamedImportUtils.mergeDefinitions;
 import static org.kie.dmn.validation.DMNValidator.Validation.ANALYZE_DECISION_TABLE;
 import static org.kie.dmn.validation.DMNValidator.Validation.VALIDATE_COMPILATION;
 import static org.kie.dmn.validation.DMNValidator.Validation.VALIDATE_MODEL;
@@ -133,6 +137,20 @@ public class DMNValidatorImpl implements DMNValidator {
                                                               new StreamSource(DMNValidatorImpl.class.getResourceAsStream("org/omg/spec/DMN/20211108/DMNDI13.xsd")),
                                                               new StreamSource(DMNValidatorImpl.class.getResourceAsStream("org/omg/spec/DMN/20211108/DMN14.xsd"))
                                       });
+        } catch (SAXException e) {
+            throw new RuntimeException("Unable to initialize correctly DMNValidator.", e);
+        }
+    }
+
+    static final Schema schemav1_5;
+    static {
+        try {
+            schemav1_5 = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
+                    .newSchema(new Source[]{new StreamSource(DMNValidatorImpl.class.getResourceAsStream("org/omg/spec/DMN/20230324/DC.xsd")),
+                            new StreamSource(DMNValidatorImpl.class.getResourceAsStream("org/omg/spec/DMN/20230324/DI.xsd")),
+                            new StreamSource(DMNValidatorImpl.class.getResourceAsStream("org/omg/spec/DMN/20230324/DMNDI15.xsd")),
+                            new StreamSource(DMNValidatorImpl.class.getResourceAsStream("org/omg/spec/DMN/20230324/DMN15.xsd"))
+                    });
         } catch (SAXException e) {
             throw new RuntimeException("Unable to initialize correctly DMNValidator.", e);
         }
@@ -530,7 +548,8 @@ public class DMNValidatorImpl implements DMNValidator {
             Source s = new StreamSource(new StringReader(xml));
             validateSchema(s, usingSchema);
         } catch (Exception e) {
-            problems.add(new DMNMessageImpl(DMNMessage.Severity.ERROR, MsgUtil.createMessage(Msg.FAILED_XML_VALIDATION, e.getMessage()), Msg.FAILED_XML_VALIDATION.getType(), null, e).withPath(path));
+            String errorMessage = String.format("%s - %s", path, e.getMessage());
+            problems.add(new DMNMessageImpl(DMNMessage.Severity.ERROR, MsgUtil.createMessage(Msg.FAILED_XML_VALIDATION, errorMessage), Msg.FAILED_XML_VALIDATION.getType(), null, e).withPath(path));
         }
         return problems;
     }
@@ -547,9 +566,11 @@ public class DMNValidatorImpl implements DMNValidator {
             case DMN_v1_3:
                 return schemav1_3;
             case DMN_v1_4:
+                return schemav1_4;
+            case DMN_v1_5:
             case UNKNOWN:
             default:
-                return schemav1_4;
+                return schemav1_5;
         }
     }
 
@@ -562,6 +583,19 @@ public class DMNValidatorImpl implements DMNValidator {
     
     private List<DMNMessage> validateModel(DMNResource mainModel, List<DMNResource> otherModels) {
         Definitions mainDefinitions = mainModel.getDefinitions();
+        List<String> unnamedImports = mainDefinitions.getImport().stream()
+                .filter(anImport -> anImport.getName() == null || anImport.getName().isEmpty())
+                .map(Import::getNamespace)
+                .toList();
+        List<Definitions> otherModelsDefinitions = new ArrayList<>();
+        otherModels.forEach(dmnResource -> {
+            Definitions other = dmnResource.getDefinitions();
+            if (unnamedImports.contains(dmnResource.getModelID().getNamespaceURI())) {
+                mergeDefinitions(mainDefinitions, other);
+            }
+            otherModelsDefinitions.add(other);
+        });
+
         StatelessKieSession kieSession = mainDefinitions instanceof org.kie.dmn.model.v1_1.KieDMNModelInstrumentedBase ? kb11.newStatelessKieSession() : kb12.newStatelessKieSession();
         MessageReporter reporter = new MessageReporter(mainModel);
         kieSession.setGlobal( "reporter", reporter );
@@ -571,7 +605,7 @@ public class DMNValidatorImpl implements DMNValidator {
                        .filter(d -> !(d instanceof DecisionService &&
                                Boolean.parseBoolean(d.getAdditionalAttributes().get(new QName("http://www.trisotech.com/2015/triso/modeling", "dynamicDecisionService")))))
                        .collect(toList());
-        List<Definitions> otherModelsDefinitions = otherModels.stream().map(DMNResource::getDefinitions).collect(Collectors.toList());
+
         BatchExecutionCommand batch = CommandFactory.newBatchExecution(Arrays.asList(CommandFactory.newInsertElements(dmnModelElements, "DEFAULT", false, "DEFAULT"),
                                                                                      CommandFactory.newInsertElements(otherModelsDefinitions, "DMNImports", false, "DMNImports")));
         kieSession.execute(batch);

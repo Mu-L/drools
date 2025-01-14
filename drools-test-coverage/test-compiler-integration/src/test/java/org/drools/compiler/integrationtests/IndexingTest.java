@@ -1,27 +1,29 @@
-/*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.drools.ancompiler.CompiledNetwork;
 import org.drools.base.base.DroolsQuery;
@@ -43,17 +45,19 @@ import org.drools.core.reteoo.NotNode;
 import org.drools.core.reteoo.ObjectSinkPropagator;
 import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.RightTuple;
+import org.drools.core.reteoo.TupleMemory;
 import org.drools.core.util.FastIterator;
 import org.drools.kiesession.session.StatefulKnowledgeSessionImpl;
+import org.drools.testcoverage.common.model.Address;
 import org.drools.testcoverage.common.model.Cheese;
 import org.drools.testcoverage.common.model.Person;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.definition.rule.Rule;
 import org.kie.api.definition.type.FactType;
@@ -66,22 +70,15 @@ import org.kie.api.runtime.rule.ViewChangedEventListener;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.core.util.DroolsTestUtil.rulestoMap;
 
-@RunWith(Parameterized.class)
 public class IndexingTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public IndexingTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test()
-    public void testAlphaNodeSharing() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAlphaNodeSharing(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -131,8 +128,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testBuildsIndexedAlphaNodes() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testBuildsIndexedAlphaNodes(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -164,8 +163,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testBuildsIndexedMemory() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testBuildsIndexedMemory(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // tests indexes are correctly built        
         final String drl =
                 "package org.drools.compiler.test\n" +
@@ -243,8 +244,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testIndexingOnQueryUnification() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testIndexingOnQueryUnification(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test  \n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -279,8 +282,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testIndexingOnQueryUnificationWithNot() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testIndexingOnQueryUnificationWithNot(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test  \n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -412,8 +417,10 @@ public class IndexingTest {
         assertThat(insertUpdateDeleteMap.get("deleted").intValue()).isEqualTo(expectedDeleted);
     }
 
-    @Test(timeout = 10000)
-    public void testFullFastIteratorResume() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testFullFastIteratorResume(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test  \n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -470,7 +477,7 @@ public class IndexingTest {
             }
 
             final List<RightTuple> list = new ArrayList<>(100);
-            FastIterator it = n.getRightIterator(bm.getRightTupleMemory());
+            FastIterator           it   = n.getRightIterator(bm.getRightTupleMemory());
             for (RightTuple rt = n.getFirstRightTuple(null, bm.getRightTupleMemory(), it); rt != null; rt = (RightTuple) it.next(rt)) {
                 list.add(rt);
             }
@@ -478,8 +485,9 @@ public class IndexingTest {
 
             // check we can resume from each entry in the list above.
             for (int i = 0; i < 100; i++) {
-                final RightTuple rightTuple = list.get(i);
-                it = bm.getRightTupleMemory().fullFastIterator(rightTuple); // resumes from the current rightTuple
+                final RightTuple rightTuple       = list.get(i);
+                TupleMemory      rightTupleMemory = bm.getRightTupleMemory();
+                it = (rightTupleMemory).fullFastIterator(rightTuple); // resumes from the current rightTuple
                 int j = i + 1;
                 for (RightTuple rt = (RightTuple) it.next(rightTuple); rt != null; rt = (RightTuple) it.next(rt)) {
                     assertThat(rt).isSameAs(list.get(j));
@@ -491,8 +499,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testRangeIndex() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testRangeIndex(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "import " + Cheese.class.getCanonicalName() + ";\n" +
                 "rule R1\n" +
                 "when\n" +
@@ -514,8 +524,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testRangeIndex2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testRangeIndex2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "import " + Cheese.class.getCanonicalName() + ";\n" +
                 "rule R1\n" +
                 "when\n" +
@@ -537,8 +549,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testNotNode() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testNotNode(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "import " + Cheese.class.getCanonicalName() + ";\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "rule R1 salience 10\n" +
@@ -565,8 +579,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testNotNodeModifyRight() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testNotNodeModifyRight(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "import " + Cheese.class.getCanonicalName() + ";\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "rule R1 salience 10 when\n" +
@@ -592,8 +608,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testRange() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testRange(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "import " + Cheese.class.getCanonicalName() + ";\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "rule R1 salience 10 when\n" +
@@ -619,8 +637,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testRange2() throws IllegalAccessException, InstantiationException {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testRange2(KieBaseTestConfiguration kieBaseTestConfiguration) throws IllegalAccessException, InstantiationException {
         final String drl = "package org.drools.compiler.test\n" +
                 "declare A\n" +
                 "    a: int\n" +
@@ -669,8 +689,9 @@ public class IndexingTest {
         }
     }
 
-    @Test
-    public void testHashingAfterRemoveRightTuple() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testHashingAfterRemoveRightTuple(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1326
         final String drl = "package " + this.getClass().getPackage().getName() + ";\n" +
                 "import " + MyPojo.class.getCanonicalName() + "\n" +
@@ -771,8 +792,9 @@ public class IndexingTest {
         }
     }
 
-    @Test
-    public void testRequireLeftReorderingWithRangeIndex() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRequireLeftReorderingWithRangeIndex(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1326
         final String drl = "import " + Queen.class.getCanonicalName() + ";\n"
                 + "rule \"multipleQueensHorizontal\"\n"
@@ -841,8 +863,10 @@ public class IndexingTest {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testBuildsIndexedMemoryWithThis() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+	@Timeout(10000)
+    public void testBuildsIndexedMemoryWithThis(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // tests indexes are correctly built
         final String drl =
                 "package org.drools.compiler.test\n" +
@@ -874,8 +898,9 @@ public class IndexingTest {
         }
     }
 
-    @Test
-    public void testAlphaIndexWithBigDecimalCoercion() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAlphaIndexWithBigDecimalCoercion(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -904,7 +929,7 @@ public class IndexingTest {
 
         try {
             // BigDecimal Index is disabled
-            assertAlphaIndex(kbase, Person.class, 0);
+            assertAlphaIndex(kieBaseTestConfiguration, kbase, Person.class, 0);
 
             List<String> list = new ArrayList<>();
             ksession.setGlobal("list", list);
@@ -919,11 +944,50 @@ public class IndexingTest {
         }
     }
 
-    private void assertAlphaIndex(KieBase kbase, Class<?> clazz, int hashedSize) {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testBeta(KieBaseTestConfiguration kieBaseTestConfiguration) {
+
+        final String drl =
+                "package org.drools.compiler.test\n" +
+                "import " + Person.class.getCanonicalName() + "\n" +
+                "import " + Address.class.getCanonicalName() + "\n" +
+                "global java.util.List list\n" +
+                "rule R1\n" +
+                "    when\n" +
+                "        a : Address()\n" +
+                "        Person( name == a.street )\n" +
+                "    then\n" +
+                "        list.add(\"R1\");\n" +
+                "end\n";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("indexing-test", kieBaseTestConfiguration, drl);
+        KieSession ksession = kbase.newKieSession();
+
+        try {
+            // BigDecimal Index is disabled
+            //assertAlphaIndex(kbase, Person.class, 0);
+
+            List<String> list = new ArrayList<>();
+            ksession.setGlobal("list", list);
+            Person person = new Person("London");
+            Address address = new Address("London");
+
+            ksession.insert(person);
+            ksession.insert(address);
+            ksession.fireAllRules();
+
+            assertThat(list).containsExactly("R1");
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    private void assertAlphaIndex(KieBaseTestConfiguration kieBaseTestConfiguration, KieBase kbase, Class<?> clazz, int hashedSize) {
         final ObjectTypeNode otn = KieUtil.getObjectTypeNode(kbase, clazz);
         assertThat(otn).isNotNull();
         ObjectSinkPropagator objectSinkPropagator = otn.getObjectSinkPropagator();
-        if (this.kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
+        if (kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
             objectSinkPropagator = ((CompiledNetwork) objectSinkPropagator).getOriginalSinkPropagator();
         }
         CompositeObjectSinkAdapter sinkAdapter = (CompositeObjectSinkAdapter) objectSinkPropagator;
@@ -935,8 +999,9 @@ public class IndexingTest {
         }
     }
 
-    @Test
-    public void testAlphaIndexWithBigDecimalDifferentScale() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAlphaIndexWithBigDecimalDifferentScale(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -965,7 +1030,7 @@ public class IndexingTest {
 
         try {
             // BigDecimal Index is disabled
-            assertAlphaIndex(kbase, Person.class, 0);
+            assertAlphaIndex(kieBaseTestConfiguration, kbase, Person.class, 0);
 
             List<String> list = new ArrayList<>();
             ksession.setGlobal("list", list);
@@ -980,8 +1045,9 @@ public class IndexingTest {
         }
     }
 
-    @Test
-    public void testBetaIndexWithBigDecimalDifferentScale() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testBetaIndexWithBigDecimalDifferentScale(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -1014,8 +1080,9 @@ public class IndexingTest {
         }
     }
 
-    @Test
-    public void testAlphaIndexOnField() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAlphaIndexOnField(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -1043,7 +1110,7 @@ public class IndexingTest {
         KieSession ksession = kbase.newKieSession();
 
         try {
-            assertAlphaIndex(kbase, Person.class, 3);
+            assertAlphaIndex(kieBaseTestConfiguration, kbase, Person.class, 3);
 
             List<String> list = new ArrayList<>();
             ksession.setGlobal("list", list);
@@ -1057,8 +1124,9 @@ public class IndexingTest {
         }
     }
 
-    @Test
-    public void testAlphaIndexOnThis() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAlphaIndexOnThis(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                 "global java.util.List list\n" +
@@ -1085,7 +1153,7 @@ public class IndexingTest {
         KieSession ksession = kbase.newKieSession();
 
         try {
-            assertAlphaIndex(kbase, Integer.class, 3);
+            assertAlphaIndex(kieBaseTestConfiguration, kbase, Integer.class, 3);
 
             List<String> list = new ArrayList<>();
             ksession.setGlobal("list", list);
@@ -1098,41 +1166,47 @@ public class IndexingTest {
         }
     }
 
-    public void betaIndexWithBigDecimalAndInt() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")    
+    public void betaIndexWithBigDecimalAndInt(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String constraints = "salary == $p1.salary, age == $p1.age";
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 30, new BigDecimal("10")), true, 1);
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 1);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 30, new BigDecimal("10")), true, 1);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 1);
     }
 
-    @Test
-    public void betaIndexWithIntAndBigDecimal() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void betaIndexWithIntAndBigDecimal(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String constraints = "age == $p1.age, salary == $p1.salary";
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 30, new BigDecimal("10")), true, 1);
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 1);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 30, new BigDecimal("10")), true, 1);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 1);
     }
 
-    @Test
-    public void betaIndexWithIntAndBigDecimalAndString() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void betaIndexWithIntAndBigDecimalAndString(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String constraints = "age == $p1.age, salary == $p1.salary, likes == $p1.likes";
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10"), "dog"), new Person("Paul", 30, new BigDecimal("10"), "dog"), true, 2);
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10"), "dog"), new Person("Paul", 30, new BigDecimal("10"), "cat"), false, 2);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10"), "dog"), new Person("Paul", 30, new BigDecimal("10"), "dog"), true, 2);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10"), "dog"), new Person("Paul", 30, new BigDecimal("10"), "cat"), false, 2);
     }
 
-    @Test
-    public void betaIndexWithIntInequalityAndBigDecimal() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void betaIndexWithIntInequalityAndBigDecimal(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String constraints = "age > $p1.age, salary == $p1.salary";
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 40, new BigDecimal("10")), true, 0);
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 0);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 40, new BigDecimal("10")), true, 0);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 0);
     }
 
-    @Test
-    public void betaIndexWithBigDecimalOnly() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void betaIndexWithBigDecimalOnly(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String constraints = "salary == $p1.salary";
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), true, 0);
-        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("20")), false, 0);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), true, 0);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(kieBaseTestConfiguration, constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("20")), false, 0);
     }
 
-    private void betaIndexWithBigDecimalWithAdditionalBetaConstraint(String constraints, Person firstPerson, Person secondPerson, boolean shouldMatch, int expectedIndexCount) {
+    private void betaIndexWithBigDecimalWithAdditionalBetaConstraint(KieBaseTestConfiguration kieBaseTestConfiguration, String constraints, Person firstPerson, Person secondPerson, boolean shouldMatch, int expectedIndexCount) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +

@@ -1,42 +1,31 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.kiesession.session;
 
-import java.io.ByteArrayOutputStream;
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
-
+import org.drools.base.RuleBase;
+import org.drools.base.beliefsystem.Mode;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.factmodel.traits.Thing;
+import org.drools.base.factmodel.traits.TraitableBean;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.core.FlowSessionConfiguration;
 import org.drools.core.QueryResultsImpl;
 import org.drools.core.RuleBaseConfiguration;
@@ -49,8 +38,8 @@ import org.drools.core.base.InternalViewChangedEventListener;
 import org.drools.core.base.NonCloningQueryViewListener;
 import org.drools.core.base.QueryRowWithSubruleIndex;
 import org.drools.core.base.StandardQueryViewChangedEventListener;
-import org.drools.base.beliefsystem.Mode;
 import org.drools.core.common.ActivationsManager;
+import org.drools.core.common.BaseNode;
 import org.drools.core.common.ConcurrentNodeMemories;
 import org.drools.core.common.EndOperationListener;
 import org.drools.core.common.EventSupport;
@@ -67,12 +56,10 @@ import org.drools.core.common.ObjectTypeConfigurationRegistry;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.PropagationContextFactory;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.core.common.SuperCacheFixer;
 import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.event.RuleEventListenerSupport;
 import org.drools.core.event.RuleRuntimeEventSupport;
-import org.drools.base.factmodel.traits.Thing;
-import org.drools.base.factmodel.traits.TraitableBean;
 import org.drools.core.impl.AbstractRuntime;
 import org.drools.core.impl.EnvironmentFactory;
 import org.drools.core.management.DroolsManagementAgent;
@@ -89,23 +76,20 @@ import org.drools.core.reteoo.QueryTerminalNode;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.drools.core.reteoo.SegmentMemory;
 import org.drools.core.reteoo.TerminalNode;
-import org.drools.base.rule.Declaration;
-import org.drools.base.rule.EntryPointId;
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.rule.accessor.FactHandleFactory;
-import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.runtime.process.InternalProcessRuntime;
 import org.drools.core.runtime.rule.impl.LiveQueryImpl;
 import org.drools.core.runtime.rule.impl.OpenQueryViewChangedEventListenerAdapter;
 import org.drools.core.time.TimerService;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.BitMask;
 import org.drools.kiesession.entrypoints.NamedEntryPointsManager;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.kie.api.KieBase;
 import org.kie.api.command.BatchExecutionCommand;
 import org.kie.api.command.Command;
 import org.kie.api.conf.MBeansOption;
-import org.drools.base.RuleBase;
 import org.kie.api.event.KieRuntimeEventManager;
 import org.kie.api.event.kiebase.KieBaseEventListener;
 import org.kie.api.event.process.ProcessEventListener;
@@ -138,6 +122,27 @@ import org.kie.internal.marshalling.MarshallerFactory;
 import org.kie.internal.process.CorrelationAwareProcessRuntime;
 import org.kie.internal.process.CorrelationKey;
 import org.kie.internal.runtime.StatefulKnowledgeSession;
+
+import java.io.ByteArrayOutputStream;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
 import static org.drools.base.base.ClassObjectType.InitialFact_ObjectType;
@@ -243,6 +248,8 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
 
     private Consumer<PropagationEntry> workingMemoryActionListener;
 
+    private boolean tmsEnabled;
+
     // ------------------------------------------------------------
     // Constructors
     // ------------------------------------------------------------
@@ -275,8 +282,7 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
              environment,
              new RuleRuntimeEventSupport(),
              new AgendaEventSupport(),
-             new RuleEventListenerSupport(),
-             null);
+             new RuleEventListenerSupport());
     }
 
     public StatefulKnowledgeSessionImpl(final long id,
@@ -284,7 +290,6 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
                                         final FactHandleFactory handleFactory,
                                         final long propagationContext,
                                         final SessionConfiguration config,
-                                        final InternalAgenda agenda,
                                         final Environment environment) {
         this(id,
              kBase,
@@ -295,8 +300,7 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
              environment,
              new RuleRuntimeEventSupport(),
              new AgendaEventSupport(),
-             new RuleEventListenerSupport(),
-             agenda);
+             new RuleEventListenerSupport());
     }
 
 
@@ -309,8 +313,7 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
                                          final Environment environment,
                                          final RuleRuntimeEventSupport workingMemoryEventSupport,
                                          final AgendaEventSupport agendaEventSupport,
-                                         final RuleEventListenerSupport ruleEventListenerSupport,
-                                         final InternalAgenda agenda) {
+                                         final RuleEventListenerSupport ruleEventListenerSupport) {
         this.id = id;
         this.kBase = kBase;
         this.handleFactory = handleFactory;
@@ -336,8 +339,7 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
         RuleBaseConfiguration conf = kBase.getRuleBaseConfiguration();
         this.pctxFactory = RuntimeComponentFactory.get().getPropagationContextFactory();
 
-        this.agenda = agenda != null ? agenda : RuntimeComponentFactory.get().getAgendaFactory( config ).createAgenda(kBase);
-        this.agenda.setWorkingMemory(this);
+        this.agenda = RuntimeComponentFactory.get().getAgendaFactory( config ).createAgenda(this);
 
         this.entryPointsManager = (NamedEntryPointsManager) RuntimeComponentFactory.get().getEntryPointFactory().createEntryPointsManager(this);
 
@@ -738,11 +740,11 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
 
         @Override
         public void internalExecute(ReteEvaluator reteEvaluator ) {
-            LeftInputAdapterNode lian = factHandle.getFirstLeftTuple().getTupleSource();
+            LeftInputAdapterNode lian = (LeftInputAdapterNode) SuperCacheFixer.getLeftTupleSource(factHandle.getFirstLeftTuple());
             LeftInputAdapterNode.LiaNodeMemory lmem = getNodeMemory(lian);
             SegmentMemory lsmem = lmem.getSegmentMemory();
 
-            LeftTuple childLeftTuple = factHandle.getFirstLeftTuple(); // there is only one, all other LTs are peers
+            TupleImpl childLeftTuple = factHandle.getFirstLeftTuple(); // there is only one, all other LTs are peers
             LeftInputAdapterNode.doDeleteObject( childLeftTuple, childLeftTuple.getPropagationContext(),  lsmem, StatefulKnowledgeSessionImpl.this, lian, false, lmem );
 
             for ( PathMemory rm : lmem.getSegmentMemory().getPathMemories() ) {
@@ -1202,6 +1204,17 @@ public class StatefulKnowledgeSessionImpl extends AbstractRuntime
     public FactHandle insertAsync(final Object object) {
         checkAlive();
         return entryPointsManager.getDefaultEntryPoint().insertAsync( object );
+    }
+
+    @Override
+    public void enableTMS() {
+        tmsEnabled = true;
+        agenda.resetKnowledgeHelper();
+    }
+
+    @Override
+    public boolean isTMSEnabled() {
+        return tmsEnabled;
     }
 
     /**

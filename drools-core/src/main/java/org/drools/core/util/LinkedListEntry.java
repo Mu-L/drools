@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.util;
 
 import java.io.Externalizable;
@@ -26,7 +28,7 @@ import java.io.ObjectOutput;
  * the same <code>LinkedListNode</code> to multiple <code>LinkedList</code>s
  * where the node can have different previous and next nodes in each list.
  */
-public class LinkedListEntry<T1 extends LinkedListNode<T1>, T2> extends AbstractBaseLinkedListNode<T1> implements Externalizable {
+public class LinkedListEntry<T1 extends DoubleLinkedEntry<T1>, T2> extends AbstractLinkedListNode<T1> implements Externalizable {
 
     private static final long serialVersionUID = 510l;
     private T2 object;
@@ -61,4 +63,5 @@ public class LinkedListEntry<T1 extends LinkedListNode<T1>, T2> extends Abstract
     public boolean equals(final Object other) {
         return this.object.equals(other);
     }
+
 }

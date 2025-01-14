@@ -1,19 +1,21 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.validation.dtanalysis;
 
 import java.util.ArrayList;
@@ -33,11 +35,11 @@ import javax.xml.namespace.QName;
 
 import org.kie.dmn.api.core.DMNModel;
 import org.kie.dmn.core.ast.DMNBaseNode;
-import org.kie.dmn.core.compiler.DMNCompilerImpl;
 import org.kie.dmn.core.compiler.DMNProfile;
 import org.kie.dmn.core.impl.DMNModelImpl;
 import org.kie.dmn.core.util.Msg;
 import org.kie.dmn.core.util.MsgUtil;
+import org.kie.dmn.core.util.NamespaceUtil;
 import org.kie.dmn.feel.codegen.feel11.ProcessedExpression;
 import org.kie.dmn.feel.codegen.feel11.ProcessedUnaryTest;
 import org.kie.dmn.feel.lang.CompilerContext;
@@ -45,7 +47,7 @@ import org.kie.dmn.feel.lang.SimpleType;
 import org.kie.dmn.feel.lang.ast.BaseNode;
 import org.kie.dmn.feel.lang.ast.DashNode;
 import org.kie.dmn.feel.lang.ast.InfixOpNode;
-import org.kie.dmn.feel.lang.ast.InfixOpNode.InfixOperator;
+import org.kie.dmn.feel.lang.ast.InfixOperator;
 import org.kie.dmn.feel.lang.ast.NameRefNode;
 import org.kie.dmn.feel.lang.ast.NullNode;
 import org.kie.dmn.feel.lang.ast.RangeNode;
@@ -53,7 +55,9 @@ import org.kie.dmn.feel.lang.ast.RangeNode.IntervalBoundary;
 import org.kie.dmn.feel.lang.ast.UnaryTestListNode;
 import org.kie.dmn.feel.lang.ast.UnaryTestNode;
 import org.kie.dmn.feel.lang.ast.UnaryTestNode.UnaryOperator;
+import org.kie.dmn.feel.lang.ast.UndefinedValueNode;
 import org.kie.dmn.feel.lang.ast.Visitor;
+import org.kie.dmn.feel.lang.impl.FEELBuilder;
 import org.kie.dmn.feel.lang.impl.InterpretedExecutableExpression;
 import org.kie.dmn.feel.lang.impl.UnaryTestInterpretedExecutableExpression;
 import org.kie.dmn.feel.lang.types.BuiltInType;
@@ -98,7 +102,7 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
     private final DMNDTAnalyserOutputClauseVisitor outputClauseVisitor;
 
     public DMNDTAnalyser(List<DMNProfile> dmnProfiles) {
-        FEEL = org.kie.dmn.feel.FEEL.newInstance((List) dmnProfiles);
+        FEEL = FEELBuilder.builder().withProfiles((List) dmnProfiles).build();
         valueFromNodeVisitor = new DMNDTAnalyserValueFromNodeVisitor((List) dmnProfiles);
         outputClauseVisitor = new DMNDTAnalyserOutputClauseVisitor((List) dmnProfiles);
     }
@@ -175,7 +179,7 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
     private void compileTableComputeColStringMissingEnum(DMNModel model, DecisionTable dt, DDTATable ddtaTable) {
         for (int iColIdx = 0; iColIdx < ddtaTable.inputCols(); iColIdx++) {
             InputClause ie = dt.getInput().get(iColIdx);
-            QName typeRef = DMNCompilerImpl.getNamespaceAndName(dt, ((DMNModelImpl) model).getImportAliasesForNS(), ie.getInputExpression().getTypeRef(), model.getNamespace());
+            QName typeRef = NamespaceUtil.getNamespaceAndName(dt, ((DMNModelImpl) model).getImportAliasesForNS(), ie.getInputExpression().getTypeRef(), model.getNamespace());
             if (SimpleType.STRING.equals(typeRef.getLocalPart()) && !ddtaTable.getInputs().get(iColIdx).isDiscreteDomain()) {
                 Interval infStringDomain = ddtaTable.getInputs().get(iColIdx).getDomainMinMax();
                 boolean areAllSinglePointOrAll = true;
@@ -220,7 +224,7 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
             DDTARule ddtaRule = new DDTARule();
             int jColIdx = 0;
             for (UnaryTests ie : r.getInputEntry()) {
-                ProcessedUnaryTest compileUnaryTests = (ProcessedUnaryTest) FEEL.compileUnaryTests(ie.getText(), feelCtx(model, dt));
+                ProcessedUnaryTest compileUnaryTests = (ProcessedUnaryTest) FEEL.processUnaryTests(ie.getText(), feelCtx(model, dt));
                 UnaryTestInterpretedExecutableExpression interpreted = compileUnaryTests.getInterpreted();
                 if (interpreted == UnaryTestInterpretedExecutableExpression.EMPTY) {
                     throw new DMNDTAnalysisException("Gaps/Overlaps analysis cannot be performed for InputEntry with unary test containing: " + ie.getText(), dt);
@@ -286,9 +290,9 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
     }
     
     private Optional<BaseNode> checkForDiamondRange(RangeNode rangeNode) {
-        if ((rangeNode.getStart() instanceof NullNode || rangeNode.getStart() == null) && rangeNode.getUpperBound() == IntervalBoundary.OPEN && rangeNode.getEnd() instanceof RangeNode) {
+        if ((rangeNode.getStart() instanceof NullNode || rangeNode.getStart() instanceof UndefinedValueNode || rangeNode.getStart() == null) && rangeNode.getUpperBound() == IntervalBoundary.OPEN && rangeNode.getEnd() instanceof RangeNode) {
             return Optional.ofNullable(((RangeNode) rangeNode.getEnd()).getStart()); // <> value
-        } else if ((rangeNode.getEnd() instanceof NullNode || rangeNode.getEnd() == null) && rangeNode.getLowerBound() == IntervalBoundary.OPEN && rangeNode.getStart() instanceof RangeNode) {
+        } else if ((rangeNode.getEnd() instanceof NullNode || rangeNode.getEnd() instanceof UndefinedValueNode  || rangeNode.getEnd() == null) && rangeNode.getLowerBound() == IntervalBoundary.OPEN && rangeNode.getStart() instanceof RangeNode) {
             return Optional.ofNullable(((RangeNode) rangeNode.getStart()).getEnd()); // >< value
         } else {
             return Optional.empty();
@@ -324,11 +328,11 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
             if (ie.getInputValues() != null) {
                 allowedValues = ie.getInputValues().getText();
             } else {
-                QName typeRef = DMNCompilerImpl.getNamespaceAndName(dt, ((DMNModelImpl) model).getImportAliasesForNS(), ie.getInputExpression().getTypeRef(), model.getNamespace());
+                QName typeRef = NamespaceUtil.getNamespaceAndName(dt, ((DMNModelImpl) model).getImportAliasesForNS(), ie.getInputExpression().getTypeRef(), model.getNamespace());
                 allowedValues = findAllowedValues(model, typeRef);
             }
             if (allowedValues != null) {
-                ProcessedUnaryTest compileUnaryTests = (ProcessedUnaryTest) FEEL.compileUnaryTests(allowedValues, FEEL.newCompilerContext());
+                ProcessedUnaryTest compileUnaryTests = (ProcessedUnaryTest) FEEL.processUnaryTests(allowedValues, FEEL.newCompilerContext());
                 UnaryTestInterpretedExecutableExpression interpreted = compileUnaryTests.getInterpreted();
                 UnaryTestListNode utln = (UnaryTestListNode) interpreted.getASTNode();
                 List<BaseNode> utlnElements = new ArrayList<>(utln.getElements());
@@ -382,12 +386,12 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
             } else {
                 QName outputTypeRef = (oe.getTypeRef() == null && dt.getOutput().size() == 1) ? dt.getTypeRef() : oe.getTypeRef();
                 if (outputTypeRef != null) {
-                    QName typeRef = DMNCompilerImpl.getNamespaceAndName(dt, ((DMNModelImpl) model).getImportAliasesForNS(), outputTypeRef, model.getNamespace());
+                    QName typeRef = NamespaceUtil.getNamespaceAndName(dt, ((DMNModelImpl) model).getImportAliasesForNS(), outputTypeRef, model.getNamespace());
                     allowedValues = findAllowedValues(model, typeRef);
                 }
             }
             if (allowedValues != null) {
-                ProcessedUnaryTest compileUnaryTests = (ProcessedUnaryTest) FEEL.compileUnaryTests(allowedValues, FEEL.newCompilerContext());
+                ProcessedUnaryTest compileUnaryTests = (ProcessedUnaryTest) FEEL.processUnaryTests(allowedValues, FEEL.newCompilerContext());
                 UnaryTestInterpretedExecutableExpression interpreted = compileUnaryTests.getInterpreted();
                 UnaryTestListNode utln = (UnaryTestListNode) interpreted.getASTNode();
                 List<BaseNode> utlnElements = new ArrayList<>(utln.getElements());
@@ -748,14 +752,15 @@ public class DMNDTAnalyser implements InternalDMNDTAnalyser {
             return new Interval(RangeBoundary.CLOSED, valueFromNode(ut.getValue()), minMax.getUpperBound().getValue(), minMax.getUpperBound().getBoundaryType(), rule, col);
         } else if (ut.getValue() instanceof RangeNode) {
             RangeNode rangeNode = (RangeNode) ut.getValue();
-            if (!(rangeNode.getStart() instanceof NullNode || rangeNode.getEnd() instanceof NullNode)) {
+            if (!(rangeNode.getStart() instanceof NullNode || rangeNode.getStart() instanceof UndefinedValueNode ||
+                    rangeNode.getEnd() instanceof NullNode || rangeNode.getEnd() instanceof UndefinedValueNode)) {
                 return new Interval(rangeNode.getLowerBound() == IntervalBoundary.OPEN ? RangeBoundary.OPEN : RangeBoundary.CLOSED,
                                     valueFromNode(rangeNode.getStart()),
                                     valueFromNode(rangeNode.getEnd()),
                                     rangeNode.getUpperBound() == IntervalBoundary.OPEN ? RangeBoundary.OPEN : RangeBoundary.CLOSED,
                                     rule,
                                     col);
-            } else if (rangeNode.getStart() instanceof NullNode) {
+            } else if (rangeNode.getStart() instanceof NullNode || rangeNode.getStart() instanceof UndefinedValueNode) {
                 return new Interval(minMax.getLowerBound().getBoundaryType(),
                                     minMax.getLowerBound().getValue(),
                                     valueFromNode(rangeNode.getEnd()),

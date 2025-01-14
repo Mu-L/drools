@@ -4,32 +4,35 @@ ecosystem:
   - name: drools
     regexs:
     - drools.*
+    - incubator-kie-drools.*
   - name: kie-benchmarks
     ignore_release: true
-    ignore_productization: true
     regexs:
     - kie-benchmarks.*
+    - incubator-kie-benchmarks.*
 git:
   branches:
   - name: main
     main_branch: true
+  - name: 10.0.x
     seed:
-      branch: main
-  - name: 8.38.x-prod
-    seed:
-      branch: seed-drools-8.38.x
-  - name: 8.39.x
-    seed:
-      branch: seed-drools-8.39.x
+      branch: seed-drools-10.0.x
 seed:
   config_file:
     git:
-      repository: drools
+      repository: incubator-kie-drools
       author:
-        name: kiegroup
-        credentials_id: kie-ci4
+        name: apache
+        credentials_id: ASF_Cloudbees_Jenkins_ci-builds
+        push:
+          credentials_id: 84811880-2025-45b6-a44c-2f33bef30ad2
       branch: main
     path: .ci/jenkins/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:
-  email_creds_id: KOGITO_CI_EMAIL_TO
+  email_creds_id: DROOLS_CI_NOTIFICATION_EMAILS
+  agent:
+    docker:
+      builder:
+        image: docker.io/apache/incubator-kie-kogito-ci-build:main-latest
+        args: --privileged --group-add docker

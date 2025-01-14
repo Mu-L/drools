@@ -1,19 +1,21 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.pmml.compiler.commons.codegenfactories;
 
 import java.io.IOException;
@@ -29,7 +31,6 @@ import org.dmg.pmml.Constant;
 import org.dmg.pmml.DataType;
 import org.dmg.pmml.DefineFunction;
 import org.dmg.pmml.DerivedField;
-import org.dmg.pmml.FieldName;
 import org.dmg.pmml.FieldRef;
 import org.dmg.pmml.OpType;
 import org.dmg.pmml.ParameterField;
@@ -86,18 +87,18 @@ public class KiePMMLTransformationDictionaryFactoryTest {
     }
 
     private DefineFunction getDefineFunction(int counter) {
-        ParameterField parameterField1 = new ParameterField(FieldName.create(PARAM_1 + counter));
+        ParameterField parameterField1 = new ParameterField(PARAM_1 + counter);
         parameterField1.setDataType(DataType.DOUBLE);
         parameterField1.setOpType(OpType.CONTINUOUS);
         parameterField1.setDisplayName("displayName1" + counter);
-        ParameterField parameterField2 = new ParameterField(FieldName.create(PARAM_2 + counter));
+        ParameterField parameterField2 = new ParameterField(PARAM_2 + counter);
         parameterField2.setDataType(DataType.DOUBLE);
         parameterField2.setOpType(OpType.CONTINUOUS);
         parameterField2.setDisplayName("displayName2" + counter);
         Constant constant = new Constant();
         constant.setValue(value1);
         FieldRef fieldRef = new FieldRef();
-        fieldRef.setField(FieldName.create("FIELD_REF" + counter));
+        fieldRef.setField("FIELD_REF" + counter);
         Apply apply = new Apply();
         apply.setFunction("/");
         apply.addExpressions(constant, fieldRef);
@@ -120,7 +121,7 @@ public class KiePMMLTransformationDictionaryFactoryTest {
         Constant constant = new Constant();
         constant.setValue(value1);
         DerivedField toReturn = new DerivedField();
-        toReturn.setName(FieldName.create(PARAM_2 + counter));
+        toReturn.setName(PARAM_2 + counter);
         toReturn.setDataType(DataType.DOUBLE);
         toReturn.setOpType(OpType.CONTINUOUS);
         toReturn.setExpression(constant);

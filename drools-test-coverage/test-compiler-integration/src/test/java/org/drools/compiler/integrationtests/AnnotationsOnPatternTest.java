@@ -1,25 +1,27 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.factmodel.AnnotationDefinition;
@@ -28,32 +30,24 @@ import org.drools.base.rule.RuleConditionElement;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.definition.rule.Rule;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class AnnotationsOnPatternTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public AnnotationsOnPatternTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(false).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(false);
-    }
-
-    @Test
-    public void testAnnotationWithUnknownProperty() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAnnotationWithUnknownProperty(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test; " +
                 "import " + Outer.class.getName().replace("$", ".") + "; " +
                 "import " + Inner.class.getName().replace("$", ".") + "; " +
@@ -68,8 +62,9 @@ public class AnnotationsOnPatternTest {
         assertThat(kieBuilder.getResults().getMessages()).hasSize(1);
     }
 
-    @Test
-    public void testAnnotationWithUnknownClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAnnotationWithUnknownClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test; " +
                 "import " + Outer.class.getName().replace("$", ".") + "; " +
 
@@ -83,8 +78,9 @@ public class AnnotationsOnPatternTest {
         assertThat(kieBuilder.getResults().getMessages()).hasSize(1);
     }
 
-    @Test
-    public void testAnnotationWithQualifiandClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAnnotationWithQualifiandClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test; " +
                 "import " + Outer.class.getName().replace("$", ".") + "; " +
 
@@ -105,8 +101,9 @@ public class AnnotationsOnPatternTest {
         assertThat(adef).isNotNull();
     }
 
-    @Test
-    public void testNestedAnnotations() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNestedAnnotations(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test; " +
                 "import " + Outer.class.getName().replace("$", ".") + "; " +
                 "import " + Inner.class.getName().replace("$", ".") + "; " +
@@ -134,8 +131,9 @@ public class AnnotationsOnPatternTest {
         assertThat(inner.getPropertyValue("text")).isEqualTo("world");
     }
 
-    @Test
-    public void testNestedAnnotationsWithMultiplicity() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNestedAnnotationsWithMultiplicity(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test; " +
                 "import " + Outer.class.getName().replace("$", ".") + "; " +
                 "import " + Inner.class.getName().replace("$", ".") + "; " +
@@ -160,8 +158,9 @@ public class AnnotationsOnPatternTest {
         assertThat(val instanceof AnnotationDefinition[]).isTrue();
     }
 
-    @Test
-    public void testRuleAnnotations() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRuleAnnotations(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test; " +
                 "import " + Inner.class.getName().replace("$", ".") + "; " +
 
@@ -183,8 +182,9 @@ public class AnnotationsOnPatternTest {
         assertThat(((Map) obj).get("text")).isEqualTo("a");
     }
 
-    @Test
-    public void testTypedSimpleArrays() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testTypedSimpleArrays(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test; " +
                 "import " + AnnotationsTest.Simple.class.getName().replace("$", ".") + "; " +
 
@@ -207,8 +207,9 @@ public class AnnotationsOnPatternTest {
         assertThat(val instanceof int[]).isTrue();
     }
 
-    @Test
-    public void testCollectAnnotationsParsingAndBuilding() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testCollectAnnotationsParsingAndBuilding(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String packageName = "org.drools.compiler.integrationtests";
 

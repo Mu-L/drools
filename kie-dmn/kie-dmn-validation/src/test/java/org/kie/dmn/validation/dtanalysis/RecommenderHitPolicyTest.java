@@ -1,25 +1,27 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.validation.dtanalysis;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.core.DMNMessage;
 import org.kie.dmn.api.core.DMNMessageType;
 import org.kie.dmn.model.api.Decision;
@@ -32,10 +34,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.dmn.validation.DMNValidator.Validation.ANALYZE_DECISION_TABLE;
 import static org.kie.dmn.validation.DMNValidator.Validation.VALIDATE_COMPILATION;
 
-public class RecommenderHitPolicyTest extends AbstractDTAnalysisTest {
+class RecommenderHitPolicyTest extends AbstractDTAnalysisTest {
 
     @Test
-    public void testGaps() {
+    void gaps() {
         Definitions definitions = getDefinitions("RecommenderHitPolicy1.dmn", "http://www.trisotech.com/definitions/_50aea0bb-4482-48f6-acfe-4abc1a1bd0d6", "Drawing 1");
         List<DMNMessage> validate = validator.validate(definitions, VALIDATE_COMPILATION, ANALYZE_DECISION_TABLE);
         DTAnalysis analysis = getAnalysis(validate, "_3aa68aee-6314-482f-a0be-84c2411d65d7");
@@ -44,9 +46,9 @@ public class RecommenderHitPolicyTest extends AbstractDTAnalysisTest {
         assertThat(analysis.getGaps()).hasSize(1);
         assertThat(validate.stream().noneMatch(m -> m.getMessageType() == DMNMessageType.DECISION_TABLE_HITPOLICY_RECOMMENDER)).isTrue();
     }
-    
+
     @Test
-    public void testGapsAllowNull() {
+    void gapsAllowNull() {
         Definitions definitions = getDefinitions("RecommenderHitPolicy1_allowNull.dmn", "http://www.trisotech.com/definitions/_50aea0bb-4482-48f6-acfe-4abc1a1bd0d6", "Drawing 1");
         List<DMNMessage> validate = validator.validate(definitions, VALIDATE_COMPILATION, ANALYZE_DECISION_TABLE);
         DTAnalysis analysis = getAnalysis(validate, "_3aa68aee-6314-482f-a0be-84c2411d65d7");
@@ -57,7 +59,7 @@ public class RecommenderHitPolicyTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testNoGapsNoOverlaps() {
+    void noGapsNoOverlaps() {
         List<HitPolicy> wrongHPs = Arrays.asList(HitPolicy.ANY, HitPolicy.PRIORITY, HitPolicy.FIRST);
         for (HitPolicy hp : wrongHPs) {
             List<DMNMessage> validate = getRecommenderHitPolicy2(hp);
@@ -82,7 +84,7 @@ public class RecommenderHitPolicyTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testNoGapsOverlapsSameValue() {
+    void noGapsOverlapsSameValue() {
         List<HitPolicy> wrongHPs = Arrays.asList(HitPolicy.UNIQUE, HitPolicy.PRIORITY, HitPolicy.FIRST);
         for (HitPolicy hp : wrongHPs) {
             List<DMNMessage> validate = getRecommenderHitPolicy3(hp);
@@ -107,7 +109,7 @@ public class RecommenderHitPolicyTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testNoGapsOverlapsDiffValue() {
+    void noGapsOverlapsDiffValue() {
         List<HitPolicy> wrongHPs = Arrays.asList(HitPolicy.UNIQUE, HitPolicy.ANY, HitPolicy.FIRST);
         for (HitPolicy hp : wrongHPs) {
             List<DMNMessage> validate = getRecommenderHitPolicy4(hp);

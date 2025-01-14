@@ -1,23 +1,27 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.kie.builder.impl;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -219,7 +223,9 @@ public abstract class AbstractKieProject implements KieProject {
     public KnowledgeBuilder buildKnowledgePackages( KieBaseModelImpl kBaseModel, BuildContext buildContext, Predicate<String> buildFilter ) {
         boolean useFolders = useFolders( kBaseModel );
 
-        Set<Asset> assets = new HashSet<>();
+        Set<Asset> assets = new LinkedHashSet<>();
+
+        InternalKieModule kModule = getKieModuleForKBase(kBaseModel.getName());
 
         boolean allIncludesAreValid = true;
         for (String include : getTransitiveIncludes(kBaseModel)) {
@@ -236,6 +242,11 @@ public abstract class AbstractKieProject implements KieProject {
             }
             if (compileIncludedKieBases()) {
                 addFiles( buildFilter, assets, getKieBaseModel( include ), includeModule, useFolders );
+            } else {
+                if (kModule != includeModule) {
+                    // includeModule is not part of the current kModule
+                    buildContext.addIncludeModule(getKieBaseModel(include), includeModule);
+                }
             }
         }
 
@@ -243,7 +254,6 @@ public abstract class AbstractKieProject implements KieProject {
             return null;
         }
 
-        InternalKieModule kModule = getKieModuleForKBase(kBaseModel.getName());
         addFiles( buildFilter, assets, kBaseModel, kModule, useFolders );
 
         KnowledgeBuilder kbuilder;
@@ -342,8 +352,12 @@ public abstract class AbstractKieProject implements KieProject {
 
         @Override
         public boolean equals( Object o ) {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
+            if ( this == o ) {
+                return true;
+            }
+            if ( o == null || getClass() != o.getClass() ) {
+                return false;
+            }
             Asset asset = (Asset) o;
             return kmodule.equals( asset.kmodule ) && name.equals( asset.name );
         }
@@ -353,6 +367,11 @@ public abstract class AbstractKieProject implements KieProject {
             int result = kmodule.hashCode();
             result = 31 * result + name.hashCode();
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Asset: " + name;
         }
     }
 }

@@ -1,19 +1,21 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.pmml;
 
 import java.io.InputStream;
@@ -62,7 +64,7 @@ public class DMNImportPMMLInfo extends PMMLInfo<DMNPMMLModelInfo> {
             final PMML pmml = org.jpmml.model.PMMLUtil.unmarshal(is);
             PMMLHeaderInfo h = PMMLInfo.pmmlToHeaderInfo(pmml, pmml.getHeader());
             for (DataField df : pmml.getDataDictionary().getDataFields()) {
-                String dfName = df.getName().getValue();
+                String dfName =df.getName();
                 BuiltInType ft = getBuiltInTypeByDataType(df.getDataType());
                 List<FEELProfile> helperFEELProfiles = cc.getFeelProfiles();
                 DMNFEELHelper feel = new DMNFEELHelper(cc.getRootClassLoader(), helperFEELProfiles);
@@ -92,7 +94,7 @@ public class DMNImportPMMLInfo extends PMMLInfo<DMNPMMLModelInfo> {
                         av.addAll(ut);
                     }
                 }
-                DMNType type = new SimpleTypeImpl(i.getNamespace(), dfName, null, false, av, model.getTypeRegistry().resolveType(model.getDefinitions().getURIFEEL(), ft.getName()), ft);
+                DMNType type = new SimpleTypeImpl(i.getNamespace(), dfName, null, false, av, null, model.getTypeRegistry().resolveType(model.getDefinitions().getURIFEEL(), ft.getName()), ft);
                 model.getTypeRegistry().registerType(type);
             }
 
@@ -118,14 +120,13 @@ public class DMNImportPMMLInfo extends PMMLInfo<DMNPMMLModelInfo> {
                 // register <import name>.<pmml MODEL name>, being a composite type of the different model outputs fields
                 Map<String, DMNType> typeMap = new HashMap<>();
                 outputFields.stream().forEach(field -> {
-                    String fieldName = field.getName().getValue();
+                    String fieldName =field.getName();
                     BuiltInType ft = getBuiltInTypeByDataType(field.getDataType());
-                    DMNType type = new SimpleTypeImpl(i.getNamespace(), fieldName, null, false, null, dmnModel.getTypeRegistry().resolveType(dmnModel.getDefinitions().getURIFEEL(), ft.getName()), ft);
+                    DMNType type = new SimpleTypeImpl(i.getNamespace(), fieldName, null, false, null, null, dmnModel.getTypeRegistry().resolveType(dmnModel.getDefinitions().getURIFEEL(), ft.getName()), ft);
                     typeMap.put(fieldName, type);
                 });
                 DMNType compositeType = new CompositeTypeImpl(i.getNamespace(), modelName, null, false, typeMap, null, null);
                 dmnModel.getTypeRegistry().registerType(compositeType);
-                return;
             } else {
                 // Case of multiple/complex output AND model without name, raise a Warning from the compilation/engine side (for the editor to use FEEL Any as the typeRef in the BKM)
                 LOG.warn("PMML modelName is not provided, while output is a composite / multiple fields. Unable to synthesize CompositeType for DMN side.");

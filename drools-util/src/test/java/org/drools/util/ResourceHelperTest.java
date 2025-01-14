@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.util;
 
 import java.io.File;
@@ -24,9 +26,10 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.drools.util.FileUtilsTest.TEST_FILE;
 import static org.drools.util.ResourceHelper.getFileResourcesByExtension;
 import static org.drools.util.ResourceHelper.getFileResourcesFromDirectory;
 import static org.drools.util.ResourceHelper.getResourcesByExtension;
@@ -35,14 +38,13 @@ import static org.drools.util.ResourceHelper.internalGetResources;
 
 public class ResourceHelperTest {
 
-    private static final String TEST_FILE = "TestFile.txt";
 
     @Test
     public void getResourcesByExtensionTest() {
         Collection<String> resources = getResourcesByExtension("txt");
         assertThat(resources)
-                .hasSize(1)
-                .anyMatch(elem -> elem.endsWith(TEST_FILE));
+                .hasSize(2)
+                .allMatch(elem -> elem.endsWith(TEST_FILE));
     }
 
     @Test
@@ -62,11 +64,11 @@ public class ResourceHelperTest {
         List<String> classPathElements = Arrays.asList(ResourceHelper.getClassPathElements());
         Optional<String> testFolder =
                 classPathElements.stream().filter(elem -> elem.contains("test-classes")).findFirst();
-        assertThat(testFolder.isPresent()).isTrue();
+        assertThat(testFolder).isPresent();
         File dir = new File(testFolder.get());
         String regex = ".*" + TEST_FILE;
         Collection<String> filesFound = getResourcesFromDirectory(dir, Pattern.compile(regex));
-        assertThat(filesFound).hasSize(1);
+        assertThat(filesFound).hasSize(2);
 
         assertThat(getResourcesFromDirectory(null, null)).isEmpty();
         assertThat(getResourcesFromDirectory(dir, Pattern.compile("noMatch"))).isEmpty();
@@ -106,9 +108,9 @@ public class ResourceHelperTest {
     public void internalGetResourcesTest() {
         List<String> classPathElements = Arrays.asList(ResourceHelper.getClassPathElements());
         Optional<String> testFolder = classPathElements.stream().filter(elem -> elem.contains("test-classes")).findFirst();
-        assertThat(testFolder.isPresent()).isTrue();
+        assertThat(testFolder).isPresent();
         Collection<String> filesFound = internalGetResources(testFolder.get(), Pattern.compile(".*\\.txt$"));
-        assertThat(filesFound.size()).isEqualTo(1);
+        assertThat(filesFound).hasSize(2);
 
         assertThat(internalGetResources(filesFound.iterator().next(), Pattern.compile(".*\\.txt$"))).isEmpty();
     }
@@ -131,7 +133,7 @@ public class ResourceHelperTest {
 
     private void commonVerifyCollectionWithExpectedFile(final Collection<File> toVerify, String expectedFile) {
         assertThat(toVerify).isNotNull();
-        assertThat(toVerify).hasSize(1)
+        assertThat(toVerify).hasSize(2)
                 .allMatch(file -> file.exists() && file.getName().equals(expectedFile));
     }
 

@@ -1,41 +1,41 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.drools.model.codegen.execmodel.domain.Address;
 import org.drools.model.codegen.execmodel.domain.Employee;
 import org.drools.model.codegen.execmodel.domain.Person;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.builder.Results;
 import org.kie.api.runtime.KieSession;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class OrTest extends BaseModelTest {
 
-    public OrTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test
-    public void testOr() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOr(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "rule R when\n" +
@@ -48,7 +48,7 @@ public class OrTest extends BaseModelTest {
                         "  System.out.println(\"Found: \" + $s);\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( "Mario" );
         ksession.insert( new Person( "Mark", 37 ) );
@@ -57,8 +57,9 @@ public class OrTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testOrWhenStringFirst() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOrWhenStringFirst(RUN_TYPE runType) {
         String str =
               "import " + Person.class.getCanonicalName() + ";" +
               "import " + Address.class.getCanonicalName() + ";" +
@@ -72,7 +73,7 @@ public class OrTest extends BaseModelTest {
               "   System.out.println(\"Found: \" + $s.getClass());\n" +
               "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( "Go" );
         ksession.insert( new Person( "Mark", 37 ) );
@@ -82,8 +83,9 @@ public class OrTest extends BaseModelTest {
     }
 
 
-    @Test
-    public void testOrWithBetaIndex() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOrWithBetaIndex(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                      "rule R when\n" +
@@ -96,7 +98,7 @@ public class OrTest extends BaseModelTest {
                      "  System.out.println(\"Found: \" + $s);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert("Mario");
         ksession.insert(new Person("Mark", 37));
@@ -105,8 +107,9 @@ public class OrTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testOrWithBetaIndexOffset() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOrWithBetaIndexOffset(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                      "rule R when\n" +
@@ -120,7 +123,7 @@ public class OrTest extends BaseModelTest {
                      "  System.out.println(\"Found: \" + $s);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert("Mario");
         ksession.insert(new Person("Mark", 37));
@@ -129,8 +132,9 @@ public class OrTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testOrConditional() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOrConditional(RUN_TYPE runType) {
         final String drl =
                 "import " + Employee.class.getCanonicalName() + ";" +
                 "import " + Address.class.getCanonicalName() + ";" +
@@ -144,7 +148,7 @@ public class OrTest extends BaseModelTest {
                 "  list.add( $address.getCity() );\n" +
                 "end\n";
 
-        KieSession kieSession = getKieSession(drl);
+        KieSession kieSession = getKieSession(runType, drl);
 
         List<String> results = new ArrayList<>();
         kieSession.setGlobal("list", results);
@@ -160,8 +164,9 @@ public class OrTest extends BaseModelTest {
         assertThat(results).containsExactlyInAnyOrder("Big City", "Small City");
     }
 
-    @Test
-    public void testOrConstraint() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOrConstraint(RUN_TYPE runType) {
         final String drl =
                 "import " + Employee.class.getCanonicalName() + ";" +
                 "import " + Address.class.getCanonicalName() + ";" +
@@ -173,7 +178,7 @@ public class OrTest extends BaseModelTest {
                 "  list.add( $address.getCity() );\n" +
                 "end\n";
 
-        KieSession kieSession = getKieSession(drl);
+        KieSession kieSession = getKieSession(runType, drl);
 
         List<String> results = new ArrayList<>();
         kieSession.setGlobal("list", results);
@@ -189,8 +194,9 @@ public class OrTest extends BaseModelTest {
         assertThat(results).containsExactlyInAnyOrder("Big City", "Small City");
     }
 
-    @Test
-    public void testOrWithDuplicatedVariables() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testOrWithDuplicatedVariables(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                 "global java.util.List list\n" +
@@ -208,7 +214,7 @@ public class OrTest extends BaseModelTest {
                 "  list.add( $p + \" has \" + $age + \" years\");\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         List<String> results = new ArrayList<>();
         ksession.setGlobal("list", results);
@@ -225,8 +231,9 @@ public class OrTest extends BaseModelTest {
         assertThat(results.contains("Mario has 40 years")).isTrue();
     }
 
-    @Test
-    public void generateErrorForEveryFieldInRHSNotDefinedInLHS() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void generateErrorForEveryFieldInRHSNotDefinedInLHS(RUN_TYPE runType) {
         // JBRULES-3390
         final String drl1 = "package org.drools.compiler.integrationtests.operators; \n" +
                 "declare B\n" +
@@ -243,11 +250,27 @@ public class OrTest extends BaseModelTest {
                 "    System.out.println($bField);\n" +
                 "end\n";
 
-        Results results = getCompilationResults(drl1);
+        Results results = getCompilationResults(runType, drl1);
         assertThat(results.getMessages().isEmpty()).isFalse();
     }
 
-    private Results getCompilationResults( String drl ) {
-        return createKieBuilder( drl ).getResults();
+    private Results getCompilationResults( RUN_TYPE runType, String drl ) {
+        return createKieBuilder(runType, drl ).getResults();
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultipleFiringWithOr(RUN_TYPE runType) {
+        // DROOLS-7466
+        final String str =
+                "rule R when\n" +
+                "    (or\n" +
+                "        $val: String() from \"foo\"\n" +
+                "        $val: String() from \"bar\")\n" +
+                "then\n" +
+                "end \n";
+
+        KieSession ksession = getKieSession(runType, str);
+        assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 }

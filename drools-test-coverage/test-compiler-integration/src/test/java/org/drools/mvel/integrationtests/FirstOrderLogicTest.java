@@ -1,24 +1,28 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.drools.core.ClockType;
 import org.drools.kiesession.audit.WorkingMemoryConsoleLogger;
@@ -42,9 +46,9 @@ import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.KieModule;
 import org.kie.api.conf.RemoveIdentitiesOption;
@@ -54,7 +58,6 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.api.runtime.conf.ClockTypeOption;
 import org.kie.api.runtime.rule.FactHandle;
-import org.kie.api.time.SessionClock;
 import org.kie.api.time.SessionPseudoClock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,25 +68,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@RunWith(Parameterized.class)
 public class FirstOrderLogicTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public FirstOrderLogicTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-     // TODO: EM failed with some tests. File JIRAs
-        return TestParametersUtil.getKieBaseCloudConfigurations(false);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        // TODO: EM failed with some tests. File JIRAs
+        return TestParametersUtil2.getKieBaseCloudConfigurations(false).stream();
     }
 
     private static Logger logger = LoggerFactory.getLogger(FirstOrderLogicTest.class);
 
-    @Test
-    public void testCollect() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollect(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         List results = new ArrayList();
 
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Collect.drl");
@@ -124,8 +120,9 @@ public class FirstOrderLogicTest {
         assertThat(results.get(0).getClass().getName()).isEqualTo(ArrayList.class.getName());
     }
 
-    @Test
-    public void testCollectNodeSharing() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectNodeSharing(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_collectNodeSharing.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -154,8 +151,9 @@ public class FirstOrderLogicTest {
         assertThat(((List) results.get(0)).size()).isEqualTo(2);
     }
 
-    @Test
-    public void testCollectModify() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectModify(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Collect.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -215,8 +213,9 @@ public class FirstOrderLogicTest {
         assertThat(results.size()).isEqualTo(fireCount);
     }
 
-    @Test
-    public void testCollectResultConstraints() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectResultConstraints(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_CollectResultConstraints.drl");
         KieSession wm = kbase.newKieSession();
         List results = new ArrayList();
@@ -249,8 +248,9 @@ public class FirstOrderLogicTest {
         assertThat(results.get(0).getClass().getName()).isEqualTo(ArrayList.class.getName());
     }
 
-    @Test
-    public void testExistsWithBinding() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExistsWithBinding(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ExistsWithBindings.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -270,8 +270,9 @@ public class FirstOrderLogicTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testNot() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNot(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "not_rule_test.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -299,8 +300,9 @@ public class FirstOrderLogicTest {
         assertThat(list.contains(new Integer( 8 ))).isTrue();
     }
 
-    @Test
-    public void testNotWithBindings() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotWithBindings(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "not_with_bindings_rule_test.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -330,8 +332,9 @@ public class FirstOrderLogicTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testExists() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExists(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "exists_rule_test.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -360,8 +363,9 @@ public class FirstOrderLogicTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testExists2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExists2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_exists.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -395,8 +399,9 @@ public class FirstOrderLogicTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testExists3() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExists3(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Exists_JBRULES_2810.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -405,8 +410,9 @@ public class FirstOrderLogicTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testForall() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testForall(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Forall.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -433,8 +439,9 @@ public class FirstOrderLogicTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testForall2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testForall2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Forall2.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -466,8 +473,9 @@ public class FirstOrderLogicTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testRemoveIdentitiesSubNetwork() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testRemoveIdentitiesSubNetwork(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieModule kieModule = KieUtil.getKieModuleFromClasspathResources("test", getClass(), kieBaseTestConfiguration, "test_removeIdentitiesSubNetwork.drl");
         KieBase kbase = KieBaseUtil.newKieBaseFromKieModuleWithAdditionalOptions(kieModule, kieBaseTestConfiguration, RemoveIdentitiesOption.YES);
         KieSession workingMemory = kbase.newKieSession();
@@ -507,8 +515,9 @@ public class FirstOrderLogicTest {
         assertThat(list.get(1)).isEqualTo(bob);
     }
 
-    @Test
-    public void testCollectWithNestedFromWithParams() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectWithNestedFromWithParams(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_CollectWithNestedFrom.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -544,8 +553,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testCollectModifyAlphaRestriction() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectModifyAlphaRestriction(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_CollectAlphaRestriction.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -592,8 +602,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testForallSinglePattern() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testForallSinglePattern(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ForallSinglePattern.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -641,8 +652,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testForallSinglePattern2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testForallSinglePattern2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ForallSinglePattern2.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -660,8 +672,9 @@ public class FirstOrderLogicTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testMVELCollect() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMVELCollect(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_MVELCollect.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -693,8 +706,9 @@ public class FirstOrderLogicTest {
         assertThat(((List) results.get(0)).size()).isEqualTo(6);
     }
 
-    @Test
-    public void testNestedCorelatedRulesWithForall() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNestedCorelatedRulesWithForall(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_NestedCorrelatedRulesWithForall.drl");
         KieSession session = kbase.newKieSession();
 
@@ -749,8 +763,9 @@ public class FirstOrderLogicTest {
         assertThat(list4.size()).isEqualTo(0);
     }
 
-    @Test
-    public void testFromInsideNotAndExists() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFromInsideNotAndExists(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_FromInsideNotAndExists.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -781,8 +796,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testOr() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testOr(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_OrNesting.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -809,8 +825,9 @@ public class FirstOrderLogicTest {
     }
 
     // JBRULES-2482 
-    @Test
-    public void testOrWithVariableResolution() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testOrWithVariableResolution(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_OrCEFollowedByMultipleEval.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -827,8 +844,9 @@ public class FirstOrderLogicTest {
     }
 
     // JBRULES-2526 
-    @Test
-    public void testOrWithVariableResolution2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testOrWithVariableResolution2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_OrCEFollowedByMultipleEval2.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -844,8 +862,9 @@ public class FirstOrderLogicTest {
                 times( 8 ) ).afterMatchFired(any(AfterMatchFiredEvent.class));
     }
 
-    @Test
-    public void testCollectWithMemberOfOperators() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectWithMemberOfOperators(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_CollectMemberOfOperator.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -888,8 +907,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testCollectWithContainsOperators() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectWithContainsOperators(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_CollectContainsOperator.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -932,8 +952,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testForallSinglePatternWithExists() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testForallSinglePatternWithExists(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ForallSinglePatternWithExists.drl");
         KieSession workingMemory = kbase.newKieSession();
 
@@ -961,8 +982,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testCollectResultBetaConstraint() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectResultBetaConstraint(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_CollectResultsBetaConstraint.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -987,8 +1009,9 @@ public class FirstOrderLogicTest {
         assertThat(results.get(1)).isEqualTo("accumulate");
     }
 
-    @Test
-    public void testFromWithOr() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFromWithOr(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_FromWithOr.drl");
         KieSession session = kbase.newKieSession();
 
@@ -1017,8 +1040,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testForallWithSlidingWindow() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testForallWithSlidingWindow(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final KieSessionConfiguration conf = RuleBaseFactory.newKnowledgeSessionConfiguration();
         conf.setOption( ClockTypeOption.get( ClockType.PSEUDO_CLOCK.getId() ) );
 
@@ -1104,8 +1128,9 @@ public class FirstOrderLogicTest {
 
     }
 
-    @Test
-    public void testCollectFromMVELAfterOr() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectFromMVELAfterOr(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_CollectFromMVELAfterOr.drl");
         KieSession wm = kbase.newKieSession();
 
@@ -1135,8 +1160,9 @@ public class FirstOrderLogicTest {
         assertThat(((Collection) results.get(0)).size()).isEqualTo(3);
     }
 
-    @Test
-    public void testCollectAfterOrCE() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectAfterOrCE(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_OrCEFollowedByCollect.drl");
         KieSession session = kbase.newKieSession();
 
@@ -1151,8 +1177,9 @@ public class FirstOrderLogicTest {
         assertThat(rules).isEqualTo(2);
     }
     
-    @Test 
-    public void testLotsOfOrs() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLotsOfOrs(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // Decomposed this test down to just two rules, while still exhibiting the problem
         // Uncomment rest of rule as those are fixed, to complicate it again.
         String str = "package org.drools.mvel.compiler.test\n" +
@@ -1219,8 +1246,9 @@ public class FirstOrderLogicTest {
         ksession.dispose();
     }
 
-    @Test 
-    public void testOrs() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testOrs(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "package org.drools.mvel.integrationtests\n" +
                 "import " + Message.class.getName() + "\n" +
                 "rule X\n" + 

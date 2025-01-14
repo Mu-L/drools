@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.base.rule.constraint;
 
 import java.io.Externalizable;
@@ -30,26 +33,26 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import org.drools.base.base.AcceptsClassObjectType;
+import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.DroolsQuery;
+import org.drools.base.base.ObjectType;
 import org.drools.base.base.ValueResolver;
+import org.drools.base.phreak.ReactiveObject;
+import org.drools.base.reteoo.BaseTuple;
 import org.drools.base.rule.ContextEntry;
+import org.drools.base.rule.Declaration;
 import org.drools.base.rule.From;
+import org.drools.base.rule.MutableTypeConstraint;
 import org.drools.base.rule.accessor.DataProvider;
 import org.drools.base.rule.accessor.PatternExtractor;
 import org.drools.base.rule.accessor.ReadAccessor;
-import org.drools.base.base.ClassObjectType;
-import org.drools.base.phreak.ReactiveObject;
-import org.drools.base.reteoo.BaseTuple;
-import org.drools.base.rule.Declaration;
-import org.drools.base.rule.MutableTypeConstraint;
-import org.drools.base.base.AcceptsClassObjectType;
-import org.drools.base.base.ObjectType;
 import org.drools.util.ClassUtils;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.drools.util.ClassUtils.convertFromPrimitiveType;
 
-public class XpathConstraint extends MutableTypeConstraint {
+public class XpathConstraint extends MutableTypeConstraint<ContextEntry> {
 
     private LinkedList<XpathChunk> chunks;
 
@@ -117,7 +120,7 @@ public class XpathConstraint extends MutableTypeConstraint {
     }
 
     @Override
-    public ContextEntry createContextEntry() {
+    public ContextEntry createContext() {
         throw new UnsupportedOperationException();
     }
 
@@ -192,13 +195,13 @@ public class XpathConstraint extends MutableTypeConstraint {
 
         private List<Object> evaluateObject(ValueResolver valueResolver, BaseTuple leftBaseTuple, XpathChunk chunk, List<Object> list, Object object) {
             Object result = chunk.evaluate(object);
-            if (!chunk.lazy && result instanceof ReactiveObject) {
-                ((ReactiveObject) result).addTuple(leftBaseTuple);
+            if (!chunk.lazy && result instanceof ReactiveObject ro) {
+                ro.addTuple(leftBaseTuple);
             }
-            if (chunk.iterate && result instanceof Iterable) {
-                for (Object value : (Iterable<?>) result) {
-                    if (!chunk.lazy && value instanceof ReactiveObject) {
-                        ((ReactiveObject) value).addTuple(leftBaseTuple);
+            if (chunk.iterate && result instanceof Iterable i) {
+                for (Object value : i) {
+                    if (!chunk.lazy && value instanceof ReactiveObject ro) {
+                        ro.addTuple(leftBaseTuple);
                     }
                     if (value != null) {
                         list.add(value);
@@ -377,8 +380,8 @@ public class XpathConstraint extends MutableTypeConstraint {
 
         private Class<?> getParametricType(Method accessor) {
             Type returnedType = accessor.getGenericReturnType();
-            if (returnedType instanceof ParameterizedType) {
-                Type[] parametricType = ((ParameterizedType) returnedType).getActualTypeArguments();
+            if (returnedType instanceof ParameterizedType pt) {
+                Type[] parametricType = pt.getActualTypeArguments();
                 if (parametricType.length > 0) {
                     return parametricType[0] instanceof Class ?
                            (Class<?>) parametricType[0] :
@@ -398,7 +401,7 @@ public class XpathConstraint extends MutableTypeConstraint {
             return getConstraintsByType(ConstraintType.ALPHA);
         }
 
-        public List<BetaNodeFieldConstraint> getBetaConstraints() {
+        public List<BetaConstraint> getBetaConstraints() {
             return getConstraintsByType(ConstraintType.BETA);
         }
 

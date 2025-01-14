@@ -1,30 +1,39 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.runtime;
 
 import java.util.Collection;
 
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.dmn.api.feel.runtime.events.FEELEvent;
+import org.kie.dmn.feel.lang.FEELDialect;
 
 public class FEELOperatorsTest extends BaseFEELTest {
 
-    @Parameterized.Parameters(name = "{3}: {0} ({1}) = {2}")
-    public static Collection<Object[]> data() {
+    @ParameterizedTest
+    @MethodSource("data")
+    protected void instanceTest(String expression, Object result, FEELEvent.Severity severity, FEEL_TARGET testFEELTarget, Boolean useExtendedProfile, FEELDialect feelDialect) {
+        expression( expression,  result, severity, testFEELTarget, useExtendedProfile, feelDialect);
+    }
+
+    private static Collection<Object[]> data() {
         final Object[][] cases = new Object[][] {
                 // 'not' expression
                 { "not( true )", Boolean.FALSE , null},
@@ -118,6 +127,8 @@ public class FEELOperatorsTest extends BaseFEELTest {
                 {"(function(a: context<a: string>) {b: \"b\", c: \"c\"}) instance of function<context<a: string, b: string>>->context<b: string>", Boolean.TRUE , null},
                 {"(function(a: context<a: string, b: string>) \"foo\") instance of function<context<a: string>>->string", Boolean.FALSE , null},
                 {"(function(a: context<a: string>, b: context<a: string, b: string>) \"foo\") instance of function<context<a: string, b: string>,context<a: string, b: string, c: string>>->string", Boolean.TRUE , null},
+                {"range(\"[1..3]\") instance of range<number>", Boolean.TRUE , null},
+                {"range(\"[1..3]\") instance of range<string>", Boolean.FALSE , null}
         };
         return addAdditionalParameters(cases, false);
     }

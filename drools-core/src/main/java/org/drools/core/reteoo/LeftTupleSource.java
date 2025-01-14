@@ -1,35 +1,37 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
 import java.util.Collection;
 import java.util.List;
 
 import org.drools.base.base.ClassObjectType;
-import org.drools.base.reteoo.NodeTypeEnums;
-import org.drools.core.common.BaseNode;
+import org.drools.base.base.ObjectType;
 import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.Pattern;
+import org.drools.core.common.BaseNode;
 import org.drools.core.phreak.BuildtimeSegmentUtilities;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.base.rule.Pattern;
-import org.drools.base.base.ObjectType;
-import org.drools.core.util.bitmask.AllSetBitMask;
-import org.drools.core.util.bitmask.BitMask;
-import org.drools.core.util.bitmask.EmptyBitMask;
+import org.drools.util.bitmask.AllSetBitMask;
+import org.drools.util.bitmask.BitMask;
+import org.drools.util.bitmask.EmptyBitMask;
 
 import static org.drools.base.reteoo.PropertySpecificUtil.calculateNegativeMask;
 import static org.drools.base.reteoo.PropertySpecificUtil.calculatePositiveMask;
@@ -57,11 +59,10 @@ public abstract class LeftTupleSource extends BaseNode implements LeftTupleNode 
     protected LeftTupleSource         leftInput;
 
 
+    private ObjectTypeNodeId leftInputOtnId = ObjectTypeNodeId.DEFAULT_ID;
 
     /** The destination for <code>Tuples</code>. */
     protected LeftTupleSinkPropagator sink;
-
-    private transient ObjectTypeNode.Id leftInputOtnId;
 
     private int pathIndex;
 
@@ -80,9 +81,7 @@ public abstract class LeftTupleSource extends BaseNode implements LeftTupleNode 
      * @param id
      */
     protected LeftTupleSource(int id, BuildContext context) {
-        super(id,
-              context != null ? context.getPartitionId() : RuleBasePartitionId.MAIN_PARTITION,
-              context != null && context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation());
+        super(id, context != null ? context.getPartitionId() : RuleBasePartitionId.MAIN_PARTITION);
         this.sink = EmptyLeftTupleSinkAdapter.getInstance();
         initMemoryId( context );
     }
@@ -95,9 +94,16 @@ public abstract class LeftTupleSource extends BaseNode implements LeftTupleNode 
         return pathIndex;
     }
 
-    public abstract short getType();
+    public abstract int getType();
 
-    public abstract LeftTuple createPeer(LeftTuple original);
+    public ObjectTypeNodeId getLeftInputOtnId() {
+        return leftInputOtnId;
+    }
+
+    public void setLeftInputOtnId(ObjectTypeNodeId leftInputOtnId) {
+        this.leftInputOtnId = leftInputOtnId;
+    }
+
 
     public void addTupleSink(final LeftTupleSink tupleSink) {
         addTupleSink(tupleSink, null);
@@ -232,7 +238,7 @@ public abstract class LeftTupleSource extends BaseNode implements LeftTupleNode 
             return;
         }
 
-        if ( leftInput.getType() != NodeTypeEnums.LeftInputAdapterNode) {
+        if ( !NodeTypeEnums.isLeftInputAdapterNode(leftInput)) {
             // BetaNode's not after LIANode are not relevant for left mask property specific, so don't block anything.
             leftDeclaredMask = AllSetBitMask.get();
             return;
@@ -279,7 +285,7 @@ public abstract class LeftTupleSource extends BaseNode implements LeftTupleNode 
 
     protected void initInferredMask(LeftTupleSource leftInput) {
         LeftTupleSource unwrappedLeft = unwrapLeftInput(leftInput);
-        if ( unwrappedLeft.getType() == NodeTypeEnums.LeftInputAdapterNode && ((LeftInputAdapterNode)unwrappedLeft).getParentObjectSource().getType() == NodeTypeEnums.AlphaNode ) {
+        if ( NodeTypeEnums.isLeftInputAdapterNode(unwrappedLeft) && ((LeftInputAdapterNode)unwrappedLeft).getParentObjectSource().getType() == NodeTypeEnums.AlphaNode ) {
             ObjectSource objectSource = ((LeftInputAdapterNode)unwrappedLeft).getParentObjectSource();
             leftInferredMask = objectSource.updateMask( leftDeclaredMask );
         } else {
@@ -309,14 +315,6 @@ public abstract class LeftTupleSource extends BaseNode implements LeftTupleNode 
 
     public BitMask getLeftNegativeMask() {
         return leftNegativeMask;
-    }
-
-    public ObjectTypeNode.Id getLeftInputOtnId() {
-        return leftInputOtnId;
-    }
-
-    public void setLeftInputOtnId(ObjectTypeNode.Id leftInputOtnId) {
-        this.leftInputOtnId = leftInputOtnId;
     }
 
     public ObjectType getObjectType() {

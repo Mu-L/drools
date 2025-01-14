@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.kiesession.consequence;
 
 import java.io.Externalizable;
@@ -24,28 +26,31 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.WorkingMemory;
 import org.drools.base.beliefsystem.Mode;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.InternalRuleFlowGroup;
-import org.drools.core.common.InternalWorkingMemoryEntryPoint;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.TruthMaintenanceSystemFactory;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.factmodel.traits.CoreWrapper;
 import org.drools.base.factmodel.traits.Thing;
 import org.drools.base.factmodel.traits.TraitableBean;
+import org.drools.base.rule.Declaration;
+import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.WorkingMemory;
+import org.drools.core.common.BaseNode;
+import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.InternalRuleFlowGroup;
+import org.drools.core.common.InternalWorkingMemoryEntryPoint;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.common.SuperCacheFixer;
+import org.drools.core.common.TruthMaintenanceSystemFactory;
+import org.drools.core.process.AbstractProcessContext;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.RuleTerminalNode;
-import org.drools.base.rule.Declaration;
-import org.drools.core.process.AbstractProcessContext;
+import org.drools.core.reteoo.Tuple;
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.rule.consequence.KnowledgeHelper;
-import org.drools.core.reteoo.Tuple;
-import org.drools.core.util.bitmask.BitMask;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.kiesession.session.StatefulKnowledgeSessionImpl;
+import org.drools.util.bitmask.BitMask;
 import org.kie.api.runtime.Channel;
 import org.kie.api.runtime.KieRuntime;
 import org.kie.api.runtime.process.NodeInstance;
@@ -70,6 +75,8 @@ public class DefaultKnowledgeHelper implements KnowledgeHelper, Externalizable {
     protected ReteEvaluator reteEvaluator;
     private StatefulKnowledgeSessionForRHS wrappedEvaluator;
 
+    private KnowledgeHelper tmsKnowledgeHelper;
+
     public DefaultKnowledgeHelper() { }
 
     public DefaultKnowledgeHelper(ReteEvaluator reteEvaluator) {
@@ -79,7 +86,7 @@ public class DefaultKnowledgeHelper implements KnowledgeHelper, Externalizable {
     public void readExternal(ObjectInput in) throws IOException,
                                             ClassNotFoundException {
         internalMatch = (InternalMatch) in.readObject();
-        tuple = (LeftTuple) in.readObject();
+        tuple = (TupleImpl) in.readObject();
         reteEvaluator = (ReteEvaluator) in.readObject();
     }
 
@@ -104,11 +111,11 @@ public class DefaultKnowledgeHelper implements KnowledgeHelper, Externalizable {
     }
 
     public void blockMatch(Match act) {
-        TruthMaintenanceSystemFactory.throwExceptionForMissingTms();
+        executeOnTMS().blockMatch(act);
     }
 
     public void unblockAllMatches(Match act) {
-        TruthMaintenanceSystemFactory.throwExceptionForMissingTms();
+        executeOnTMS().unblockAllMatches(act);
     }
 
     public FactHandle insertAsync( final Object object ) {
@@ -120,8 +127,8 @@ public class DefaultKnowledgeHelper implements KnowledgeHelper, Externalizable {
     }
 
     public FactHandle insert(final Object object, final boolean dynamic) {
-        return (InternalFactHandle) ((InternalWorkingMemoryEntryPoint) this.reteEvaluator.getDefaultEntryPoint())
-                .insert(object, dynamic, this.internalMatch.getRule(), this.internalMatch.getTuple().getTupleSink());
+        return ((InternalWorkingMemoryEntryPoint) this.reteEvaluator.getDefaultEntryPoint())
+                .insert(object, dynamic, this.internalMatch.getRule(), SuperCacheFixer.asTerminalNode(this.internalMatch.getTuple()));
     }
 
     @Override
@@ -141,23 +148,34 @@ public class DefaultKnowledgeHelper implements KnowledgeHelper, Externalizable {
 
     @Override
     public FactHandle insertLogical(Object object, Object value) {
-        TruthMaintenanceSystemFactory.throwExceptionForMissingTms();
-        return null;
+        return executeOnTMS().insertLogical(object, value);
     }
 
     @Override
     public FactHandle insertLogical(EntryPoint ep, Object object) {
-        TruthMaintenanceSystemFactory.throwExceptionForMissingTms();
-        return null;
+        return executeOnTMS().insertLogical(ep, object);
     }
 
-    public InternalFactHandle bolster( final Object object ) {
+    public FactHandle bolster( final Object object ) {
         return bolster( object, null );
     }
 
-    public InternalFactHandle bolster( final Object object, final Object value ) {
-        TruthMaintenanceSystemFactory.throwExceptionForMissingTms();
-        return null;
+    public FactHandle bolster( final Object object, final Object value ) {
+        return executeOnTMS().bolster(object, value);
+    }
+
+    private KnowledgeHelper executeOnTMS() {
+        if (!TruthMaintenanceSystemFactory.present()) {
+            TruthMaintenanceSystemFactory.throwExceptionForMissingTms();
+        }
+        if (tmsKnowledgeHelper == null) {
+            reteEvaluator.enableTMS();
+            tmsKnowledgeHelper = reteEvaluator.createKnowledgeHelper();
+        }
+        if (internalMatch != tmsKnowledgeHelper.getActivation()) {
+            tmsKnowledgeHelper.setActivation(internalMatch);
+        }
+        return tmsKnowledgeHelper;
     }
 
     public void cancelMatch(Match act) {
@@ -256,7 +274,7 @@ public class DefaultKnowledgeHelper implements KnowledgeHelper, Externalizable {
 
         ((InternalFactHandle) handle).getEntryPoint(reteEvaluator).delete(handle,
                                                              this.internalMatch.getRule(),
-                                                             this.internalMatch.getTuple().getTupleSink(),
+                                                             SuperCacheFixer.asTerminalNode(this.internalMatch.getTuple()),
                                                              fhState);
     }
 
@@ -270,7 +288,7 @@ public class DefaultKnowledgeHelper implements KnowledgeHelper, Externalizable {
 
     @Override
     public Declaration[] getRequiredDeclarations() {
-        return ((RuleTerminalNode)this.tuple.getTupleSink()).getRequiredDeclarations();
+        return ((RuleTerminalNode)this.tuple.getSink()).getRequiredDeclarations();
     }
 
     public WorkingMemory getWorkingMemory() {

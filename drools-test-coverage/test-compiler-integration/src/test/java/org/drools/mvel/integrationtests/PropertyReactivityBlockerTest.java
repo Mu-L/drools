@@ -1,25 +1,28 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.drools.core.event.DebugAgendaEventListener;
 import org.drools.core.reteoo.ReteDumper;
@@ -28,32 +31,24 @@ import org.drools.mvel.compiler.Neighbor;
 import org.drools.mvel.compiler.Person;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class PropertyReactivityBlockerTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public PropertyReactivityBlockerTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
     
-    @Test()
-    public void testA_NotWorking() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testA_NotWorking(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-644
         String drl =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -87,8 +82,9 @@ public class PropertyReactivityBlockerTest {
         assertThat(list.get(0)).isEqualTo("t0");
     }
     
-    @Test()
-    public void testAbis_NotWorking() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAbis_NotWorking(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-644
         String drl =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -130,8 +126,9 @@ public class PropertyReactivityBlockerTest {
         assertThat(list.get(0)).isEqualTo("t0");
     }
     
-    @Test()
-    public void testA_Working() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testA_Working(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-644
         String drl =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -165,8 +162,9 @@ public class PropertyReactivityBlockerTest {
         assertThat(list.get(0)).isEqualTo("t0");
     }
     
-    @Test()
-    public void testAbis_Working() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAbis_Working(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-644
         String drl =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -207,8 +205,9 @@ public class PropertyReactivityBlockerTest {
         assertThat(list.get(0)).isEqualTo("t0");
     }
     
-    @Test()
-    public void testUpdateRewrittenWithCorrectBitMaskAndCorrectClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testUpdateRewrittenWithCorrectBitMaskAndCorrectClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "import " + Cell.class.getCanonicalName() + ";\n" +
                 "import " + Neighbor.class.getCanonicalName() + ";\n" +

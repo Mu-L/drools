@@ -1,30 +1,33 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.testcoverage.regression;
 
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.KieSessionTest;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieSessionTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.definition.type.FactType;
 import org.kie.api.io.Resource;
 import org.kie.api.runtime.KieSession;
@@ -40,26 +43,27 @@ public class NotInFusionTest extends KieSessionTest {
     private static final String RULE2 = "not equal 2";
     private static final String RULE3 = "different";
 
-    public NotInFusionTest(final KieBaseTestConfiguration kieBaseTestConfiguration,
-                           final KieSessionTestConfiguration kieSessionTestConfiguration) {
-        super(kieBaseTestConfiguration, kieSessionTestConfiguration);
+
+    public static Stream<Arguments> parameters() {
+        return TestParametersUtil2.getStreamKieBaseAndStatefulKieSessionConfigurations().stream();
     }
 
-    @Parameterized.Parameters(name = "{1}" + " (from " + "{0}" + ")")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getStreamKieBaseAndStatefulKieSessionConfigurations();
-    }
-
-    @Test
-    public void testNoEvent() {
+    @ParameterizedTest(name = "{1}" + " (from " + "{0}" + ")")
+	@MethodSource("parameters")
+    public void testNoEvent(KieBaseTestConfiguration kieBaseTestConfiguration,
+            KieSessionTestConfiguration kieSessionTestConfiguration) {
+    	createKieSession(kieBaseTestConfiguration, kieSessionTestConfiguration);
         KieSession ksession = session.getStateful();
         ksession.fireAllRules();
 
         assertThat(firedRules.isRuleFired(RULE1)).as(RULE1).isTrue();
     }
 
-    @Test
-    public void testInsertFirst() throws Exception {
+    @ParameterizedTest(name = "{1}" + " (from " + "{0}" + ")")
+	@MethodSource("parameters")
+    public void testInsertFirst(KieBaseTestConfiguration kieBaseTestConfiguration,
+            KieSessionTestConfiguration kieSessionTestConfiguration) throws Exception {
+    	createKieSession(kieBaseTestConfiguration, kieSessionTestConfiguration);
         KieSession ksession = session.getStateful();
 
         insertNotEvent(ksession);
@@ -68,8 +72,11 @@ public class NotInFusionTest extends KieSessionTest {
         assertThat(firedRules.isRuleFired(RULE1)).as(RULE1).isFalse();
     }
 
-    @Test
-    public void testInsertFirstAndAdd() throws Exception {
+    @ParameterizedTest(name = "{1}" + " (from " + "{0}" + ")")
+	@MethodSource("parameters")
+    public void testInsertFirstAndAdd(KieBaseTestConfiguration kieBaseTestConfiguration,
+            KieSessionTestConfiguration kieSessionTestConfiguration) throws Exception {
+    	createKieSession(kieBaseTestConfiguration, kieSessionTestConfiguration);
         KieSession ksession = session.getStateful();
 
         insertNotEvent(ksession);
@@ -85,8 +92,11 @@ public class NotInFusionTest extends KieSessionTest {
         assertThat(firedRules.isRuleFired(RULE1)).as(RULE1).isTrue();
     }
 
-    @Test
-    public void testInsertFirstAndAdd2() throws Exception {
+    @ParameterizedTest(name = "{1}" + " (from " + "{0}" + ")")
+	@MethodSource("parameters")
+    public void testInsertFirstAndAdd2(KieBaseTestConfiguration kieBaseTestConfiguration,
+            KieSessionTestConfiguration kieSessionTestConfiguration) throws Exception {
+    	createKieSession(kieBaseTestConfiguration, kieSessionTestConfiguration);
         KieSession ksession = session.getStateful();
 
         insertNotEvent(ksession);
@@ -103,8 +113,11 @@ public class NotInFusionTest extends KieSessionTest {
         assertThat(firedRules.isRuleFired(RULE1)).as(RULE1).isTrue();
     }
 
-    @Test
-    public void testInsertFirstAndAdd3() throws Exception {
+    @ParameterizedTest(name = "{1}" + " (from " + "{0}" + ")")
+	@MethodSource("parameters")
+    public void testInsertFirstAndAdd3(KieBaseTestConfiguration kieBaseTestConfiguration,
+            KieSessionTestConfiguration kieSessionTestConfiguration) throws Exception {
+    	createKieSession(kieBaseTestConfiguration, kieSessionTestConfiguration);
         KieSession ksession = session.getStateful();
 
         insertNotEvent(ksession);
@@ -122,8 +135,11 @@ public class NotInFusionTest extends KieSessionTest {
         assertThat(firedRules.isRuleFired(RULE1)).as(RULE1).isTrue();
     }
 
-    @Test
-    public void testNoEntryPoint() throws Exception {
+    @ParameterizedTest(name = "{1}" + " (from " + "{0}" + ")")
+	@MethodSource("parameters")
+    public void testNoEntryPoint(KieBaseTestConfiguration kieBaseTestConfiguration,
+            KieSessionTestConfiguration kieSessionTestConfiguration) throws Exception {
+    	createKieSession(kieBaseTestConfiguration, kieSessionTestConfiguration);
         KieSession ksession = session.getStateful();
 
         ksession.insert(createNotEvent(ksession, "value"));

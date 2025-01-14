@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
 import java.util.ArrayList;
@@ -25,7 +27,9 @@ import java.util.Map;
 
 import org.drools.model.codegen.execmodel.domain.Person;
 import org.drools.model.codegen.execmodel.domain.Result;
-import org.junit.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.KieSession;
@@ -35,12 +39,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class RuleAttributesTest extends BaseModelTest {
 
-    public RuleAttributesTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test(timeout = 5000)
-    public void testNoLoop() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+	@Timeout(5000)
+    public void testNoLoop(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                         "rule R no-loop when\n" +
@@ -49,7 +51,7 @@ public class RuleAttributesTest extends BaseModelTest {
                         "  modify($p) { setAge($p.getAge()+1) };\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         Person me = new Person( "Mario", 40 );
         ksession.insert( me );
@@ -58,8 +60,9 @@ public class RuleAttributesTest extends BaseModelTest {
         assertThat(me.getAge()).isEqualTo(41);
     }
 
-    @Test
-    public void testSalience() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSalience(RUN_TYPE runType) throws Exception {
         String str =
                 "import " + Result.class.getCanonicalName() + ";" +
                         "import " + Person.class.getCanonicalName() + ";" +
@@ -77,7 +80,7 @@ public class RuleAttributesTest extends BaseModelTest {
                         "   delete($p);" +
                         "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert(new Person("Mario", 40));
         ksession.fireAllRules();
@@ -87,8 +90,9 @@ public class RuleAttributesTest extends BaseModelTest {
         assertThat(results.contains("R2")).isTrue();
     }
 
-    @Test
-    public void testSalienceExpressionAttribute() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSalienceExpressionAttribute(RUN_TYPE runType) throws Exception {
         String str = "import " + Person.class.getCanonicalName() + ";" +
                      "\n" +
                      "rule R1 salience -$p.getAge() when\n" +
@@ -104,7 +108,7 @@ public class RuleAttributesTest extends BaseModelTest {
                      "   delete($p);" +
                      "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert(new Person("Mario", 40));
         ksession.fireAllRules();
@@ -114,8 +118,9 @@ public class RuleAttributesTest extends BaseModelTest {
         assertThat(results.contains("R2")).isTrue();
     }
 
-    @Test
-    public void testExpressionEnabledAttribute() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testExpressionEnabledAttribute(RUN_TYPE runType) throws Exception {
         String str = "import " + Person.class.getCanonicalName() + ";\n" +
                      "rule R1\n" +
                      "enabled ($b)\n" +
@@ -127,7 +132,7 @@ public class RuleAttributesTest extends BaseModelTest {
                      "   delete($p);" +
                      "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert(Boolean.FALSE);
         Person mario = new Person("Mario", 40);
@@ -140,8 +145,9 @@ public class RuleAttributesTest extends BaseModelTest {
         assertThat(!results.contains("R1")).isTrue();
     }
 
-    @Test
-    public void testCrossNoLoopWithNodeSharing() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testCrossNoLoopWithNodeSharing(RUN_TYPE runType) throws Exception {
         String str =
                 "package org.drools.compiler.loop " +
                         "rule 'Rule 1' " +
@@ -166,7 +172,7 @@ public class RuleAttributesTest extends BaseModelTest {
                         "      update( $thing2 ); " +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( "hello" );
         ksession.insert( new Integer( 42 ) );
@@ -179,8 +185,9 @@ public class RuleAttributesTest extends BaseModelTest {
         assertThat(x).isEqualTo(2);
     }
 
-    @Test
-    public void testCalendars() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testCalendars(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.integrationtests;\n" +
                         "\n" +
@@ -202,7 +209,7 @@ public class RuleAttributesTest extends BaseModelTest {
                         "       list.add(\"weekday\");\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ArrayList<String> list = new ArrayList<String>();
 
@@ -241,8 +248,9 @@ public class RuleAttributesTest extends BaseModelTest {
         }
     };
 
-    @Test
-    public void testAutoFocus() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAutoFocus(RUN_TYPE runType) {
         String str =
                 "package org.drools.testcoverage.functional;\n" +
                         "//generated from Decision Table\n" +
@@ -333,7 +341,7 @@ public class RuleAttributesTest extends BaseModelTest {
                         "end\n" +
                         "\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         final OrderListener listener = new OrderListener();
         ksession.addEventListener(listener);
@@ -376,8 +384,9 @@ public class RuleAttributesTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testMetadataBasics() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMetadataBasics(RUN_TYPE runType) {
         final String PACKAGE_NAME = "org.asd";
         final String RULE_NAME = "hello world";
         final String RULE_KEY = "output";
@@ -390,7 +399,7 @@ public class RuleAttributesTest extends BaseModelTest {
                             "     System.out.println(\"Hello world!\");\n" +
                             " end";
 
-        KieSession ksession = getKieSession(rule);
+        KieSession ksession = getKieSession(runType, rule);
 
         final Map<String, Object> metadata = ksession.getKieBase().getRule(PACKAGE_NAME, RULE_NAME).getMetaData();
 
@@ -398,8 +407,9 @@ public class RuleAttributesTest extends BaseModelTest {
         assertThat(metadata.get(RULE_KEY)).isEqualTo("\"" + RULE_VALUE + "\"");
     }
 
-    @Test
-    public void testMetadataValue() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMetadataValue(RUN_TYPE runType) {
         final String rule = " package org.test;\n" +
                             " rule R1\n" +
                             " @metaValueString(\"asd\")\n" +
@@ -411,7 +421,7 @@ public class RuleAttributesTest extends BaseModelTest {
                             "     System.out.println(\"Hello world!\");\n" +
                             " end";
 
-        KieSession ksession = getKieSession(rule);
+        KieSession ksession = getKieSession(runType, rule);
 
         final Map<String, Object> metadata = ksession.getKieBase().getRule("org.test", "R1").getMetaData();
 
@@ -421,8 +431,9 @@ public class RuleAttributesTest extends BaseModelTest {
         assertThat(metadata.get("metaValueCheck3")).isSameAs(System.out);
     }
 
-    @Test
-    public void testDynamicSalience() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDynamicSalience(RUN_TYPE runType) {
         String str =
                 "global java.util.List list;\n" +
                 "rule R1 salience $s.length when\n" +
@@ -436,7 +447,7 @@ public class RuleAttributesTest extends BaseModelTest {
                 "    list.add($i);" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         List<Object> list = new ArrayList<>();
         ksession.setGlobal( "list", list );
@@ -452,8 +463,9 @@ public class RuleAttributesTest extends BaseModelTest {
 
     public static final int CONST_SALIENCE = 1;
 
-    @Test
-    public void testSalienceFromConstant() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSalienceFromConstant(RUN_TYPE runType) {
         // DROOLS-5550
         String str =
                 "import " + RuleAttributesTest.class.getCanonicalName() + "\n;" +
@@ -469,7 +481,7 @@ public class RuleAttributesTest extends BaseModelTest {
                 "    list.add($i);" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         List<Object> list = new ArrayList<>();
         ksession.setGlobal( "list", list );

@@ -1,24 +1,32 @@
-/*
- * Copyright 2011 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import org.drools.base.base.ObjectType;
 import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.Pattern;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.common.DefaultEventHandle;
@@ -34,12 +42,7 @@ import org.drools.core.rule.BehaviorContext;
 import org.drools.core.rule.BehaviorManager;
 import org.drools.core.rule.BehaviorRuntime;
 import org.drools.core.rule.SlidingTimeWindow;
-import org.drools.core.util.bitmask.BitMask;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import org.drools.util.bitmask.BitMask;
 
 /**
  * <code>WindowNodes</code> are nodes in the <code>Rete</code> network used
@@ -61,8 +64,9 @@ public class WindowNode extends ObjectSource
     protected BehaviorManager              behavior;
     private EntryPointId                   entryPoint;
     private ObjectSinkNode                 previousRightTupleSinkNode;
-    private ObjectSinkNode                 nextRightTupleSinkNode;
-    private transient ObjectTypeNode.Id rightInputOtnId = ObjectTypeNode.DEFAULT_ID;
+    private           ObjectSinkNode   nextRightTupleSinkNode;
+
+    private ObjectTypeNodeId rightInputOtnId = ObjectTypeNodeId.DEFAULT_ID;
 
     public WindowNode() {
     }
@@ -83,7 +87,6 @@ public class WindowNode extends ObjectSource
                       final BuildContext context) {
         super(id,
               context.getPartitionId(),
-              context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation(),
               objectSource,
               context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeHashingThreshold(),
               context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeRangeIndexThreshold());
@@ -100,7 +103,7 @@ public class WindowNode extends ObjectSource
         initMemoryId( context );
     }
 
-    public short getType() {
+    public int getType() {
         return NodeTypeEnums.WindowNode;
     }
 
@@ -134,7 +137,7 @@ public class WindowNode extends ObjectSource
             }
         }
 
-        RightTuple rightTuple = new RightTupleImpl( evFh, this );
+        RightTuple rightTuple = new RightTuple(evFh, this );
         rightTuple.setPropagationContext( pctx );
 
         InternalFactHandle clonedFh = evFh.cloneAndLink();  // this is cloned, as we need to separate the child RightTuple references
@@ -150,7 +153,7 @@ public class WindowNode extends ObjectSource
     }
 
     @Override
-    public void retractRightTuple(RightTuple rightTuple, PropagationContext pctx, ReteEvaluator reteEvaluator) {
+    public void retractRightTuple(TupleImpl rightTuple, PropagationContext pctx, ReteEvaluator reteEvaluator) {
         if (isInUse()) {
             // This retraction could be the effect of an event expiration, but this node could be no
             // longer in use since an incremental update could have concurrently removed it
@@ -163,7 +166,7 @@ public class WindowNode extends ObjectSource
     }
 
     @Override
-    public void modifyRightTuple(RightTuple rightTuple, PropagationContext context, ReteEvaluator reteEvaluator) {
+    public void modifyRightTuple(TupleImpl rightTuple, PropagationContext context, ReteEvaluator reteEvaluator) {
         DefaultEventHandle originalFactHandle = (DefaultEventHandle) rightTuple.getFactHandle();
         DefaultEventHandle cloneFactHandle  = (DefaultEventHandle) rightTuple.getContextObject();
         originalFactHandle.quickCloneUpdate( cloneFactHandle ); // make sure all fields are updated
@@ -191,19 +194,19 @@ public class WindowNode extends ObjectSource
                              ModifyPreviousTuples modifyPreviousTuples,
                              PropagationContext context,
                              ReteEvaluator reteEvaluator) {
-        RightTuple rightTuple = modifyPreviousTuples.peekRightTuple(partitionId);
+        TupleImpl rightTuple = modifyPreviousTuples.peekRightTuple(partitionId);
 
         // if the peek is for a different OTN we assume that it is after the current one and then this is an assert
-        while ( rightTuple != null && rightTuple.getInputOtnId().before( getRightInputOtnId() ) ) {
+        while ( rightTuple != null && rightTuple.getInputOtnId().before(getRightInputOtnId()) ) {
             modifyPreviousTuples.removeRightTuple(partitionId);
 
             // we skipped this node, due to alpha hashing, so retract now
             rightTuple.setPropagationContext( context );
-            rightTuple.retractTuple( context, reteEvaluator );
+            ((RightTuple)rightTuple).retractTuple(context, reteEvaluator);
             rightTuple = modifyPreviousTuples.peekRightTuple(partitionId);
         }
 
-        if ( rightTuple != null && rightTuple.getInputOtnId().equals( getRightInputOtnId()) ) {
+        if ( rightTuple != null && rightTuple.getInputOtnId().equals(getRightInputOtnId()) ) {
             modifyPreviousTuples.removeRightTuple(partitionId);
             rightTuple.reAdd();
             modifyRightTuple( rightTuple, context, reteEvaluator );
@@ -298,22 +301,14 @@ public class WindowNode extends ObjectSource
     }
 
     @Override
-    public BitMask calculateDeclaredMask(ObjectType modifiedType, List<String> settableProperties) {
+    public BitMask calculateDeclaredMask(Pattern pattern, ObjectType modifiedType, List<String> settableProperties) {
         throw new UnsupportedOperationException();
-    }
-
-    public ObjectTypeNode.Id getRightInputOtnId() {
-        return rightInputOtnId;
-    }
-
-    public void setRightInputOtnId(ObjectTypeNode.Id rightInputOtnId) {
-        this.rightInputOtnId = rightInputOtnId;
     }
 
     public static class WindowMemory implements Memory {
         public BehaviorContext[] behaviorContext;
 
-        public short getNodeType() {
+        public int getNodeType() {
             return NodeTypeEnums.WindowNode;
         }
 
@@ -341,7 +336,7 @@ public class WindowNode extends ObjectSource
             throw new UnsupportedOperationException();
         }
 
-        public void nullPrevNext() {
+        public void clear() {
             throw new UnsupportedOperationException();
         }
 
@@ -357,5 +352,13 @@ public class WindowNode extends ObjectSource
             }
             return eventFactHandles;
         }
+    }
+
+    public ObjectTypeNodeId getRightInputOtnId() {
+        return rightInputOtnId;
+    }
+
+    public void setRightInputOtnId(ObjectTypeNodeId rightInputOtnId) {
+        this.rightInputOtnId = rightInputOtnId;
     }
 }

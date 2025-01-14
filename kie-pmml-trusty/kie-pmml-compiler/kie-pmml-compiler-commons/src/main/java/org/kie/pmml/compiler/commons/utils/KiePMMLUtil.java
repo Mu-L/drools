@@ -1,17 +1,20 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.kie.pmml.compiler.commons.utils;
 
@@ -21,11 +24,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.dmg.pmml.DataField;
 import org.dmg.pmml.DataType;
-import org.dmg.pmml.FieldName;
 import org.dmg.pmml.MathContext;
 import org.dmg.pmml.MiningField;
 import org.dmg.pmml.MiningFunction;
@@ -166,7 +168,7 @@ public class KiePMMLUtil {
         String cleanedName = model.getModelName().replaceAll("[^A-Za-z0-9]", "");
         String fieldName = String.format(TARGETFIELD_TEMPLATE, cleanedName);
         DataField toReturn = new DataField();
-        toReturn.setName(FieldName.create(fieldName));
+        toReturn.setName(fieldName);
         toReturn.setOpType(targetOpType);
         toReturn.setDataType(targetDataType);
         return Optional.of(toReturn);
@@ -338,7 +340,7 @@ public class KiePMMLUtil {
                                 .filter(targetField -> outputField.getTargetField().equals(targetField.getName()))
                                 .findFirst()
                                 .orElseThrow(() -> new KiePMMLException("Failed to find a target field for OutputField "
-                                                                                + outputField.getName().getValue()));
+                                                                                +outputField.getName()));
                     }
                     if (referencedField == null && (outputField.getResultFeature() == null || outputField.getResultFeature().equals(ResultFeature.PREDICTED_VALUE))) { // default predictedValue
                         referencedField = targetFields.stream()
@@ -351,7 +353,7 @@ public class KiePMMLUtil {
                         return;
                     }
                     if (referencedField != null) {
-                        FieldName targetFieldName = referencedField.getName();
+                         String targetFieldName = referencedField.getName();
                         DataField dataField = dataFields.stream()
                                 .filter(df -> df.getName().equals(targetFieldName))
                                 .findFirst()

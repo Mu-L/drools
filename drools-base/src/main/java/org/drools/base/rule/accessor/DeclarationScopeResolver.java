@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.base.rule.accessor;
 
 import java.lang.reflect.Type;
@@ -107,7 +109,7 @@ public class DeclarationScopeResolver {
 
     public Declaration getDeclaration(String identifier) {
         // it may be a local bound variable
-        for (final Iterator<RuleConditionElement> iterator = buildList.descendingIterator(); iterator.hasNext();) {
+        for (final Iterator<RuleConditionElement> iterator = buildList.iterator(); iterator.hasNext();) {
             final Declaration declaration = iterator.next().resolveDeclaration( identifier );
             if ( declaration != null ) {
                 return declaration;
@@ -203,7 +205,7 @@ public class DeclarationScopeResolver {
             if ( declaration != null ) {
                 // if it is an OR and it is duplicated, we can stop looking for duplication now
                 // as it is a separate logical branch
-                boolean inOr = ((rce instanceof GroupElement) && ((GroupElement) rce).isOr());
+                boolean inOr = (rce instanceof GroupElement ge && ge.isOr());
                 if ( ! inOr || type == null ) {
                     return ! inOr;
                 }
@@ -214,8 +216,7 @@ public class DeclarationScopeResolver {
         if ( rule != null && rule.getParent() != null ) {
             // recursive algorithm for each parent
             //     -> lhs.getInnerDeclarations()
-            Declaration parentDeclaration = getExtendedDeclaration( rule.getParent(),
-                                                                    name );
+            Declaration parentDeclaration = getExtendedDeclaration( rule.getParent(), name );
             return null != parentDeclaration;
         }
         return false;
@@ -233,14 +234,14 @@ public class DeclarationScopeResolver {
         Map<String, Declaration> declarations = new HashMap<>();
         for (RuleConditionElement aBuildList : this.buildList) {
             // if we are inside of an OR we don't want each previous stack entry added because we can't see those variables
-            if (aBuildList instanceof GroupElement && ((GroupElement)aBuildList).getType() == GroupElement.Type.OR) {
+            if (aBuildList instanceof GroupElement ge && ge.getType() == GroupElement.Type.OR) {
                 continue;
             }
 
             // this may be optimized in the future to only re-add elements at
             // scope breaks, like "NOT" and "EXISTS"
-            Map<String,Declaration> innerDeclarations = aBuildList instanceof GroupElement ?
-                    ((GroupElement)aBuildList).getInnerDeclarations(consequenceName) :
+            Map<String,Declaration> innerDeclarations = aBuildList instanceof GroupElement ge ?
+                    ge.getInnerDeclarations(consequenceName) :
                     aBuildList.getInnerDeclarations();
             declarations.putAll(innerDeclarations);
         }
@@ -277,8 +278,7 @@ public class DeclarationScopeResolver {
     private Pattern findPatternInNestedElements(final int id,
                                                 final RuleConditionElement rce) {
         for ( RuleConditionElement element : rce.getNestedElements() ) {
-            if ( element instanceof Pattern ) {
-                Pattern p = (Pattern) element;
+            if ( element instanceof Pattern p ) {
                 if (p.getPatternId() == id ) {
                     return p;
                 }

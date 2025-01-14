@@ -1,22 +1,26 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.base.ClassFieldAccessorCache;
@@ -32,9 +36,9 @@ import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.IndexableConstraint;
 import org.drools.base.rule.Pattern;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.base.rule.accessor.ReadAccessor;
-import org.drools.base.util.FieldIndex;
+import org.drools.base.util.IndexedValueReader;
 import org.drools.core.util.AbstractHashTable.Index;
 import org.drools.core.util.LinkedList;
 import org.drools.core.util.LinkedListEntry;
@@ -43,28 +47,20 @@ import org.drools.core.util.index.TupleList;
 import org.drools.model.functions.Predicate1;
 import org.drools.modelcompiler.util.EvaluationUtil;
 import org.drools.mvel.model.Cheese;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public abstract class BaseBetaConstraintsTest {
 
     public static EvaluatorRegistry registry = new EvaluatorRegistry();
 
-    protected boolean useLambdaConstraint;
 
-    @Parameterized.Parameters(name = "useLambdaConstraint={0}")
-    public static Collection<Object[]> getParameters() {
-        Collection<Object[]> parameters = new ArrayList<>();
-        parameters.add(new Object[]{false});
-        parameters.add(new Object[]{true});
-        return parameters;
+    public static Stream<Boolean> parameters() {
+        return Stream.of(false, true);
     }
 
-    protected BetaNodeFieldConstraint getCheeseTypeConstraint(final String identifier,
-                                                    Operator operator) {
+    protected BetaConstraint getCheeseTypeConstraint(boolean useLambdaConstraint, final String identifier,
+                                                     Operator operator) {
         if (useLambdaConstraint) {
             Pattern pattern = new Pattern(0, new ClassObjectType(Cheese.class));
 
@@ -103,21 +99,21 @@ public abstract class BaseBetaConstraintsTest {
         }
     }
 
-    protected void checkBetaConstraints(BetaNodeFieldConstraint[] constraints,
+    protected void checkBetaConstraints(BetaConstraint[] constraints,
                                         Class cls) {
         checkBetaConstraints(constraints, cls, NodeTypeEnums.JoinNode);
     }
 
-    protected void checkBetaConstraints(BetaNodeFieldConstraint[] constraints,
+    protected void checkBetaConstraints(BetaConstraint[] constraints,
                                         Class cls,
-                                        short betaNodeType) {
+                                        int betaNodeType) {
         RuleBaseConfiguration config = RuleBaseFactory.newKnowledgeBaseConfiguration().as(RuleBaseConfiguration.KEY);
         int depth = config.getCompositeKeyDepth();
 
         BetaConstraints betaConstraints;
 
         try {
-            betaConstraints = (BetaConstraints) cls.getConstructor( new Class[]{BetaNodeFieldConstraint[].class, RuleBaseConfiguration.class} ).newInstance( constraints, config );
+            betaConstraints = (BetaConstraints) cls.getConstructor( new Class[]{BetaConstraint[].class, RuleBaseConfiguration.class}).newInstance(constraints, config);
         } catch ( Exception e ) {
             throw new RuntimeException( "could not invoke constructor for " + cls.getName() );
         }
@@ -179,16 +175,16 @@ public abstract class BaseBetaConstraintsTest {
     }
 
     protected void checkSameConstraintForIndex(IndexableConstraint constraint,
-                                               FieldIndex fieldIndex) {
+                                               IndexedValueReader fieldIndex) {
         assertThat(fieldIndex.getLeftExtractor()).isSameAs(constraint.getRequiredDeclarations()[0]);
-        assertThat(fieldIndex.getRightExtractor()).isSameAs(constraint.getFieldExtractor());
+        assertThat(fieldIndex.getRightExtractor()).isSameAs(constraint.getRightIndexExtractor());
     }
 
-    protected BetaNodeFieldConstraint[] convertToConstraints(LinkedList list) {
-        final BetaNodeFieldConstraint[] array = new BetaNodeFieldConstraint[list.size()];
-        int i = 0;
+    protected BetaConstraint[] convertToConstraints(LinkedList list) {
+        final BetaConstraint[] array = new BetaConstraint[list.size()];
+        int                    i     = 0;
         for ( LinkedListEntry entry = (LinkedListEntry) list.getFirst(); entry != null; entry = (LinkedListEntry) entry.getNext() ) {
-            array[i++] = (BetaNodeFieldConstraint) entry.getObject();
+            array[i++] = (BetaConstraint) entry.getObject();
         }
         return array;
     }

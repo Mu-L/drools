@@ -1,19 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+  -->
+
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-    <parent>
-    <groupId>org.jboss</groupId>
-    <artifactId>jboss-parent</artifactId>
-    <!-- Keep in sync with jboss-parent version in kie-user-bom-parent/pom.xml -->
-    <version>36</version>
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>32</version>
   </parent>
 
   <groupId>org.kie</groupId>
   <artifactId>drools-parent</artifactId>
   <packaging>pom</packaging>
-  <version>8.40.0-SNAPSHOT</version>
+  <version>999-SNAPSHOT</version>
 
   <name>Drools :: Parent</name>
   <description>
@@ -22,8 +40,8 @@
   <url>http://www.drools.org</url>
   <inceptionYear>2001</inceptionYear>
   <organization>
-    <name>JBoss by Red Hat</name>
-    <url>http://www.jboss.org/</url>
+    <name>The Apache Software Foundation</name>
+    <url>https://apache.org/</url>
   </organization>
   <licenses>
     <license>
@@ -33,93 +51,51 @@
     </license>
   </licenses>
 
-  <repositories>
-    <repository>
-      <!-- Duplicating the Maven Central repository here (as it is already coming from Super POM) makes the build much faster,
-           as the Maven Central is now treated as the first (default) repository (because it is before the JBoss.org one).
-           Artifacts with release (fixed) versions are being downloaded primarily from there. Without the central being the
-           first repository the JBoss.org Nexus would be contacted first and since it is quite slow it slows down the build.
-           We use JBoss.org repo only to download our SNAPSHOTs. -->
-      <id>central</id>
-      <name>Central Repository</name>
-      <url>https://repo.maven.apache.org/maven2</url>
-      <layout>default</layout>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <!-- Bootstrap repository to locate the parent pom when the parent pom has not been build locally. -->
-    <!-- Conventions are described in http://community.jboss.org/wiki/MavenGettingStarted-Developers -->
-    <repository>
-      <id>jboss-public-repository-group</id>
-      <name>JBoss Public Repository Group</name>
-      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>daily</updatePolicy>
-      </snapshots>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <!-- Duplicating the Maven Central repository here (as it is already coming from Super POM) makes the build much faster,
-           as the Maven Central is now treated as the first (default) repository (because it is before the JBoss.org one).
-           Artifacts with release (fixed) versions are being downloaded primarily from there. Without the central being the
-           first repository the JBoss.org Nexus would be contacted first and since it is quite slow it slows down the build.
-           We use JBoss.org repo only to download our SNAPSHOTs. -->
-      <id>central</id>
-      <name>Central Repository</name>
-      <url>https://repo.maven.apache.org/maven2</url>
-      <layout>default</layout>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>
-    <pluginRepository>
-      <id>jboss-public-repository-group</id>
-      <name>JBoss Public Repository Group</name>
-      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
-
   <scm>
-    <connection>scm:git:https://github.com/kiegroup/drools.git</connection>
-    <developerConnection>scm:git:git@github.com:kiegroup/drools.git</developerConnection>
-    <url>https://github.com/kiegroup/drools</url>
+    <connection>scm:git:https://github.com/apache/incubator-kie-drools.git</connection>
+    <developerConnection>scm:git:https://github.com/apache/incubator-kie-drools.git</developerConnection>
+    <url>https://github.com/apache/incubator-kie-drools</url>
   </scm>
 
   <ciManagement>
     <system>jenkins</system>
-    <url>https://jenkins-kieci.rhcloud.com</url>
+    <url>https://ci-builds.apache.org/job/KIE/</url>
   </ciManagement>
   <issueManagement>
-    <system>jira</system>
-    <url>https://issues.jboss.org/browse/DROOLS</url>
+    <system>GitHub Issues</system>
+    <url>https://github.com/apache/incubator-kie-issues/issues</url>
   </issueManagement>
   <developers>
     <developer>
-      <name>All developers are listed on the team website</name>
-      <url>http://www.drools.org/community/team.html</url>
+      <name>The Apache KIE Team</name>
+      <email>dev@kie.apache.org</email>
+      <url>https://kie.apache.org</url>
+      <organization>Apache Software Foundation</organization>
+      <organizationUrl>http://apache.org/</organizationUrl>
     </developer>
   </developers>
-  <contributors>
-    <contributor>
-      <name>All contributors are listed on the team website</name>
-      <url>http://www.drools.org/community/team.html</url>
-    </contributor>
-  </contributors>
   <mailingLists>
+    <mailingList>
+      <name>Development List</name>
+      <subscribe>dev-subscribe@kie.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@kie.apache.org</unsubscribe>
+      <post>dev@kie.apache.org</post>
+      <archive>https://lists.apache.org/list.html?dev@kie.apache.org</archive>
+    </mailingList>
+    <mailingList>
+      <name>User List</name>
+      <subscribe>users-subscribe@kie.apache.org</subscribe>
+      <unsubscribe>users-unsubscribe@kie.apache.org</unsubscribe>
+      <post>users@kie.apache.org</post>
+      <archive>https://lists.apache.org/list.html?users@kie.apache.org</archive>
+    </mailingList>
+    <mailingList>
+      <name>Commits List</name>
+      <subscribe>commits-subscribe@kie.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@kie.apache.org</unsubscribe>
+      <post>commits@kie.apache.org</post>
+      <archive>https://lists.apache.org/list.html?commits@kie.apache.org</archive>
+    </mailingList>
     <mailingList>
       <name>setup</name>
       <subscribe>https://groups.google.com/forum/#!forum/drools-setup</subscribe>
@@ -134,78 +110,83 @@
       <subscribe>https://groups.google.com/forum/#!forum/drools-usage</subscribe>
       <unsubscribe>https://groups.google.com/forum/#!forum/drools-usage</unsubscribe>
     </mailingList>
-    <mailingList>
-      <name>development</name>
-      <subscribe>https://groups.google.com/forum/#!forum/drools-development</subscribe>
-      <unsubscribe>https://groups.google.com/forum/#!forum/drools-development</unsubscribe>
-    </mailingList>
   </mailingLists>
 
+  <properties>
+    <project.build.outputTimestamp>2024-01-12T00:00:00Z</project.build.outputTimestamp>
+    <version.maven.artifact.plugin>3.4.1</version.maven.artifact.plugin>
+  </properties>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-artifact-plugin</artifactId>
+          <version>${version.maven.artifact.plugin}</version>
+          <configuration>
+            <outputTimestamp>${project.build.outputTimestamp}</outputTimestamp>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <modules>
+    <module>bom</module>
+    <module>build-parent</module>
+    <module>kie-api</module>
+    <module>kie-internal</module>
+    <module>kie-util</module>
+    <module>kie-memory-compiler</module>
+    <module>drools-ruleunits</module>
+    <module>drools-wiring</module>
+    <module>kie-test-util</module>
+    <module>drools-util</module>
+    <module>drools-io</module>
+    <module>drools-core</module>
+    <module>drools-base</module>
+    <module>drools-commands</module>
+    <module>drools-kiesession</module>
+    <module>drools-ecj</module>
+    <module>drools-drl</module>
+    <module>drools-compiler</module>
+    <module>drools-mvel</module>
+    <module>drools-xml-support</module>
+    <module>drools-legacy-test-util</module>
+    <module>drools-tms</module>
+    <module>drools-beliefs</module>
+    <module>drools-serialization-protobuf</module>
+    <module>drools-traits</module>
+    <module>drools-verifier</module>
+    <module>drools-persistence</module>
+    <module>drools-templates</module>
+    <module>drools-decisiontables</module>
+    <module>drools-examples</module>
+    <module>kie-ci</module>
+    <module>drools-model</module>
+    <module>drools-examples-api</module>
+    <module>drools-test-coverage</module>
+    <module>drools-scenario-simulation</module>
+    <module>drools-metric</module>
+    <module>drools-alphanetwork-compiler</module>
+    <module>drools-engine</module>
+    <module>drools-engine-classic</module>
+    <module>drools-impact-analysis</module>
+    <module>drools-retediagram</module>
+    <module>drools-fastutil</module>
+    <module>efesto</module>
+    <module>kie-drl</module>
+    <module>kie-dmn</module>
+    <module>kie-pmml-trusty</module>
+    <module>kie-maven-plugin</module>
+    <module>kie-archetypes</module>
+    <module>drools-quarkus-extension</module>
+    <module>drools-reliability</module>
+    <module>drools-drlonyaml-parent</module>
+  </modules>
+
   <profiles>
-    <profile>
-      <id>default</id>
-      <activation>
-        <property>
-          <name>!productized</name>
-        </property>
-      </activation>
-      <modules>
-        <module>bom</module>
-        <module>build-parent</module>
-        <module>kie-api</module>
-        <module>kie-internal</module>
-        <module>kie-util</module>
-        <module>kie-memory-compiler</module>
-        <module>drools-ruleunits</module>
-        <module>drools-wiring</module>
-        <module>kie-test-util</module>
-        <module>drools-util</module>
-        <module>drools-io</module>
-        <module>drools-core</module>
-        <module>drools-base</module>
-        <module>drools-commands</module>
-        <module>drools-kiesession</module>
-        <module>drools-ecj</module>
-        <module>drools-drl-ast</module>
-        <module>drools-drl-parser</module>
-        <module>drools-drl-extensions</module>
-        <module>drools-compiler</module>
-        <module>drools-mvel</module>
-        <module>drools-xml-support</module>
-        <module>drools-legacy-test-util</module>
-        <module>drools-tms</module>
-        <module>drools-beliefs</module>
-        <module>drools-serialization-protobuf</module>
-        <module>drools-traits</module>
-        <module>drools-verifier</module>
-        <module>drools-persistence</module>
-        <module>drools-templates</module>
-        <module>drools-decisiontables</module>
-        <module>drools-examples</module>
-        <module>kie-ci</module>
-        <module>drools-model</module>
-        <module>drools-examples-api</module>
-        <module>drools-test-coverage</module>
-        <module>drools-scenario-simulation</module>
-        <module>drools-metric</module>
-        <module>drools-alphanetwork-compiler</module>
-        <module>drools-engine</module>
-        <module>drools-engine-classic</module>
-        <module>drools-impact-analysis</module>
-        <module>drools-retediagram</module>
-        <module>drools-fastutil</module>
-        <module>efesto</module>
-        <module>kie-drl</module>
-        <module>kie-dmn</module>
-        <module>kie-pmml-trusty</module>
-        <module>kie-maven-plugin</module>
-        <module>kie-archetypes</module>
-        <module>drools-drl-quarkus-extension</module>
-        <module>jpmml-migration-recipe</module>
-        <module>drools-reliability</module>
-        <module>drools-drlonyaml-parent</module>
-      </modules>
-    </profile>
     <profile>
       <id>fullProfile</id>
       <activation>
@@ -217,6 +198,42 @@
         <module>drools-docs</module>
         <module>drools-distribution</module>
       </modules>
+    </profile>
+    <profile>
+      <id>reproducible-build</id>
+      <activation>
+        <property>
+          <name>reproducible</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-artifact-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>check-buildplan</id>
+                <goals>
+                  <goal>check-buildplan</goal>
+                </goals>
+                <!-- The execution's configuration is part of the pluginManagement. This piece here only makes sure the
+                     execution is enabled (by specifying a phase) for full profile builds. -->
+                <phase>validate</phase>
+              </execution>
+              <execution>
+                <id>compare</id>
+                <goals>
+                  <goal>compare</goal>
+                </goals>
+                <!-- The execution's configuration is part of the pluginManagement. This piece here only makes sure the
+                     execution is enabled (by specifying a phase) for full profile builds. -->
+                <phase>install</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile><!-- this profile is defined here in order to be available from the root of the drools repository and maven reactor build -->
       <id>rewrite</id>
@@ -250,53 +267,28 @@
         </plugins>
       </build>
     </profile>
+
     <profile>
-      <id>productized</id>
+      <id>enableNewParser</id>
       <activation>
         <property>
-          <name>productized</name>
+          <name>enableNewParser</name>
         </property>
       </activation>
-      <modules>
-        <module>bom</module>
-        <module>build-parent</module>
-        <module>kie-api</module>
-        <module>kie-util</module>
-        <module>kie-memory-compiler</module>
-        <module>kie-ci</module>
-        <module>efesto</module>
-        <module>drools-util</module>
-        <module>drools-io</module>
-        <module>drools-serialization-protobuf</module>
-        <module>drools-legacy-test-util</module>
-        <module>drools-commands</module>
-        <module>drools-wiring</module>
-        <module>drools-model</module>
-        <module>drools-ruleunits</module>
-        <module>drools-core</module>
-        <module>drools-base</module>
-        <module>drools-compiler</module>
-        <module>drools-mvel</module>
-        <module>drools-kiesession</module>
-        <module>drools-xml-support</module>
-        <module>drools-tms</module>
-        <module>drools-ecj</module>
-        <module>drools-drl-ast</module>
-        <module>drools-drl-parser</module>
-        <module>drools-drl-extensions</module>
-        <module>drools-templates</module>
-        <module>drools-decisiontables</module>
-        <module>drools-alphanetwork-compiler</module>
-        <module>drools-engine</module>
-        <module>drools-engine-classic</module>
-        <module>kie-dmn</module>
-        <module>kie-drl</module>
-        <module>kie-pmml-trusty</module>
-        <module>kie-internal</module>
-        <module>kie-test-util</module>
-        <module>drools-drl-quarkus-extension</module>
-        <module>drools-reliability</module>
-      </modules>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <!-- false by default. Activate this profile when you test the new parser -->
+                <drools.drl.antlr4.parser.enabled>true</drools.drl.antlr4.parser.enabled>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 

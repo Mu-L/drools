@@ -1,17 +1,20 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.kie.pmml.models.regression.compiler.factories;
 
@@ -203,7 +206,7 @@ public class KiePMMLRegressionTableFactory {
      */
     static Map<String, SerializableFunction<Double, Double>> getNumericPredictorsMap(final List<NumericPredictor> numericPredictors) {
         return numericPredictors.stream()
-                .collect(Collectors.toMap(numericPredictor -> numericPredictor.getName().getValue(),
+                .collect(Collectors.toMap(numericPredictor ->numericPredictor.getField(),
                                           KiePMMLRegressionTableFactory::getNumericPredictorEntry));
     }
 
@@ -232,7 +235,7 @@ public class KiePMMLRegressionTableFactory {
      */
     static Map<String, SerializableFunction<String, Double>> getCategoricalPredictorsMap(final List<CategoricalPredictor> categoricalPredictors) {
         final Map<String, List<CategoricalPredictor>> groupedCollectors = categoricalPredictors.stream()
-                .collect(groupingBy(categoricalPredictor -> categoricalPredictor.getField().getValue()));
+                .collect(groupingBy(categoricalPredictor ->categoricalPredictor.getField()));
         return groupedCollectors.entrySet().stream()
                 .map(entry -> {
                     Map<String, Double> groupedCategoricalPredictorMap =
@@ -273,7 +276,7 @@ public class KiePMMLRegressionTableFactory {
         return predictorTerms.stream()
                 .map(predictorTerm -> {
                     int arity = predictorsArity.addAndGet(1);
-                    String variableName = predictorTerm.getName() != null ? predictorTerm.getName().getValue() :
+                    String variableName = predictorTerm.getName() != null ?predictorTerm.getName() :
                             "predictorTermFunction" + arity;
                     return new AbstractMap.SimpleEntry<>(variableName,
                                                          getPredictorTermSerializableFunction(predictorTerm));
@@ -292,7 +295,7 @@ public class KiePMMLRegressionTableFactory {
         return resultMap -> {
             final AtomicReference<Double> result = new AtomicReference<>(1.0);
             final List<String> fieldRefs = predictorTerm.getFieldRefs().stream()
-                    .map(fieldRef -> fieldRef.getField().getValue())
+                    .map(fieldRef ->fieldRef.getField())
                     .collect(Collectors.toList());
             for (Map.Entry<String, Object> entry : resultMap.entrySet()) {
                 if (fieldRefs.contains(entry.getKey())) {
@@ -440,7 +443,7 @@ public class KiePMMLRegressionTableFactory {
      */
     static Map<String, Expression> getNumericPredictorsExpressions(final List<NumericPredictor> numericPredictors) {
         return numericPredictors.stream()
-                .collect(Collectors.toMap(numericPredictor -> numericPredictor.getName().getValue(),
+                .collect(Collectors.toMap(numericPredictor ->numericPredictor.getField(),
                                           KiePMMLRegressionTableFactory::getNumericPredictorExpression));
     }
 
@@ -489,7 +492,7 @@ public class KiePMMLRegressionTableFactory {
      */
     static Map<String, Expression> getCategoricalPredictorsExpressions(final List<CategoricalPredictor> categoricalPredictors, final BlockStmt body, final String variableName) {
         final Map<String, List<CategoricalPredictor>> groupedCollectors = categoricalPredictors.stream()
-                .collect(groupingBy(categoricalPredictor -> categoricalPredictor.getField().getValue()));
+                .collect(groupingBy(categoricalPredictor ->categoricalPredictor.getField()));
         final String categoricalPredictorMapNameBase = getSanitizedVariableName(String.format("%sMap", variableName));
         final AtomicInteger counter = new AtomicInteger();
         return groupedCollectors.entrySet().stream()
@@ -578,7 +581,7 @@ public class KiePMMLRegressionTableFactory {
         return predictorTerms.stream()
                 .map(predictorTerm -> {
                     int arity = predictorsArity.addAndGet(1);
-                    String variableName = predictorTerm.getName() != null ? predictorTerm.getName().getValue() :
+                    String variableName = predictorTerm.getName() != null ?predictorTerm.getName() :
                             "predictorTermFunction" + arity;
                     return new AbstractMap.SimpleEntry<>(variableName,
                                                          getPredictorTermFunction(predictorTerm));
@@ -627,7 +630,7 @@ public class KiePMMLRegressionTableFactory {
                     .orElseThrow(() -> new KiePMMLInternalException(String.format(MISSING_VARIABLE_IN_BODY,
                                                                                   "fieldRefs", body)));
             final List<Expression> nodeList = predictorTerm.getFieldRefs().stream()
-                    .map(fieldRef -> new StringLiteralExpr(fieldRef.getField().getValue()))
+                    .map(fieldRef -> new StringLiteralExpr(fieldRef.getField()))
                     .collect(Collectors.toList());
             NodeList<Expression> expressions = NodeList.nodeList(nodeList);
             MethodCallExpr methodCallExpr = new MethodCallExpr(new NameExpr("Arrays"), "asList", expressions);

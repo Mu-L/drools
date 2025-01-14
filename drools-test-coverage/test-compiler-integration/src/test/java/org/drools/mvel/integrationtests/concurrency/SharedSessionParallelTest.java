@@ -1,73 +1,71 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests.concurrency;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.stream.Stream;
 
 import org.drools.mvel.integrationtests.facts.BeanA;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.runtime.KieSession;
-import org.kie.test.testcategory.TurtleTestCategory;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-@RunWith(Parameterized.class)
-@Category(TurtleTestCategory.class)
+@EnabledIfSystemProperty(named = "runTurtleTests", matches = "true")
 public class SharedSessionParallelTest extends AbstractConcurrentTest {
 
-    @Parameterized.Parameters(name = "Enforced jitting={0}, KieBase type={1}")
-    public static List<Object[]> getTestParameters() {
-        List<Boolean[]> baseParams = Arrays.asList(
-                new Boolean[] {false},
-                new Boolean[] {true}
-                );
+    public static Stream<Arguments> parameters() {
+        List<Boolean> baseParams = List.of(false, true);
 
-        Collection<Object[]> kbParams = TestParametersUtil.getKieBaseCloudConfigurations(true);
+        Collection<KieBaseTestConfiguration> kbParams = TestParametersUtil2.getKieBaseCloudConfigurations(true);
         // combine
-        List<Object[]> params = new ArrayList<>();
-        for (Boolean[] baseParam : baseParams) {
-            for (Object[] kbParam : kbParams) {
-                if (baseParam[0] == true && ((KieBaseTestConfiguration) kbParam[0]).isExecutableModel()) {
+        List<Arguments> params = new ArrayList<>();
+        for (Boolean baseParam : baseParams) {
+            for (KieBaseTestConfiguration kbParam : kbParams) {
+                if (baseParam && kbParam.isExecutableModel()) {
                     // jitting & exec-model test is not required
                 } else {
-                    params.add(new Object[] {baseParam[0], kbParam[0]});
+                    params.add(arguments(baseParam, kbParam));
                 }
             }
         }
-        return params;
+        return params.stream();
     }
 
-    public SharedSessionParallelTest(final boolean enforcedJitting, final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        super(enforcedJitting, false, false, false, kieBaseTestConfiguration);
-    }
-
-    @Test(timeout = 120000)
-    public void testNoExceptions() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(120000)
+    public void testNoExceptions(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final String drl = "rule R1 when String() then end";
 
         final int repetitions = 100;
@@ -94,8 +92,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         }
     }
 
-    @Test(timeout = 40000)
-    public void testCheckOneThreadOnly() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testCheckOneThreadOnly(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 100;
         final List<String> list = Collections.synchronizedList(new ArrayList<>());
 
@@ -137,8 +138,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         }
     }
 
-    @Test(timeout = 40000)
-    public void testCorrectFirings() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testCorrectFirings(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 100;
 
         final String drl = "import " + BeanA.class.getCanonicalName() + ";\n" +
@@ -166,8 +170,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         checkList(threadCount, list);
     }
 
-    @Test(timeout = 40000)
-    public void testCorrectFirings2() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testCorrectFirings2(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 100;
 
         final String drl = "import " + BeanA.class.getCanonicalName() + ";\n" +
@@ -197,8 +204,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         assertThat(list).hasSize(expectedListSize);
     }
 
-    @Test(timeout = 40000)
-    public void testLongRunningRule() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testLongRunningRule(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 100;
         final int seed = threadCount + 200;
         final int objectCount = 1000;
@@ -255,8 +265,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         checkList(1, threadCount, list2, (threadCount - 1) * objectCount);
     }
 
-    @Test(timeout = 40000)
-    public void testLongRunningRule2() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testLongRunningRule2(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 100;
         final int seed = 1000;
 
@@ -306,8 +319,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         checkList(0, seed, list, seed * threadCount);
     }
 
-    @Test(timeout = 40000)
-    public void testLongRunningRule3() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testLongRunningRule3(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 10;
         final int seed = threadCount + 50;
         final int objectCount = 1000;
@@ -372,8 +388,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         assertThat(list2).hasSize(list2ExpectedSize);
     }
 
-    @Test(timeout = 40000)
-    public void testCountdownBean() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testCountdownBean(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 100;
         final int seed = 1000;
 
@@ -412,8 +431,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         assertThat(bean).hasFieldOrPropertyWithValue("seed", 0);
     }
 
-    @Test(timeout = 40000)
-    public void testCountdownBean2() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(40000)
+    public void testCountdownBean2(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 100;
         final int seed = 1000;
 
@@ -453,8 +475,11 @@ public class SharedSessionParallelTest extends AbstractConcurrentTest {
         }
     }
 
-    @Test(timeout = 60000)
-    public void testOneRulePerThread() throws InterruptedException {
+    @ParameterizedTest(name = "Enforced jitting={0}, KieBase type={1}")
+    @MethodSource("parameters")
+    @Timeout(60000)
+    public void testOneRulePerThread(boolean enforcedJitting, KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
+        initTest(enforcedJitting, false, false, false, kieBaseTestConfiguration);
         final int threadCount = 1000;
 
         final String[] drls = new String[threadCount];

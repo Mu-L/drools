@@ -1,43 +1,39 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.runtime.functions;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.feel.runtime.events.InvalidParametersEvent;
 
-public class SubstringFunctionTest {
+class SubstringFunctionTest {
 
-    private SubstringFunction substringFunction;
-
-    @Before
-    public void setUp() {
-        substringFunction = new SubstringFunction();
-    }
+    private static final SubstringFunction substringFunction = SubstringFunction.INSTANCE;
 
     @Test
-    public void invokeNull2ParamsMethod() {
+    void invokeNull2ParamsMethod() {
         FunctionTestUtil.assertResultError(substringFunction.invoke((String) null, null), InvalidParametersEvent.class);
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", null), InvalidParametersEvent.class);
         FunctionTestUtil.assertResultError(substringFunction.invoke(null, 0), InvalidParametersEvent.class);
     }
 
     @Test
-    public void invokeNull3ParamsMethod() {
+    void invokeNull3ParamsMethod() {
         FunctionTestUtil.assertResultError(substringFunction.invoke(null, null, null), InvalidParametersEvent.class);
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", null, null), InvalidParametersEvent.class);
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", null, 2), InvalidParametersEvent.class);
@@ -47,13 +43,13 @@ public class SubstringFunctionTest {
     }
 
     @Test
-    public void invokeStartZero() {
+    void invokeStartZero() {
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", 0), InvalidParametersEvent.class);
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", 0, null), InvalidParametersEvent.class);
     }
 
     @Test
-    public void invokeStartOutOfListBounds() {
+    void invokeStartOutOfListBounds() {
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", 10), InvalidParametersEvent.class);
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", 10, null), InvalidParametersEvent.class);
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", -10), InvalidParametersEvent.class);
@@ -61,18 +57,18 @@ public class SubstringFunctionTest {
     }
 
     @Test
-    public void invokeLengthNegative() {
+    void invokeLengthNegative() {
         FunctionTestUtil.assertResultError(substringFunction.invoke("test", 1, -3), InvalidParametersEvent.class);
     }
 
     @Test
-    public void invokeLengthOutOfListBounds() {
+    void invokeLengthOutOfListBounds() {
         FunctionTestUtil.assertResult(substringFunction.invoke("test", 2, 3), "est");
         FunctionTestUtil.assertResult(substringFunction.invoke("test", -3, 3), "est");
     }
 
     @Test
-    public void invokeStartPositive() {
+    void invokeStartPositive() {
         FunctionTestUtil.assertResult(substringFunction.invoke("test", 1), "test");
         FunctionTestUtil.assertResult(substringFunction.invoke("test", 2), "est");
         FunctionTestUtil.assertResult(substringFunction.invoke("test", 4), "t");
@@ -82,7 +78,7 @@ public class SubstringFunctionTest {
     }
 
     @Test
-    public void invokeStartNegative() {
+    void invokeStartNegative() {
         FunctionTestUtil.assertResult(substringFunction.invoke("test", -1), "t");
         FunctionTestUtil.assertResult(substringFunction.invoke("test", -2), "st");
         FunctionTestUtil.assertResult(substringFunction.invoke("test", -4), "test");

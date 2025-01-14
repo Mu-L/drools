@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.model.codegen.execmodel.assembler;
 
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
@@ -38,16 +56,11 @@ public class TestAssembler implements KieAssemblerService {
 
     }
 
-    public static final KnowledgeBuilderResult AFTER_RULES = new DroolsError(null) {
+    public static final KnowledgeBuilderResult AFTER_RULES = new DroolsError( "AFTER_RULES") {
 
         @Override
         public ResultSeverity getSeverity() {
             return ResultSeverity.WARNING;
-        }
-
-        @Override
-        public String getMessage() {
-            return "AFTER_RULES";
         }
 
         @Override
@@ -57,16 +70,11 @@ public class TestAssembler implements KieAssemblerService {
 
     };
 
-    public static final KnowledgeBuilderResult BEFORE_RULES = new DroolsError(null) {
+    public static final KnowledgeBuilderResult BEFORE_RULES = new DroolsError("BEFORE_RULES") {
 
         @Override
         public ResultSeverity getSeverity() {
             return ResultSeverity.WARNING;
-        }
-
-        @Override
-        public String getMessage() {
-            return "BEFORE_RULES";
         }
 
         @Override

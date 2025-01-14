@@ -1,30 +1,34 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.beliefs.bayes;
 
 import org.drools.beliefs.graph.Graph;
 import org.drools.beliefs.graph.GraphNode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.beliefs.bayes.GraphTest.addNode;
 import static org.drools.beliefs.bayes.GraphTest.bitSet;
-import static org.drools.beliefs.bayes.JunctionTreeTest.assertArray;
 import static org.drools.beliefs.bayes.JunctionTreeTest.scaleDouble;
+
 
 public class BayesAbsorbtionTest {
 
@@ -34,7 +38,7 @@ public class BayesAbsorbtionTest {
         double[] oldD = new double[] { 2, 4, 1 };
         double[] r = BayesAbsorption.dividePotentials(newD, oldD);
 
-        assertArray(new double[]{5, 2, 4}, scaleDouble(3, r));
+        assertThat(scaleDouble(3, r)).containsExactly(5, 2, 4);
     }
 
     @Test
@@ -43,7 +47,7 @@ public class BayesAbsorbtionTest {
         double[] oldD = new double[] { 0.1, 0.2, 0.3, 0.4 };
         double[] r = BayesAbsorption.dividePotentials(newD, oldD);
 
-        assertArray(new double[]{5.0, 5.0, 5.0, 5.0}, scaleDouble(3, r));
+        assertThat(scaleDouble(3, r)).containsExactly(5.0, 5.0, 5.0, 5.0);
     }
 
     @Test
@@ -91,7 +95,7 @@ public class BayesAbsorbtionTest {
         BayesAbsorption p = new BayesAbsorption(sepVarPos, oldSepPotentials, sep.getPotentials(), sepVarMultipliers, vars, node1.getPotentials());
         p.absorb();
 
-        assertArray(new double[]{0.035, 0.135, 0.3, 0.529}, scaleDouble(3, node1.getPotentials()));
+        assertThat(scaleDouble(3, node1.getPotentials())).containsExactly(0.035, 0.135, 0.3, 0.529);
     }
 
     @Test
@@ -142,7 +146,7 @@ public class BayesAbsorbtionTest {
         BayesAbsorption p = new BayesAbsorption(sepVarPos, oldSepPotentials, sep.getPotentials(), sepVarMultipliers, vars, node1.getPotentials());
         p.absorb();
 
-        assertArray(new double[]{ 0.01, 0.019, 0.055, 0.073, 0.137, 0.163, 0.254, 0.289 }, scaleDouble(3, node1.getPotentials()));
+        assertThat(scaleDouble(3, node1.getPotentials())).containsExactly(0.01, 0.019, 0.055, 0.073, 0.137, 0.163, 0.254, 0.289);
     }
 
     @Test
@@ -194,6 +198,6 @@ public class BayesAbsorbtionTest {
         BayesAbsorption p = new BayesAbsorption(sepVarPos, oldSepPotentials, sep.getPotentials(), sepVarMultipliers, vars, node1.getPotentials());
         p.absorb();
 
-        assertArray(new double[]{0.01, 0.038, 0.028, 0.075, 0.139, 0.222, 0.194, 0.295}, scaleDouble(3, node1.getPotentials()));
+        assertThat(scaleDouble(3, node1.getPotentials())).containsExactly(0.01, 0.038, 0.028, 0.075, 0.139, 0.222, 0.194, 0.295);
     }
 }

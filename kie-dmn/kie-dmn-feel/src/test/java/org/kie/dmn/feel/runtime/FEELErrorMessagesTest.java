@@ -1,26 +1,29 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.runtime;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.feel.runtime.events.FEELEvent;
 import org.kie.dmn.api.feel.runtime.events.FEELEventListener;
 import org.kie.dmn.feel.FEEL;
 import org.kie.dmn.feel.lang.CompilerContext;
+import org.kie.dmn.feel.lang.impl.FEELBuilder;
 import org.kie.dmn.feel.runtime.events.SyntaxErrorEvent;
 import org.kie.dmn.feel.runtime.events.UnknownVariableErrorEvent;
 import org.mockito.ArgumentCaptor;
@@ -31,12 +34,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 
-
-public class FEELErrorMessagesTest {
+class FEELErrorMessagesTest {
 
     @Test
-    public void unknownVariable() {
-        final FEEL feel = FEEL.newInstance();
+    void unknownVariable() {
+        final FEEL feel = FEELBuilder.builder().build();
         final FEELEventListener fel = Mockito.mock(FEELEventListener.class );
         feel.addListener( fel );
 
@@ -52,8 +54,8 @@ public class FEELErrorMessagesTest {
     }
 
     @Test
-    public void ifWithoutElse() {
-        final FEEL feel = FEEL.newInstance();
+    void ifWithoutElse() {
+        final FEEL feel = FEELBuilder.builder().build();
         final FEELEventListener fel = Mockito.mock(FEELEventListener.class);
         feel.addListener(fel);
 
@@ -69,8 +71,8 @@ public class FEELErrorMessagesTest {
     }
 
     @Test
-    public void ifWithoutElse2() {
-        final FEEL feel = FEEL.newInstance();
+    void ifWithoutElse2() {
+        final FEEL feel = FEELBuilder.builder().build();
         final FEELEventListener fel = Mockito.mock(FEELEventListener.class);
         feel.addListener(fel);
 
@@ -86,8 +88,8 @@ public class FEELErrorMessagesTest {
     }
 
     @Test
-    public void ifWithoutThen() {
-        final FEEL feel = FEEL.newInstance();
+    void ifWithoutThen() {
+        final FEEL feel = FEELBuilder.builder().build();
         final FEELEventListener fel = Mockito.mock(FEELEventListener.class);
         feel.addListener(fel);
 
@@ -103,8 +105,8 @@ public class FEELErrorMessagesTest {
     }
 
     @Test
-    public void ifWithoutThen2() {
-        final FEEL feel = FEEL.newInstance();
+    void ifWithoutThen2() {
+        final FEEL feel = FEELBuilder.builder().build();
         final FEELEventListener fel = Mockito.mock(FEELEventListener.class);
         feel.addListener(fel);
 

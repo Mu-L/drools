@@ -1,17 +1,20 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.drools.model.codegen.project;
 
@@ -87,31 +90,33 @@ public class ProjectRuntimeGenerator {
     }
 
     private void writeGetDefaultKieBaseMethod(ClassOrInterfaceDeclaration clazz) {
-        MethodDeclaration getDefaultKieBaseMethod = clazz.findAll(MethodDeclaration.class).stream()
-                .filter(m -> m.getNameAsString().equals("getKieBase"))
-                .filter(m -> m.getParameters().isEmpty())
-                .findFirst()
-                .orElseThrow(() -> new InvalidTemplateException(generator, "Cannot find getKieBase method"));
-
         if (modelMethod.getDefaultKieBaseName() != null) {
-            getDefaultKieBaseMethod.findFirst(StringLiteralExpr.class)
+            findDefaultKieMethod(clazz, "getKieBase").findFirst(StringLiteralExpr.class)
                     .orElseThrow(() -> new InvalidTemplateException(generator, "Cannot find string inside getKieBase method"))
                     .setString(modelMethod.getDefaultKieBaseName());
         }
     }
 
     private void writeNewDefaultKieSessionMethod(ClassOrInterfaceDeclaration clazz) {
-        MethodDeclaration newDefaultKieSessionMethod = clazz.findAll(MethodDeclaration.class).stream()
-                .filter(m -> m.getNameAsString().equals("newKieSession"))
-                .filter(m -> m.getParameters().isEmpty())
-                .findFirst()
-                .orElseThrow(() -> new InvalidTemplateException(generator, "Cannot find newKieSession method"));
-
         if (modelMethod.getDefaultKieSessionName() != null) {
-            newDefaultKieSessionMethod.findFirst(StringLiteralExpr.class)
+            findDefaultKieMethod(clazz, "newKieSession").findFirst(StringLiteralExpr.class)
                     .orElseThrow(() -> new InvalidTemplateException(generator, "Cannot find string inside newKieSession method"))
                     .setString(modelMethod.getDefaultKieSessionName());
         }
+
+        if (modelMethod.getDefaultKieStatelessSessionName() != null) {
+            findDefaultKieMethod(clazz, "newStatelessKieSession").findFirst(StringLiteralExpr.class)
+                    .orElseThrow(() -> new InvalidTemplateException(generator, "Cannot find string inside newStatelessKieSession method"))
+                    .setString(modelMethod.getDefaultKieStatelessSessionName());
+        }
+    }
+
+    private MethodDeclaration findDefaultKieMethod(ClassOrInterfaceDeclaration clazz, String methodName) {
+        return clazz.findAll(MethodDeclaration.class).stream()
+                .filter(m -> m.getNameAsString().equals(methodName))
+                .filter(m -> m.getParameters().isEmpty())
+                .findFirst()
+                .orElseThrow(() -> new InvalidTemplateException(generator, "Cannot find " + methodName + " method"));
     }
 
     private void writeGetKieBaseForSessionMethod(ClassOrInterfaceDeclaration clazz) {

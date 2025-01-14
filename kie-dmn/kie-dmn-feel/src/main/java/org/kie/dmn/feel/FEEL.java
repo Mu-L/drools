@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel;
 
 import java.util.List;
@@ -21,14 +23,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.kie.dmn.api.feel.runtime.events.FEELEventListener;
+import org.kie.dmn.feel.codegen.feel11.ProcessedExpression;
 import org.kie.dmn.feel.lang.CompiledExpression;
 import org.kie.dmn.feel.lang.CompilerContext;
 import org.kie.dmn.feel.lang.EvaluationContext;
 import org.kie.dmn.feel.lang.FEELProfile;
 import org.kie.dmn.feel.lang.Type;
-import org.kie.dmn.feel.lang.impl.FEELImpl;
+import org.kie.dmn.feel.lang.impl.FEELBuilder;
 import org.kie.dmn.feel.runtime.UnaryTest;
-import org.kie.dmn.model.api.GwtIncompatible;
 
 /**
  * FEEL expression language engine interface
@@ -36,43 +38,14 @@ import org.kie.dmn.model.api.GwtIncompatible;
  * This class is the entry point for the engine use
  */
 public interface FEEL {
-
-    /**
-     * Factory method to create a new FEEL engine instance
-     *
-     * @return a newly instantiated FEEL engine instance
-     */
-    static FEEL newInstance() {
-        return new FEELImpl();
-    }
-
-    /**
-     * Factory method to create a new FEEL engine instance, using the specified classloader.
-     *
-     * @return a newly instantiated FEEL engine instance
-     */
-    @GwtIncompatible
-    static FEEL newInstance(ClassLoader cl) {
-        return new FEELImpl(cl);
-    }
-
-    /**
-     * Factory method to create a new FEEL engine instance using custom FEELProfile(s)
-     *
-     * @return a newly instantiated FEEL engine instance
-     */
-    static FEEL newInstance(List<FEELProfile> profiles) {
-        return new FEELImpl(profiles);
-    }
-
+    
     /**
      * Factory method to create a new FEEL engine instance using custom FEELProfile(s), using the specified classloader.
      *
      * @return a newly instantiated FEEL engine instance
      */
-    @GwtIncompatible
     static FEEL newInstance(ClassLoader cl, List<FEELProfile> profiles) {
-        return new FEELImpl(cl, profiles);
+        return FEELBuilder.builder().withClassloader(cl).withProfiles(profiles).build();
     }
 
     /**
@@ -93,6 +66,17 @@ public interface FEEL {
     CompiledExpression compile(String expression, CompilerContext ctx);
 
     /**
+     * Process the string expression using the given
+     * compiler context. The returned <code>ProcessedExpression</code>
+     * could be used to retrieve the actual <code>CompiledExpression</code>
+     *
+     * @param expression a FEEL expression
+     * @param ctx a compiler context
+     * @return the processed expression
+     */
+    ProcessedExpression processExpression(String expression, CompilerContext ctx);
+
+    /**
      * Compiles the string expression using the given
      * compiler context.
      *
@@ -100,7 +84,7 @@ public interface FEEL {
      * @param ctx a compiler context
      * @return the compiled unary tests
      */
-    CompiledExpression compileUnaryTests(String expression, CompilerContext ctx);
+    CompiledExpression processUnaryTests(String expression, CompilerContext ctx);
 
     /**
      * Evaluates the given FEEL expression and returns
@@ -164,7 +148,7 @@ public interface FEEL {
      * Evaluates the given compiled FEEL expression using the
      * given EvaluationContext, and returns the result
      *
-     * @param expression a FEEL expression
+     * @param expr a FEEL expression
      * @param ctx the EvaluationContext to be used for defining
      *            input variables and additional feel event listeners
      *            contextual to this method call

@@ -1,23 +1,26 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.management;
 
 import java.lang.reflect.Type;
 import java.util.Map;
+
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
@@ -49,6 +52,7 @@ import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 
+import org.drools.base.RuleBase;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.EntryPointNode;
 import org.drools.core.reteoo.ObjectTypeNode;
@@ -111,8 +115,8 @@ public class KnowledgeBaseMonitoring
     // ************************************************************************************************
 
     // Constructor
-    public KnowledgeBaseMonitoring(InternalRuleBase kbase) {
-        this.kbase = kbase;
+    public KnowledgeBaseMonitoring(RuleBase kbase) {
+        this.kbase = (InternalRuleBase) kbase;
         this.name = DroolsManagementAgent.createObjectNameFor(kbase);
 
         initOpenMBeanInfo();
@@ -281,7 +285,9 @@ public class KnowledgeBaseMonitoring
 
     public AttributeList getAttributes(String[] attributeNames) {
         AttributeList resultList = new AttributeList();
-        if ( attributeNames.length == 0 ) return resultList;
+        if ( attributeNames.length == 0 ) {
+            return resultList;
+        }
         for ( int i = 0; i < attributeNames.length; i++ ) {
             try {
                 Object value = getAttribute( attributeNames[i] );

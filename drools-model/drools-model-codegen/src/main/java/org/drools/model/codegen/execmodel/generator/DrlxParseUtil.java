@@ -1,20 +1,21 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator;
 
 import java.lang.reflect.Field;
@@ -88,11 +89,6 @@ import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.UnknownType;
 import org.drools.drl.ast.descr.AnnotationDescr;
 import org.drools.drl.ast.descr.PatternDescr;
-import org.drools.util.TypeResolver;
-import org.drools.util.ClassUtils;
-import org.drools.util.IncompatibleGetterOverloadException;
-import org.drools.util.MethodUtils;
-import org.drools.util.StringUtils;
 import org.drools.model.Index;
 import org.drools.model.codegen.execmodel.errors.IncompatibleGetterOverloadError;
 import org.drools.model.codegen.execmodel.errors.InvalidExpressionErrorResult;
@@ -109,15 +105,21 @@ import org.drools.mvel.parser.printer.PrintUtil;
 import org.drools.mvelcompiler.ConstraintCompiler;
 import org.drools.mvelcompiler.MvelCompiler;
 import org.drools.mvelcompiler.context.MvelCompilerContext;
+import org.drools.util.ClassUtils;
+import org.drools.util.IncompatibleGetterOverloadException;
+import org.drools.util.MethodUtils;
+import org.drools.util.StringUtils;
+import org.drools.util.TypeResolver;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
-import static org.drools.util.MethodUtils.findMethod;
 import static org.drools.model.codegen.execmodel.generator.DslMethodNames.PATTERN_CALL;
 import static org.drools.model.codegen.execmodel.generator.DslMethodNames.isDslTopLevelNamespace;
 import static org.drools.model.codegen.execmodel.generator.expressiontyper.ExpressionTyper.findLeftLeafOfNameExprTraversingParent;
+import static org.drools.util.ClassUtils.actualTypeFromGenerics;
 import static org.drools.util.ClassUtils.toRawClass;
+import static org.drools.util.MethodUtils.findMethod;
 
 public class DrlxParseUtil {
 
@@ -160,7 +162,7 @@ public class DrlxParseUtil {
         Method accessor = getAccessor(clazz, name, context);
         if (accessor != null) {
             MethodCallExpr body = new MethodCallExpr( scope, accessor.getName() );
-            return new TypedExpression( body, accessor.getGenericReturnType() );
+            return new TypedExpression( body, actualTypeFromGenerics( type, accessor.getGenericReturnType() ) );
         } else {
             // try parse it as inner class
             for (Class<?> declaredClass : clazz.getClasses()) {
@@ -294,7 +296,7 @@ public class DrlxParseUtil {
         if (usedDeclarations != null) {
             usedDeclarations.add(name);
         }
-        Optional<java.lang.reflect.Type> type = context.getDeclarationById( name ).map(DeclarationSpec::getDeclarationClass);
+        Optional<java.lang.reflect.Type> type = context.getTypedDeclarationById(name ).map(TypedDeclarationSpec::getDeclarationClass);
         return type.orElseThrow(() -> new NoSuchElementException("Cannot get expression type by name " + name + "!"));
     }
 
@@ -586,7 +588,7 @@ public class DrlxParseUtil {
         return classNameToReferenceTypeWithBoxing(declarationClass).parsedType;
     }
 
-    public static Type classToReferenceType(DeclarationSpec declaration) {
+    public static Type classToReferenceType(TypedDeclarationSpec declaration) {
         if (declaration.isParametrizedType()) {
             return StaticJavaParser.parseClassOrInterfaceType(declaration.getDeclarationType().getTypeName());
         }
@@ -946,7 +948,7 @@ public class DrlxParseUtil {
 
         List<DeclarationSpec> allDeclarations = new ArrayList<>(context.getAllDeclarations());
         originalPatternType.ifPresent(pt -> {
-            allDeclarations.add(new DeclarationSpec(THIS_PLACEHOLDER, pt));
+            allDeclarations.add(new TypedDeclarationSpec(THIS_PLACEHOLDER, pt));
             mvelCompilerContext.setRootPatternPrefix(pt, THIS_PLACEHOLDER);
         });
 

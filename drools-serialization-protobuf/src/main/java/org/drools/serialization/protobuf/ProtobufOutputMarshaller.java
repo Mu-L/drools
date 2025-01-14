@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.serialization.protobuf;
 
 import com.google.protobuf.ByteString;
@@ -43,12 +45,10 @@ import org.drools.core.marshalling.MarshallerWriteContext;
 import org.drools.core.phreak.PropagationEntry;
 import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.process.WorkItem;
-import org.drools.core.reteoo.AbstractTuple;
-import org.drools.core.reteoo.LeftTuple;
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.QueryElementNode.QueryElementNodeMemory;
-import org.drools.core.reteoo.RightTuple;
 import org.drools.core.reteoo.Sink;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.rule.consequence.InternalMatch;
@@ -61,6 +61,7 @@ import org.drools.core.time.impl.PointInTimeTrigger;
 import org.drools.core.time.impl.PseudoClockScheduler;
 import org.drools.core.time.impl.TimerJobInstance;
 import org.drools.core.util.FastIterator;
+import org.drools.core.util.LinkedList;
 import org.drools.core.util.LinkedListEntry;
 import org.drools.kiesession.entrypoints.NamedEntryPoint;
 import org.drools.kiesession.session.StatefulKnowledgeSessionImpl;
@@ -111,14 +112,8 @@ public class ProtobufOutputMarshaller {
     }
 
     public static void writeSession( ProtobufMarshallerWriteContext context) throws IOException {
-
         ProtobufMessages.KnowledgeSession _session = serializeSession( context );
-        
-//        System.out.println("=============================================================================");
-//        System.out.println(_session);
-
-        PersisterHelper.writeToStreamWithHeader( context,
-                                                 _session );
+        PersisterHelper.writeToStreamWithHeader( context, _session );
     }
 
     private static ProtobufMessages.KnowledgeSession serializeSession( MarshallerWriteContext context) throws IOException {
@@ -244,7 +239,7 @@ public class ProtobufOutputMarshaller {
             // this must clone as re-evaluation will under underlying Collection
             for ( RuleAgendaItem activation : new ArrayList<>(wm.getAgenda().getAgendaGroupsManager().getActivations())) {
                 // evaluate it
-                activation.getRuleExecutor().reEvaluateNetwork( wm );
+                activation.getRuleExecutor().evaluateNetworkIfDirty( wm );
                 activation.getRuleExecutor().removeRuleAgendaItemWhenEmpty( wm );
             }
             dirty = false;
@@ -361,10 +356,10 @@ public class ProtobufOutputMarshaller {
     private static ProtobufMessages.NodeMemory writeQueryElementNodeMemory(final int nodeId,
                                                                            final Memory memory,
                                                                            final InternalWorkingMemory wm) {
-        org.drools.core.util.Iterator<LeftTuple> it = LeftTupleIterator.iterator( wm, ((QueryElementNodeMemory) memory).getNode() );
+        org.drools.core.util.Iterator<TupleImpl> it = LeftTupleIterator.iterator(wm, ((QueryElementNodeMemory) memory).getNode() );
 
         ProtobufMessages.NodeMemory.QueryElementNodeMemory.Builder _query = ProtobufMessages.NodeMemory.QueryElementNodeMemory.newBuilder();
-        for ( LeftTuple leftTuple = it.next(); leftTuple != null; leftTuple = it.next() ) {
+        for ( TupleImpl leftTuple = it.next(); leftTuple != null; leftTuple = it.next() ) {
             InternalFactHandle handle = (InternalFactHandle) leftTuple.getContextObject();
             FactHandle _handle = ProtobufMessages.FactHandle.newBuilder()
                     .setId( handle.getId() )
@@ -375,9 +370,9 @@ public class ProtobufOutputMarshaller {
                     .setTuple( PersisterHelper.createTuple( leftTuple ) )
                     .setHandle( _handle );
 
-            LeftTuple childLeftTuple = leftTuple.getFirstChild();
+            TupleImpl childLeftTuple = leftTuple.getFirstChild();
             while ( childLeftTuple != null ) {
-                RightTuple rightParent = childLeftTuple.getRightParent();
+                TupleImpl rightParent = childLeftTuple.getRightParent();
                 _context.addResult( ProtobufMessages.FactHandle.newBuilder()
                         .setId( rightParent.getFactHandle().getId() )
                         .setRecency( rightParent.getFactHandle().getRecency() )
@@ -464,7 +459,7 @@ public class ProtobufOutputMarshaller {
 
                 if ( key.size() > 1 ) {
                     // add all the other key's if they exist
-                    FastIterator keyIter = key.fastIterator();
+                    FastIterator keyIter = new LinkedList.TMSLinkedListFastIterator();
                     for ( DefaultFactHandle handle = key.getFirst().getNext(); handle != null; handle = (DefaultFactHandle) keyIter.next( handle ) ) {
                         _key.addOtherHandle( handle.getId() );
                     }
@@ -491,7 +486,7 @@ public class ProtobufOutputMarshaller {
         ObjectMarshallingStrategyStore objectMarshallingStrategyStore = context.getObjectMarshallingStrategyStore();
 
         // for ( LinkedListEntry node = (LinkedListEntry) beliefSet.getFirst(); node != null; node = (LinkedListEntry) node.getNext() ) {
-        FastIterator it =  beliefSet.iterator();
+        FastIterator it =  new LinkedList.TMSLinkedListFastIterator();
         for ( LinkedListEntry node = (LinkedListEntry) beliefSet.getFirst(); node != null; node = (LinkedListEntry) it.next(node) ) {
             LogicalDependency belief = (LogicalDependency) node.getObject();
             ProtobufMessages.LogicalDependency.Builder _logicalDependency = ProtobufMessages.LogicalDependency.newBuilder();
@@ -548,9 +543,7 @@ public class ProtobufOutputMarshaller {
 
         // Write out FactHandles
         for ( InternalFactHandle handle : orderFacts( objectStore ) ) {
-            ProtobufMessages.FactHandle _handle = writeFactHandle( context,
-                                                                   objectMarshallingStrategyStore,
-                                                                   handle );
+            ProtobufMessages.FactHandle _handle = writeFactHandle( context, objectMarshallingStrategyStore, handle );
             _epb.addHandle( _handle );
         }
     }
@@ -570,7 +563,6 @@ public class ProtobufOutputMarshaller {
             _handle.setTimestamp( efh.getStartTimestamp() );
             _handle.setDuration( efh.getDuration() );
             _handle.setIsExpired( efh.isExpired() );
-            _handle.setActivationsCount( efh.getActivationsCount() );
             _handle.setOtnCount( efh.getOtnCount() );
         }
 
@@ -717,7 +709,7 @@ public class ProtobufOutputMarshaller {
         org.drools.core.reteoo.Tuple tuple = internalMatch.getTuple();
         ProtobufMessages.Tuple.Builder _tb = ProtobufMessages.Tuple.newBuilder();
 
-        boolean serializeObjects = isDormient && hasNodeMemory((AbstractTuple) internalMatch);
+        boolean serializeObjects = isDormient && hasNodeMemory((TupleImpl) internalMatch);
 
         if (tuple != null) {
             // tuple can be null if this is a rule network evaluation activation, instead of terminal node left tuple.
@@ -740,9 +732,9 @@ public class ProtobufOutputMarshaller {
         return _tb.build();
     }
 
-    private static boolean hasNodeMemory(AbstractTuple agendaItem) {
-        Sink tupleSink = agendaItem.getTupleSink();
-        if (tupleSink instanceof TerminalNode ) {
+    private static boolean hasNodeMemory(TupleImpl agendaItem) {
+        Sink tupleSink = agendaItem.getSink();
+        if (NodeTypeEnums.isTerminalNode(tupleSink)) {
             return PersisterHelper.hasNodeMemory( (TerminalNode) tupleSink );
         }
         return false;

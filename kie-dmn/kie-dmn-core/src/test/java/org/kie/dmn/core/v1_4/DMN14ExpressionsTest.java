@@ -1,19 +1,21 @@
-/*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.v1_4;
 
 
@@ -22,9 +24,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.dmn.api.core.DMNMessageType;
 import org.kie.dmn.api.core.DMNModel;
 import org.kie.dmn.api.core.DMNResult;
@@ -45,26 +47,22 @@ public class DMN14ExpressionsTest extends BaseVariantTest {
     private DMNRuntime runtime;
     private DMNModel model;
 
-    public DMN14ExpressionsTest(final BaseVariantTest.VariantTestConf conf) {
-        super(conf);
-    }
-
-    @Parameterized.Parameters(name = "{0}")
     public static Object[] params() {
         return new Object[]{KIE_API_TYPECHECK, BUILDER_DEFAULT_NOCL_TYPECHECK}; // only variants needed until DMNv1.4 is actually published
     }
-
-
-    @Before
-    public void setup() {
+    
+    void setup() {
         runtime = createRuntime("dmn14expressions.dmn", DMN14ExpressionsTest.class);
         assertThat(runtime).isNotNull();
         model = runtime.getModel("http://www.trisotech.com/definitions/_3404349f-5046-4ad3-ad15-7f1e27291ab5", "DMN 1.4 expressions");
         assertThat(model).isNotNull();
     }
 
-    @Test
-    public void testConditionalWithInput() throws Throwable {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void conditionalWithInput(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Boolean Input", true)), "Conditional");
         assertThat(results.getDecisionResultByName("Conditional").getResult()).isEqualTo("Conditional evaluated to TRUE");
 
@@ -76,16 +74,22 @@ public class DMN14ExpressionsTest extends BaseVariantTest {
 
     }
 
-    @Test
-    public void testConditionalNonBooleanIf() throws Throwable {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void conditionalNonBooleanIf(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(), "Non boolean");
         assertThat(results.getMessages()).hasSize(1);
         assertThat(results.getMessages().iterator().next().getMessageType()).isEqualTo(DMNMessageType.ERROR_EVAL_NODE);
 
     }
 
-    @Test
-    public void testIteratorFor() throws Throwable {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void iteratorFor(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 1)), "Addition");
         assertThat(results.getDecisionResultByName("Addition").getResult().toString()).isEqualTo(Arrays.asList(2, 3, 4, 5).toString());
 
@@ -93,36 +97,48 @@ public class DMN14ExpressionsTest extends BaseVariantTest {
         assertThat(results.getDecisionResultByName("Addition").getResult().toString()).isEqualTo(Arrays.asList(3, 4, 5, 6).toString());
     }
 
-    @Test
-    public void testIteratorForPartial() throws Throwable {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void iteratorForPartial(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 0)), "Addition Partial");
         assertThat(results.getDecisionResultByName("Addition Partial").getResult().toString()).isEqualTo(Arrays.asList(1, 3, 6, 10).toString());
 
         results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 5)), "Addition Partial");
         assertThat(results.getDecisionResultByName("Addition Partial").getResult().toString()).isEqualTo(Arrays.asList(1, 8, 16, 25).toString());
     }
-    
-    @Test
-    public void testIteratorForInRangeClose() throws Throwable {
+
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void iteratorForInRangeClose(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 1)), "Addition Range Close");
         assertThat(results.getDecisionResultByName("Addition Range Close").getResult().toString()).isEqualTo(Arrays.asList(3, 4).toString());
 
         results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 2)), "Addition Range Close");
         assertThat(results.getDecisionResultByName("Addition Range Close").getResult().toString()).isEqualTo(Arrays.asList(4, 5).toString());
-    } 
+    }
 
-    @Test
-    public void testIteratorForInRangeOpen() throws Throwable {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void iteratorForInRangeOpen(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 1)), "Addition Range Open");
         assertThat(results.getDecisionResultByName("Addition Range Open").getResult().toString()).isEqualTo(Arrays.asList(2, 3, 4, 5).toString());
 
         results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 2)), "Addition Range Open");
         assertThat(results.getDecisionResultByName("Addition Range Open").getResult().toString()).isEqualTo(Arrays.asList(3, 4, 5, 6).toString());
-    } 
+    }
 
-    
-    @Test
-    public void testIteratorSome() throws Throwable {
+
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void iteratorSome(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 5)), "Number Greater Exists");
         assertThat(((Boolean) results.getDecisionResultByName("Number Greater Exists").getResult()).booleanValue()).isTrue();
 
@@ -133,8 +149,11 @@ public class DMN14ExpressionsTest extends BaseVariantTest {
         assertThat(((Boolean) results.getDecisionResultByName("Number Greater Exists").getResult()).booleanValue()).isFalse();
     }
 
-    @Test
-    public void testIteratorEvery() throws Throwable {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void iteratorEvery(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 5)), "All Greater");
         assertThat(((Boolean) results.getDecisionResultByName("All Greater").getResult()).booleanValue()).isFalse();
 
@@ -145,21 +164,27 @@ public class DMN14ExpressionsTest extends BaseVariantTest {
         assertThat(((Boolean) results.getDecisionResultByName("All Greater").getResult()).booleanValue()).isFalse();
     }
 
-    @Test
-    public void testFilterIndex() throws Throwable {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void filterIndex(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 5)), "Match by index");
-        assertThat(results.getDecisionResultByName("Match by index").getResult()).isEqualTo(new BigDecimal(5));
+        assertThat(results.getDecisionResultByName("Match by index").getResult()).asList().hasSize(1);
+        assertThat(results.getDecisionResultByName("Match by index").getResult()).asList().contains(new BigDecimal(5));
 
         results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", -2)), "Match by index");
-        assertThat(results.getDecisionResultByName("Match by index").getResult()).isEqualTo(new BigDecimal(9));
+        assertThat(results.getDecisionResultByName("Match by index").getResult()).asList().isEmpty();
 
         results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 0)), "Match by index");
-        assertThat(results.getMessages()).hasSizeGreaterThan(0);
-
+        assertThat(results.getDecisionResultByName("Match by index").getResult()).asList().isEmpty();
     }
 
-    @Test
-    public void testFilterExpression() throws Throwable {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void filterExpression(final BaseVariantTest.VariantTestConf conf) throws Throwable {
+        testConfig = conf;
+        setup();
         DMNResult results = runtime.evaluateByName(model, new DMNContextImpl(Collections.singletonMap("Number Input", 5)), "Match by Fnct");
         assertThat(results.getDecisionResultByName("Match by Fnct").getResult().toString()).isEqualTo(Arrays.asList(6, 7, 8, 9, 10).toString());
 

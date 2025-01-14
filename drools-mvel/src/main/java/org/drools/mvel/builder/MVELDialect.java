@@ -1,33 +1,27 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.builder;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.QueryImpl;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.LineMappings;
 import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
 import org.drools.compiler.compiler.AnalysisResult;
 import org.drools.compiler.compiler.BoundIdentifiers;
@@ -45,13 +39,13 @@ import org.drools.compiler.rule.builder.EntryPointBuilder;
 import org.drools.compiler.rule.builder.EvaluatorWrapper;
 import org.drools.compiler.rule.builder.ForallBuilder;
 import org.drools.compiler.rule.builder.FromBuilder;
+import org.drools.compiler.rule.builder.GroupByBuilder;
 import org.drools.compiler.rule.builder.GroupElementBuilder;
 import org.drools.compiler.rule.builder.NamedConsequenceBuilder;
 import org.drools.compiler.rule.builder.PackageBuildContext;
 import org.drools.compiler.rule.builder.PatternBuilder;
 import org.drools.compiler.rule.builder.PatternBuilderForAbductiveQuery;
 import org.drools.compiler.rule.builder.PatternBuilderForQuery;
-import org.drools.compiler.rule.builder.PredicateBuilder;
 import org.drools.compiler.rule.builder.RuleBuildContext;
 import org.drools.compiler.rule.builder.RuleClassBuilder;
 import org.drools.compiler.rule.builder.RuleConditionBuilder;
@@ -59,10 +53,6 @@ import org.drools.compiler.rule.builder.SalienceBuilder;
 import org.drools.compiler.rule.builder.WindowReferenceBuilder;
 import org.drools.compiler.rule.builder.dialect.DialectUtil;
 import org.drools.core.common.InternalWorkingMemory;
-import org.drools.base.definitions.InternalKnowledgePackage;
-import org.drools.base.definitions.rule.impl.QueryImpl;
-import org.drools.base.rule.Declaration;
-import org.drools.base.rule.LineMappings;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.drl.ast.descr.AccumulateDescr;
 import org.drools.drl.ast.descr.AndDescr;
@@ -75,6 +65,7 @@ import org.drools.drl.ast.descr.ExistsDescr;
 import org.drools.drl.ast.descr.ForallDescr;
 import org.drools.drl.ast.descr.FromDescr;
 import org.drools.drl.ast.descr.FunctionDescr;
+import org.drools.drl.ast.descr.GroupByDescr;
 import org.drools.drl.ast.descr.ImportDescr;
 import org.drools.drl.ast.descr.NamedConsequenceDescr;
 import org.drools.drl.ast.descr.NotDescr;
@@ -97,6 +88,20 @@ import org.kie.memorycompiler.resources.MemoryResourceReader;
 import org.mvel2.MVEL;
 import org.mvel2.optimizers.OptimizerFactory;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import static org.drools.compiler.lang.DescrDumper.WM_ARGUMENT;
 
 public class MVELDialect
@@ -110,6 +115,7 @@ public class MVELDialect
     protected static final PatternBuilderForQuery QUERY_BUILDER = new PatternBuilderForQuery();
     protected static final PatternBuilderForQuery ABDUCTIVE_QUERY_BUILDER = new PatternBuilderForAbductiveQuery();
     protected static final MVELAccumulateBuilder ACCUMULATE_BUILDER = new MVELAccumulateBuilder();
+    protected static final MVELGroupByBuilder GROUP_BY_BUILDER = new MVELGroupByBuilder();
     protected static final SalienceBuilder SALIENCE_BUILDER = new MVELSalienceBuilder();
     protected static final EnabledBuilder ENABLED_BUILDER = new MVELEnabledBuilder();
     protected static final MVELEvalBuilder EVAL_BUILDER = new MVELEvalBuilder();
@@ -285,6 +291,9 @@ public class MVELDialect
 
         builders.put(AccumulateDescr.class,
                      ACCUMULATE_BUILDER);
+
+        builders.put(GroupByDescr.class,
+                     GROUP_BY_BUILDER);
 
         builders.put(EvalDescr.class,
                      EVAL_BUILDER);
@@ -681,6 +690,10 @@ public class MVELDialect
         return ACCUMULATE_BUILDER;
     }
 
+    public GroupByBuilder getGroupByBuilder() {
+        return GROUP_BY_BUILDER;
+    }
+
     public ConsequenceBuilder getConsequenceBuilder() {
         return CONSEQUENCE_BUILDER;
     }
@@ -695,10 +708,6 @@ public class MVELDialect
 
     public EntryPointBuilder getEntryPointBuilder() {
         return ENTRY_POINT_BUILDER;
-    }
-
-    public PredicateBuilder getPredicateBuilder() {
-        throw new RuntimeException("mvel PredicateBuilder is no longer in use");
     }
 
     public SalienceBuilder getSalienceBuilder() {

@@ -1,20 +1,21 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator.drlxparse;
 
 import java.io.Serializable;
@@ -51,6 +52,8 @@ import static org.drools.model.codegen.execmodel.generator.DrlxParseUtil.toClass
 import static org.drools.model.codegen.execmodel.generator.DrlxParseUtil.toJavaParserType;
 import static org.drools.model.codegen.execmodel.generator.DrlxParseUtil.toStringLiteral;
 import static org.drools.util.ClassUtils.toNonPrimitiveType;
+import static org.drools.util.CoercionUtil.areComparisonCompatible;
+import static org.drools.util.CoercionUtil.areEqualityCompatible;
 
 public class CoercedExpression {
 
@@ -150,7 +153,20 @@ public class CoercedExpression {
             coercedLeft = left;
         }
 
+        checkCoercion(coercedLeft, coercedRight, leftClass, rightClass);
         return new CoercedExpressionResult(coercedLeft, coercedRight, rightAsStaticField);
+    }
+
+    private void checkCoercion(TypedExpression coercedLeft, TypedExpression coercedRight, Class<?> leftClass, Class<?> rightClass) {
+        if (equalityExpr) {
+            if (!areEqualityCompatible(coercedLeft.getRawClass(), coercedRight.getRawClass())) {
+                throw new CoercedExpressionException(new InvalidExpressionErrorResult("Equality operation requires compatible types. Found " + leftClass + " and " + rightClass));
+            }
+        } else {
+            if (!areComparisonCompatible(coercedLeft.getRawClass(), coercedRight.getRawClass())) {
+                throw new CoercedExpressionException(new InvalidExpressionErrorResult("Comparison operation requires compatible types. Found " + leftClass + " and " + rightClass));
+            }
+        }
     }
 
     private boolean isBoolean(Class<?> leftClass) {
@@ -162,12 +178,14 @@ public class CoercedExpression {
     }
 
     private boolean canCoerce() {
-        final Class<?> leftClass = left.getRawClass();
+        return canCoerce(left.getRawClass(), right.getRawClass());
+    }
+
+    private static boolean canCoerce(Class<?> leftClass, Class<?> rightClass) {
         if (!leftClass.isPrimitive() || !canCoerceLiteralNumberExpr(leftClass)) {
             return true;
         }
 
-        final Class<?> rightClass = right.getRawClass();
         return rightClass.isPrimitive()
                 || Number.class.isAssignableFrom(rightClass)
                 || Boolean.class == rightClass

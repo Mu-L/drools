@@ -1,20 +1,29 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo.builder;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.List;
 
 import org.drools.base.RuleBuildContext;
 import org.drools.base.common.NetworkNode;
@@ -26,7 +35,7 @@ import org.drools.base.rule.Pattern;
 import org.drools.base.rule.RuleComponent;
 import org.drools.base.rule.RuleConditionElement;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.base.rule.constraint.XpathConstraint;
 import org.drools.core.common.BaseNode;
 import org.drools.core.common.InternalWorkingMemory;
@@ -37,13 +46,6 @@ import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.PathEndNode;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.time.TemporalDependencyMatrix;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.List;
 
 import static org.drools.base.rule.TypeDeclaration.NEVER_EXPIRES;
 
@@ -69,11 +71,11 @@ public class BuildContext implements RuleBuildContext {
     // the rule component being processed at the moment
     private final Deque<RuleComponent> ruleComponent = new ArrayDeque<>();
     // a build stack to track nested elements
-    private Deque<RuleConditionElement> buildstack;
+    private Deque<RuleConditionElement>    buildstack;
     // beta constraints from the last pattern attached
-    private List<BetaNodeFieldConstraint>    betaconstraints;
+    private List<BetaConstraint>           betaconstraints;
     // alpha constraints from the last pattern attached
-    private List<AlphaNodeFieldConstraint>   alphaConstraints;
+    private List<AlphaNodeFieldConstraint> alphaConstraints;
     // xpath constraints from the last pattern attached
     private List<XpathConstraint>            xpathConstraints;
 
@@ -243,11 +245,11 @@ public class BuildContext implements RuleBuildContext {
         return this.buildstack == null ? Collections.emptyList() : buildstack;
     }
 
-    public List<BetaNodeFieldConstraint> getBetaconstraints() {
+    public List<BetaConstraint> getBetaconstraints() {
         return this.betaconstraints;
     }
 
-    public void setBetaconstraints(final List<BetaNodeFieldConstraint> betaconstraints) {
+    public void setBetaconstraints(final List<BetaConstraint> betaconstraints) {
         this.betaconstraints = betaconstraints;
     }
 

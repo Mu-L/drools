@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.compiler.kie.builder.impl;
 
 import java.io.ByteArrayInputStream;
@@ -295,6 +298,12 @@ public class KieBuilderImpl
                 kieRepository.addKieModule( kDep );
             }
         }
+
+        clearBuilderCache();
+    }
+
+    private static void clearBuilderCache() {
+        DecisionTableFactory.clearCompilerCache();
     }
 
     private void addKBasesFilesToTrg() {
@@ -378,18 +387,13 @@ public class KieBuilderImpl
             return true;
         } else {
             String folderNameForFile = lastSep > 0 ? fileName.substring( 0, lastSep ) : "";
-            int resourcesPos = folderNameForFile.indexOf( RESOURCES_ROOT );
-            if (resourcesPos >= 0) {
-                folderNameForFile = folderNameForFile.substring( resourcesPos + RESOURCES_ROOT.length() );
-            }
             String pkgNameForFile = packageNameForFile( fileName, folderNameForFile, !useFolders, file );
             return isPackageInKieBase( kieBase, pkgNameForFile );
         }
     }
 
     private static String packageNameForFile( String fileName, String folderNameForFile, boolean discoverPackage, Supplier<InternalResource> file ) {
-        String packageNameFromFolder = folderNameForFile.replace( '/', '.' );
-
+        String packageNameFromFolder = getRelativePackageName(folderNameForFile.replace( '/', '.' ));
         if (discoverPackage) {
             String packageNameForFile = packageNameFromAsset(fileName, file.get());
             if (packageNameForFile != null) {
@@ -449,9 +453,13 @@ public class KieBuilderImpl
         int pkgPos = content.indexOf( "RuleSet" );
         if (pkgPos >= 0) {
             pkgPos += "RuleSet ".length();
-            for (; !Character.isJavaIdentifierStart( content.charAt( pkgPos ) ); pkgPos++);
+            for (; !Character.isJavaIdentifierStart( content.charAt( pkgPos ) ); pkgPos++) {
+                
+            };
             int end = pkgPos+1;
-            for (; Character.isLetterOrDigit( content.charAt( end ) ) || content.charAt( end ) == '.'; end++);
+            for (; Character.isLetterOrDigit( content.charAt( end ) ) || content.charAt( end ) == '.'; end++) {
+                
+            };
             return content.substring( pkgPos, end ).trim();
         }
         return null;

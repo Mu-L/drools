@@ -1,35 +1,37 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.common;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import org.drools.core.WorkingMemoryEntryPoint;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+
 import org.drools.base.factmodel.traits.TraitTypeEnum;
-import org.drools.core.reteoo.AbstractLeftTuple;
+import org.drools.base.rule.EntryPointId;
+import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.RightTuple;
-import org.drools.base.rule.EntryPointId;
-import org.drools.core.reteoo.Tuple;
+import org.drools.core.reteoo.TupleImpl;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class QueryElementFactHandle
@@ -152,9 +154,6 @@ public class QueryElementFactHandle
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
-    public void setFirstLeftTuple(LeftTuple leftTuple) {
-    }
-
     @Override
     public LinkedTuples getLinkedTuples() {
         return null;
@@ -196,17 +195,17 @@ public class QueryElementFactHandle
     }
 
     
-    public LeftTuple getFirstLeftTuple() {
+    public TupleImpl getFirstLeftTuple() {
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
     
-    public RightTuple getFirstRightTuple() {
+    public TupleImpl getFirstRightTuple() {
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
     
-    public RightTuple getLastRightTuple() {
+    public TupleImpl getLastRightTuple() {
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
@@ -227,15 +226,15 @@ public class QueryElementFactHandle
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
-    public void addFirstLeftTuple(LeftTuple leftTuple) {
+    public void addFirstLeftTuple(TupleImpl leftTuple) {
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
-    public void addLastLeftTuple( LeftTuple leftTuple ) {
+    public void addLastLeftTuple( TupleImpl leftTuple ) {
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
-    public void removeLeftTuple( LeftTuple leftTuple ) {
+    public void removeLeftTuple( TupleImpl leftTuple ) {
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
@@ -247,19 +246,11 @@ public class QueryElementFactHandle
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
-    public void addFirstRightTuple( RightTuple rightTuple ) {
+    public void addLastRightTuple( TupleImpl rightTuple ) {
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
-    public void addLastRightTuple( RightTuple rightTuple ) {
-        throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
-    }
-
-    public void addTupleInPosition( Tuple rightTuple ) {
-        throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
-    }
-
-    public void removeRightTuple( RightTuple rightTuple ) {
+    public void removeRightTuple( TupleImpl rightTuple ) {
         throw new UnsupportedOperationException( "QueryElementFactHandle does not support this method" );
     }
 
@@ -278,18 +269,13 @@ public class QueryElementFactHandle
         return false;
     }
 
-    public void forEachRightTuple( Consumer<RightTuple> rightTupleConsumer ) { }
+    public void forEachRightTuple( Consumer<TupleImpl> rightTupleConsumer) { }
 
     @Override
-    public void forEachLeftTuple( Consumer<AbstractLeftTuple> leftTupleConsumer) { }
+    public void forEachLeftTuple( Consumer<TupleImpl> leftTupleConsumer) { }
 
     @Override
-    public RightTuple findFirstRightTuple( Predicate<RightTuple> rightTuplePredicate ) {
-        return null;
-    }
-
-    @Override
-    public AbstractLeftTuple findFirstLeftTuple( Predicate<AbstractLeftTuple> lefttTuplePredicate ) {
+    public LeftTuple findFirstLeftTuple(Predicate<TupleImpl> lefttTuplePredicate ) {
         return null;
     }
 }

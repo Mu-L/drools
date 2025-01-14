@@ -1,25 +1,28 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.ancompiler.CompiledNetwork;
 import org.drools.core.reteoo.CompositeObjectSinkAdapter;
@@ -35,12 +38,11 @@ import org.drools.testcoverage.common.model.Person;
 import org.drools.testcoverage.common.model.Primitives;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
 import org.drools.util.DateUtils;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.KieServices;
@@ -52,10 +54,7 @@ import org.kie.internal.conf.AlphaRangeIndexThresholdOption;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class AlphaNodeRangeIndexingTest {
-
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
 
     private static final String BASIC_DRL =
             "package org.drools.compiler.test\n" +
@@ -79,24 +78,20 @@ public class AlphaNodeRangeIndexingTest {
                                             "   Person( age <= 4 )\n" +
                                             "then\n end\n";
 
-    public AlphaNodeRangeIndexingTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
+    public static Stream<KieBaseTestConfiguration> parameters() {
         //System.setProperty("alphanetworkCompilerEnabled", "true");
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Test
-    public void testInteger() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testInteger(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = BASIC_DRL;
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 6, 6, 0, 6); // sinksLength = 6, sinkAdapterSize = 6, rangeIndexableSinks is null, Size of RangeIndexed nodes = 6
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 6, 6, 0, 6); // sinksLength = 6, sinkAdapterSize = 6, rangeIndexableSinks is null, Size of RangeIndexed nodes = 6
 
         ksession.insert(new Person("John", 18));
         int fired = ksession.fireAllRules();
@@ -107,7 +102,7 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(3);
     }
 
-    private KieBase createKieBaseWithRangeIndexThresholdValue(String drl, int rangeIndexThresholdValue) {
+    private KieBase createKieBaseWithRangeIndexThresholdValue(KieBaseTestConfiguration kieBaseTestConfiguration, String drl, int rangeIndexThresholdValue) {
         final KieModule kieModule = KieUtil.getKieModuleFromDrls("indexing-test", kieBaseTestConfiguration, drl);
         final KieContainer kieContainer = KieServices.get().newKieContainer(kieModule.getReleaseId());
         final KieBaseConfiguration kieBaseConfiguration = kieBaseTestConfiguration.getKieBaseConfiguration();
@@ -115,12 +110,13 @@ public class AlphaNodeRangeIndexingTest {
         return kieContainer.newKieBase(kieBaseConfiguration);
     }
 
-    private void assertSinks(KieBase kbase, Class<?> factClass, int sinksLength, int sinkAdapterSize, int rangeIndexableSinksSize, int rangeIndexSize) {
+    private void assertSinks(KieBaseTestConfiguration kieBaseTestConfiguration, KieBase kbase, Class<?> factClass, int sinksLength, int sinkAdapterSize, int rangeIndexableSinksSize, int rangeIndexSize
+    		) {
         final ObjectTypeNode otn = KieUtil.getObjectTypeNode(kbase, factClass);
         assertThat(otn).isNotNull();
 
         ObjectSinkPropagator objectSinkPropagator = otn.getObjectSinkPropagator();
-        if (this.kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
+        if (kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
             objectSinkPropagator = ((CompiledNetwork) objectSinkPropagator).getOriginalSinkPropagator();
         }
         CompositeObjectSinkAdapter sinkAdapter = (CompositeObjectSinkAdapter) objectSinkPropagator;
@@ -141,8 +137,9 @@ public class AlphaNodeRangeIndexingTest {
         }
     }
 
-    @Test
-    public void testNoMatch() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNoMatch(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -165,10 +162,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( age >= 50 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 6, 6, 0, 6);
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 6, 6, 0, 6);
 
         ksession.insert(new Person("John", 30));
         int fired = ksession.fireAllRules();
@@ -179,8 +176,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(1);
     }
 
-    @Test
-    public void testDouble() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDouble(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Order.class.getCanonicalName() + "\n" +
@@ -203,10 +201,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Order( total <= 4.0 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Order.class, 6, 6, 0, 6);
+        assertSinks(kieBaseTestConfiguration, kbase, Order.class, 6, 6, 0, 6);
 
         Order o1 = new Order();
         o1.setTotal(18.0);
@@ -221,8 +219,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(3);
     }
 
-    @Test
-    public void testString() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testString(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -245,10 +244,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( name <= \"Paul\" )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 6, 6, 0, 6);
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 6, 6, 0, 6);
 
         ksession.insert(new Person("John"));
         int fired = ksession.fireAllRules();
@@ -259,8 +258,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(5);
     }
 
-    @Test
-    public void testBigDecimal() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testBigDecimal(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Primitives.class.getCanonicalName() + "\n" +
@@ -283,10 +283,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Primitives( bigDecimal <= 4.0 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Primitives.class, 6, 6, 0, 6);
+        assertSinks(kieBaseTestConfiguration, kbase, Primitives.class, 6, 6, 0, 6);
 
         Primitives p1 = new Primitives();
         p1.setBigDecimal(new BigDecimal("18.0"));
@@ -301,8 +301,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(3);
     }
 
-    @Test
-    public void testNull() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNull(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Primitives.class.getCanonicalName() + "\n" +
@@ -325,10 +326,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Primitives( bigDecimal <= 4.0 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Primitives.class, 6, 6, 0, 5); // [bigDecimal >= null]  is in OtherSinks
+        assertSinks(kieBaseTestConfiguration, kbase, Primitives.class, 6, 6, 0, 5); // [bigDecimal >= null]  is in OtherSinks
 
         Primitives p1 = new Primitives();
         p1.setBigDecimal(new BigDecimal("18.0"));
@@ -343,8 +344,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(0); // bigDecimal >= null is false
     }
 
-    @Test
-    public void testEmpty() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testEmpty(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -367,10 +369,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( name <= \"Paul\" )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 6, 6, 0, 6);
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 6, 6, 0, 6);
 
         ksession.insert(new Person("John"));
         int fired = ksession.fireAllRules();
@@ -381,8 +383,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(3);
     }
 
-    @Test
-    public void testDate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Order.class.getCanonicalName() + "\n" +
@@ -418,10 +421,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   results.add(drools.getRule().getName());" +
                            "end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Order.class, 6, 6, 0, 6);
+        assertSinks(kieBaseTestConfiguration, kbase, Order.class, 6, 6, 0, 6);
 
         List<String> results = new ArrayList<>();
         ksession.setGlobal("results", results);
@@ -442,8 +445,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(results).containsOnly("test2", "test3", "test4", "test6");
     }
 
-    @Test
-    public void testUnderThreshold() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUnderThreshold(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -454,10 +458,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( age < 25 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 2, 2, 2, 0);
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 2, 2, 2, 0);
 
         ksession.insert(new Person("John", 18));
         int fired = ksession.fireAllRules();
@@ -468,8 +472,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(1);
     }
 
-    @Test
-    public void testSurroundingRange() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSurroundingRange(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -483,10 +488,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( age >= 40 && < 60 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 3, 3, 0, 3);
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 3, 3, 0, 3);
 
         ksession.insert(new Person("John", 18));
         int fired = ksession.fireAllRules();
@@ -497,11 +502,12 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(0);
     }
 
-    @Test
-    public void testRemoveObjectSink() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveObjectSink(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = BASIC_DRL;
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession1 = kbase.newKieSession();
 
         ksession1.insert(new Person("John", 18));
@@ -517,12 +523,12 @@ public class AlphaNodeRangeIndexingTest {
         kbase.removeRule("org.drools.compiler.test", "test2");
         kbase.removeRule("org.drools.compiler.test", "test3");
 
-        if (this.kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
+        if (kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
             // after removeRule, ANC is not recreated
             return;
         }
 
-        assertSinks(kbase, Person.class, 4, 4, 0, 4); // still above threshold
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 4, 4, 0, 4); // still above threshold
 
         final KieSession ksession2 = kbase.newKieSession();
 
@@ -539,7 +545,7 @@ public class AlphaNodeRangeIndexingTest {
         kbase.removeRule("org.drools.compiler.test", "test4");
         kbase.removeRule("org.drools.compiler.test", "test5");
 
-        assertSinks(kbase, Person.class, 2, 2, 2, 0); // now under threshold so put back from rangeIndex
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 2, 2, 2, 0); // now under threshold so put back from rangeIndex
 
         final KieSession ksession3 = kbase.newKieSession();
 
@@ -553,8 +559,9 @@ public class AlphaNodeRangeIndexingTest {
         ksession3.dispose();
     }
 
-    @Test
-    public void testCustomComparable() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testCustomComparable(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + MyComparableHolder.class.getCanonicalName() + "\n" +
@@ -578,11 +585,11 @@ public class AlphaNodeRangeIndexingTest {
                            "   MyComparableHolder( myComparable <= MyComparable.PQR )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
         // Doesn't support Object type for range index. See CompositeObjectSinkAdapter.isRangeIndexable()
-        assertSinks(kbase, MyComparableHolder.class, 6, 6, 0, 0);
+        assertSinks(kieBaseTestConfiguration, kbase, MyComparableHolder.class, 6, 6, 0, 0);
 
         MyComparable abc = new MyComparable("ABC", 1);
         ksession.insert(new MyComparableHolder(abc));
@@ -595,8 +602,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(3);
     }
 
-    @Test
-    public void testNestedProps() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNestedProps(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -619,11 +627,11 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( address.number <= 4 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
         // Doesn't support nested prop for range index. See CompositeObjectSinkAdapter.isRangeIndexable()
-        assertSinks(kbase, Person.class, 6, 6, 0, 0);
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 6, 6, 0, 0);
 
         Person person1 = new Person("John", 18);
         person1.setAddress(new Address("ABC street", 18, "London"));
@@ -638,8 +646,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(3);
     }
 
-    @Test
-    public void testMultipleProps() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMultipleProps(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -680,13 +689,13 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( name <= \"Paul\" )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
         final ObjectTypeNode otn = KieUtil.getObjectTypeNode(kbase, Person.class);
         assertThat(otn).isNotNull();
         ObjectSinkPropagator objectSinkPropagator = otn.getObjectSinkPropagator();
-        if (this.kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
+        if (kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
             objectSinkPropagator = ((CompiledNetwork) objectSinkPropagator).getOriginalSinkPropagator();
         }
         CompositeObjectSinkAdapter sinkAdapter = (CompositeObjectSinkAdapter) objectSinkPropagator;
@@ -709,8 +718,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(8);
     }
 
-    @Test
-    public void testModify() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testModify(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -735,10 +745,10 @@ public class AlphaNodeRangeIndexingTest {
                            "  modify($p) { setAge(90) }\n" +
                            "end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 6, 6, 0, 6);
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 6, 6, 0, 6);
 
         ksession.insert(new Person("John", 0));
         int fired = ksession.fireAllRules();
@@ -746,8 +756,9 @@ public class AlphaNodeRangeIndexingTest {
 
     }
 
-    @Test
-    public void testIncrementalCompilation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilation(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         // 2 rules under threshold
         final String drl1 =
@@ -807,7 +818,7 @@ public class AlphaNodeRangeIndexingTest {
         KieBase kbase = kc.newKieBase(kieBaseConfiguration);
         KieSession ksession = kbase.newKieSession();
 
-        assertSinks(ksession.getKieBase(), Person.class, 2, 2, 2, 0);
+        assertSinks(kieBaseTestConfiguration, ksession.getKieBase(), Person.class, 2, 2, 2, 0);
 
         ksession.insert(new Person("John", 18));
         int fired = ksession.fireAllRules();
@@ -827,7 +838,7 @@ public class AlphaNodeRangeIndexingTest {
         kbase = kc.newKieBase(kieBaseConfiguration);
         ksession = kbase.newKieSession();
 
-        assertSinks(ksession.getKieBase(), Person.class, 6, 6, 0, 6); // now fully indexed
+        assertSinks(kieBaseTestConfiguration, ksession.getKieBase(), Person.class, 6, 6, 0, 6); // now fully indexed
 
         ksession.insert(new Person("Paul", 18));
         fired = ksession.fireAllRules();
@@ -847,7 +858,7 @@ public class AlphaNodeRangeIndexingTest {
         kbase = kc.newKieBase(kieBaseConfiguration);
         ksession = kbase.newKieSession();
 
-        assertSinks(ksession.getKieBase(), Person.class, 2, 2, 2, 0); // under threshold so back to rangeIndexableSinks
+        assertSinks(kieBaseTestConfiguration, ksession.getKieBase(), Person.class, 2, 2, 2, 0); // under threshold so back to rangeIndexableSinks
 
         ksession.insert(new Person("George", 18));
         fired = ksession.fireAllRules();
@@ -855,8 +866,9 @@ public class AlphaNodeRangeIndexingTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testDefaultThreshold() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDefaultThreshold(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // Assuming AlphaRangeIndexThresholdOption.DEFAULT_VALUE == 9
         final String drl = "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -892,16 +904,16 @@ public class AlphaNodeRangeIndexingTest {
         final KieContainer kieContainer = KieServices.get().newKieContainer(kieModule.getReleaseId());
         final KieBase kbase = kieContainer.getKieBase();
 
-        assertSinks(kbase, Person.class, 9, 9, 0, 9); // indexed
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 9, 9, 0, 9); // indexed
 
         kbase.removeRule("org.drools.compiler.test", "test9");
 
-        if (this.kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
+        if (kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
             // after removeRule, ANC is not recreated
             return;
         }
 
-        assertSinks(kbase, Person.class, 8, 8, 8, 0); // under threshold so not indexed
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 8, 8, 8, 0); // under threshold so not indexed
 
         final KieSession ksession = kbase.newKieSession();
 
@@ -914,8 +926,9 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(3);
     }
 
-    @Test
-    public void testMixedRangeHashAndOther() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMixedRangeHashAndOther(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
                            "global java.util.List results;\n" +
@@ -955,13 +968,13 @@ public class AlphaNodeRangeIndexingTest {
                            "   results.add(drools.getRule().getName());" +
                            "end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
         final ObjectTypeNode otn = KieUtil.getObjectTypeNode(kbase, Person.class);
         assertThat(otn).isNotNull();
         ObjectSinkPropagator objectSinkPropagator = otn.getObjectSinkPropagator();
-        if (this.kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
+        if (kieBaseTestConfiguration.useAlphaNetworkCompiler()) {
             objectSinkPropagator = ((CompiledNetwork) objectSinkPropagator).getOriginalSinkPropagator();
         }
         CompositeObjectSinkAdapter sinkAdapter = (CompositeObjectSinkAdapter) objectSinkPropagator;
@@ -986,9 +999,10 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(results).containsOnly("test1", "test3", "test4", "test7");
     }
 
-    @Ignore("No need to test. Fails with standard-drl")
-    @Test
-    public void testCoercionStringToNumber() {
+    @Disabled("No need to test. Fails with standard-drl")
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testCoercionStringToNumber(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -1002,10 +1016,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( name > 50 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 3, 3, 0, 0);
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 3, 3, 0, 0);
 
         ksession.insert(new Person("30"));
         int fired = ksession.fireAllRules();
@@ -1016,15 +1030,16 @@ public class AlphaNodeRangeIndexingTest {
         assertThat(fired).isEqualTo(1);
     }
 
-    @Test
-    public void testDifferentNumberOfDigitsInDecimal() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDifferentNumberOfDigitsInDecimal(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6313
-        checkDifferentNumberOfDigitsInDecimal("10");
-        checkDifferentNumberOfDigitsInDecimal("10.00");
-        checkDifferentNumberOfDigitsInDecimal("10B");
+        checkDifferentNumberOfDigitsInDecimal(kieBaseTestConfiguration, "10");
+        checkDifferentNumberOfDigitsInDecimal(kieBaseTestConfiguration, "10.00");
+        checkDifferentNumberOfDigitsInDecimal(kieBaseTestConfiguration, "10B");
     }
 
-    private void checkDifferentNumberOfDigitsInDecimal(String value) {
+    private void checkDifferentNumberOfDigitsInDecimal(KieBaseTestConfiguration kieBaseTestConfiguration, String value) {
         String drl =
                 "import " + Factor.class.getCanonicalName() + ";\n" +
                      "rule R1 when\n" +
@@ -1046,7 +1061,7 @@ public class AlphaNodeRangeIndexingTest {
                      "    Factor( factorAmt > 10.0 )\n" +
                      "then end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
 
         final KieSession ksession = kbase.newKieSession();
         ksession.insert(new Factor(25.0));
@@ -1066,8 +1081,9 @@ public class AlphaNodeRangeIndexingTest {
         }
     }
 
-    @Test
-    public void testIntegerWithStaticMethodAddedBeforeThreshold() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIntegerWithStaticMethodAddedBeforeThreshold(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
                            "import " + StaticUtil.class.getCanonicalName() + "\n" +
@@ -1086,21 +1102,22 @@ public class AlphaNodeRangeIndexingTest {
 
         final KieBase kbase;
 
-            kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
-            final KieSession ksession = kbase.newKieSession();
-            assertSinks(kbase, Person.class, 4, 4, 0, 3); // "age < StaticUtil.getThirty()" is not range indexable
+        kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
+        final KieSession ksession = kbase.newKieSession();
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 4, 4, 0, 3); // "age < StaticUtil.getThirty()" is not range indexable
 
-            ksession.insert(new Person("John", 18));
-            int fired = ksession.fireAllRules();
+        ksession.insert(new Person("John", 18));
+        int fired = ksession.fireAllRules();
         assertThat(fired).isEqualTo(4);
 
-            ksession.insert(new Person("Paul", 60));
-            fired = ksession.fireAllRules();
+        ksession.insert(new Person("Paul", 60));
+        fired = ksession.fireAllRules();
         assertThat(fired).isEqualTo(2);
     }
 
-    @Test
-    public void testIntegerWithStaticMethodAddedAfterThreshold() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIntegerWithStaticMethodAddedAfterThreshold(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
                            "import " + StaticUtil.class.getCanonicalName() + "\n" +
@@ -1119,9 +1136,9 @@ public class AlphaNodeRangeIndexingTest {
 
         final KieBase kbase;
 
-        kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
-        assertSinks(kbase, Person.class, 4, 4, 0, 3); // "age < StaticUtil.getThirty()" is not range indexable
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 4, 4, 0, 3); // "age < StaticUtil.getThirty()" is not range indexable
 
         ksession.insert(new Person("John", 18));
         int fired = ksession.fireAllRules();
@@ -1139,8 +1156,9 @@ public class AlphaNodeRangeIndexingTest {
         }
     }
 
-    @Test
-    public void testSharedAlpha() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSharedAlpha(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
                            "rule test1\n when\n" +
@@ -1156,10 +1174,10 @@ public class AlphaNodeRangeIndexingTest {
                            "   Person( age < 30 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(kieBaseTestConfiguration, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
-        assertSinks(kbase, Person.class, 3, 3, 0, 3); // sinksLength = 3, sinkAdapterSize = 3, rangeIndexableSinks is null, Size of RangeIndexed nodes = 3
+        assertSinks(kieBaseTestConfiguration, kbase, Person.class, 3, 3, 0, 3); // sinksLength = 3, sinkAdapterSize = 3, rangeIndexableSinks is null, Size of RangeIndexed nodes = 3
 
         ksession.insert(new Person("John", 18));
         int fired = ksession.fireAllRules();

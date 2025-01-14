@@ -1,21 +1,30 @@
-/*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.processors;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.drools.compiler.builder.PackageRegistryManager;
 import org.drools.compiler.builder.impl.BuildResultCollector;
@@ -26,10 +35,10 @@ import org.drools.compiler.builder.impl.processors.AccumulateFunctionCompilation
 import org.drools.compiler.builder.impl.processors.CompilationPhase;
 import org.drools.compiler.builder.impl.processors.FunctionCompilationPhase;
 import org.drools.compiler.builder.impl.processors.GlobalCompilationPhase;
-import org.drools.compiler.builder.impl.processors.RuleValidator;
-import org.drools.compiler.builder.impl.processors.SinglePackagePhaseFactory;
 import org.drools.compiler.builder.impl.processors.IteratingPhase;
+import org.drools.compiler.builder.impl.processors.SinglePackagePhaseFactory;
 import org.drools.compiler.builder.impl.processors.WindowDeclarationCompilationPhase;
+import org.drools.compiler.kie.builder.impl.BuildContext;
 import org.drools.compiler.lang.descr.CompositePackageDescr;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.model.codegen.execmodel.PackageModel;
@@ -37,11 +46,6 @@ import org.drools.model.codegen.execmodel.PackageModelManager;
 import org.drools.model.codegen.execmodel.PackageSourceManager;
 import org.kie.internal.builder.KnowledgeBuilderConfiguration;
 import org.kie.internal.builder.KnowledgeBuilderResult;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Function;
 
 public class ModelMainCompilationPhase<T> implements CompilationPhase {
 
@@ -60,6 +64,8 @@ public class ModelMainCompilationPhase<T> implements CompilationPhase {
     private final PackageSourceManager<T> packageSourceManager;
     private final boolean oneClassPerRule;
 
+    private final BuildContext buildContext;
+
     public ModelMainCompilationPhase(
             PackageModelManager packageModels,
             PackageRegistryManager pkgRegistryManager,
@@ -68,7 +74,11 @@ public class ModelMainCompilationPhase<T> implements CompilationPhase {
             boolean hasMvel,
             InternalKnowledgeBase kBase,
             TypeDeclarationContext typeDeclarationContext,
-            GlobalVariableContext globalVariableContext, Function<PackageModel, T> sourceGenerator, PackageSourceManager<T> packageSourceManager, boolean oneClassPerRule) {
+            GlobalVariableContext globalVariableContext,
+            Function<PackageModel, T> sourceGenerator,
+            PackageSourceManager<T> packageSourceManager,
+            boolean oneClassPerRule,
+            BuildContext buildContext) {
         this.packageModels = packageModels;
         this.pkgRegistryManager = pkgRegistryManager;
         this.packages = packages;
@@ -80,6 +90,7 @@ public class ModelMainCompilationPhase<T> implements CompilationPhase {
         this.sourceGenerator = sourceGenerator;
         this.packageSourceManager = packageSourceManager;
         this.oneClassPerRule = oneClassPerRule;
+        this.buildContext = buildContext;
     }
 
     @Override
@@ -93,7 +104,9 @@ public class ModelMainCompilationPhase<T> implements CompilationPhase {
         phases.add(iteratingPhase((reg, acc) -> GlobalCompilationPhase.of(reg, acc, kBase, globalVariableContext, acc.getFilter())));
         phases.add(new DeclaredTypeDeregistrationPhase(packages, pkgRegistryManager));
 
-        phases.add(iteratingPhase((reg, acc) -> new RuleValidator(reg, acc, configuration))); // validateUniqueRuleNames
+        Map<String, Set<String>> includedRuleNameMap = new HashMap<>();
+        phases.add(new PopulateIncludedRuleNameMapPhase(buildContext.getIncludeModules(), includedRuleNameMap));
+        phases.add(iteratingPhase((reg, acc) -> new ModelRuleValidator(reg, acc, configuration, includedRuleNameMap))); // validateUniqueRuleNames
         phases.add(iteratingPhase((reg, acc) -> new ModelGeneratorPhase(reg, acc, packageModels.getPackageModel(acc, reg, acc.getName()), typeDeclarationContext))); // validateUniqueRuleNames
         phases.add(iteratingPhase((reg, acc) -> new SourceCodeGenerationPhase<>(
                 packageModels.getPackageModel(acc, reg, acc.getName()), packageSourceManager, sourceGenerator, oneClassPerRule))); // validateUniqueRuleNames

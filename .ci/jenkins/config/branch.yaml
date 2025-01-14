@@ -1,77 +1,70 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+generation_config:
+  missing_environment: ignore
 environments:
+  default:
+    env_vars:
+      DROOLS_BUILD_MVN_OPTS: -Dfull
   native:
     env_vars:
       NATIVE: true
       BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
+      DROOLS_BUILD_MVN_OPTS: -Dfull
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
-  native-lts:
-    env_vars:
-      NATIVE: true
-      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
-      QUARKUS_BRANCH: '2.13'
-      ADDITIONAL_TIMEOUT: 720
-    ids:
-    - native
-    - prod
-  quarkus-main:
-    enabled: false
-    env_vars:
-      QUARKUS_BRANCH: main
-    ids:
-    - quarkus
-  quarkus-3:
-    pull_request_default_check: false
-    env_vars:
-      BUILD_MAVEN_TOOL: kie-maven-3.9.1
-      BUILD_JDK_TOOL: kie-jdk17
-      BUILD_MVN_OPTS: -Denforcer.skip
-    ids:
-    - quarkus
-    - quarkus3
-  quarkus-branch:
-    env_vars:
-      QUARKUS_BRANCH: '2.16'
-    ids:
-    - quarkus
-  quarkus-lts:
-    pull_request_default_check: false
-    env_vars:
-      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-      QUARKUS_BRANCH: '2.13'
-    ids:
-    - quarkus
-    - lts
-    - prod
   sonarcloud:
     auto_generation: false
     env_vars:
       ENABLE_SONARCLOUD: true
+      DROOLS_BUILD_MVN_OPTS: -Dfull
     ids:
     - sonarcloud
     - coverage
-productized_branch: true
-disable:
-  triggers: false
 repositories:
-- name: drools
-- name: drools-website
-- name: kie-benchmarks
-productized_repositories:
-- name: drools
+- name: incubator-kie-drools
+  job_display_name: drools
+# Not yet migrated to Apache
+# - name: incubator-kie-drools-website
+#   job_display_name: drools-website
+- name: incubator-kie-benchmarks
+  job_display_name: kie-benchmarks
+## TODO to check if should be enabled
+# - name: incubator-kie-jpmml-integration
+#   job_display_name: kie-jpmml-integration
 git:
   author:
-    name: kiegroup
-    credentials_id: kie-ci4
-    token_credentials_id: kie-ci4-token
-  bot_author:
-    name: bsig-gh-bot
-    credentials_id: bsig-gh-bot
+    name: apache
+    # Taken from https://ci-builds.apache.org/credentials/
+    # Need to be verified
+    credentials_id: 399061d0-5ab5-4142-a186-a52081fef742
+    token_credentials_id: kie-ci3-token
+    push:
+      credentials_id: 84811880-2025-45b6-a44c-2f33bef30ad2 # CI Push Access for KIE
+      token_credentials_id: 41128c14-bb63-4708-9074-d20a318ee630 # GitHub Personal Access Token for KIE
   fork_author:
     name: kie-ci
     credentials_id: kie-ci
+    push:
+      credentials_id: kie-ci
   quarkus:
     author:
       name: quarkusio
@@ -80,33 +73,49 @@ git:
   jenkins_config_path: .ci/jenkins
 buildchain_config:
   git:
-    repository: drools
-    file_path: .ci/buildchain-config.yaml
+    repository: incubator-kie-kogito-pipelines
+    file_path: .ci/pull-request-config.yaml
+    token_credentials_id: kie-ci3-token
 maven:
-  settings_file_id: kogito_release_settings
+  settings:
+    nightly:
+      config_file_id: kie-nightly-settings
+    release:
+      config_file_id: kie-release-settings
   nexus:
-    release_url: https://repository.jboss.org/nexus
-    release_repository: jboss-releases-repository
-    staging_profile_url: https://repository.jboss.org/nexus/content/groups/kogito-public/
-    staging_profile_id: 1976dd1c18392a
-    build_promotion_profile_id: ea49ccd6f174
+    release_url: TO_DEFINE
+    release_repository: TO_DEFINE
+    staging_profile_url: TO_DEFINE
+    staging_profile_id: TO_DEFINE
+    build_promotion_profile_id: TO_DEFINE
   artifacts_repository: ''
   artifacts_upload_repository:
-    url: https://repository.jboss.org/nexus/content/repositories/snapshots/
-    creds_id: kogito-snapshots-upload
-  pr_checks:
-    repository:
-      url: https://bxms-qe.rhev-ci-vms.eng.rdu2.redhat.com:8443/nexus/content/repositories/kogito-runtimes-pr-full-testing/
-      creds_id: unpacks-zip-on-qa-nexus
+    nightly:
+      url: https://repository.apache.org/content/repositories/snapshots
+      creds_id: apache-nexus-kie-deploy-credentials
+    release:
+      url: https://repository.apache.org/service/local/staging/deploy/maven2
+      creds_id: jenkins-deploy-to-nexus-staging
 cloud:
   image:
-    registry_credentials_nightly: nightly_kogito
-    registry_credentials_release: release_kogito
-    registry: quay.io
-    namespace: kiegroup
+    registry_user_credentials_id: DOCKERHUB_USER
+    registry_token_credentials_id: DOCKERHUB_TOKEN
+    registry: docker.io
+    namespace: apache
     latest_git_branch: main
+release:
+  gpg:
+    sign:
+      key-credentials-id: 'GPG_KEY_FILE'
+      passphrase-credentials-id: ''
 jenkins:
-  email_creds_id: KOGITO_CI_EMAIL_TO
+  email_creds_id: DROOLS_CI_NOTIFICATION_EMAILS
+  agent:
+    docker:
+      builder:
+        image: docker.io/apache/incubator-kie-kogito-ci-build:main-latest
+        args: --privileged --group-add docker
   default_tools:
-    jdk: kie-jdk11
-    maven: kie-maven-3.8.7
+    jdk: jdk_17_latest
+    maven: maven_3.9.6
+    sonar_jdk: jdk_17_latest

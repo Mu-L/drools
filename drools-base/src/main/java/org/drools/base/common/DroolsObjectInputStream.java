@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.base.common;
 
 import java.io.IOException;
@@ -27,11 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.RuleBase;
 import org.drools.base.base.AccessorKey;
 import org.drools.base.base.ReadAccessorSupplier;
+import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.util.ClassUtils;
-import org.drools.base.RuleBase;
 
 public class DroolsObjectInputStream extends ObjectInputStream
     implements
@@ -42,9 +44,9 @@ public class DroolsObjectInputStream extends ObjectInputStream
     private Package pkg;
     private ReadAccessorSupplier store;
 
-    private Map<AccessorKey, List<Consumer<ReadAccessor>>> extractorBinders = new HashMap<>();
+    private final Map<AccessorKey, List<Consumer<ReadAccessor>>> extractorBinders = new HashMap<>();
     
-    private Map<String, Object> customExtensions = new HashMap<>();
+    private final Map<String, Object> customExtensions = new HashMap<>();
 
     private final Map<String, Object> clonedByIdentity;
 
@@ -129,12 +131,12 @@ public class DroolsObjectInputStream extends ObjectInputStream
 
     public void readExtractor( Consumer<ReadAccessor> binder ) throws ClassNotFoundException, IOException {
         Object accessor = readObject();
-        if (accessor instanceof AccessorKey ) {
-            ReadAccessor reader = store != null ? store.getReader((AccessorKey) accessor) : null;
+        if (accessor instanceof AccessorKey key) {
+            ReadAccessor reader = store != null ? store.getReader(key) : null;
             if (reader == null) {
                 // when an accessor is used in a query it may have been defined in a different package and that package
                 // couldn't have been deserialized yet, so delay this binding at the end of the deserialization process
-                extractorBinders.computeIfAbsent( (AccessorKey) accessor, k -> new ArrayList<>() ).add( binder );
+                extractorBinders.computeIfAbsent( key, k -> new ArrayList<>() ).add( binder );
             } else {
                 binder.accept( reader );
             }

@@ -1,27 +1,29 @@
-/*
- * Copyright 2011 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.InternalFactHandle;
@@ -32,10 +34,9 @@ import org.drools.mvel.compiler.Cheese;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.Message;
@@ -50,23 +51,16 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * Test for declared bean Extension
  */
-@RunWith(Parameterized.class)
 public class ExtendsTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public ExtendsTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        // TODO: EM failed with some tests. File JIRAs
+        return TestParametersUtil2.getKieBaseCloudConfigurations(false).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-     // TODO: EM failed with some tests. File JIRAs
-        return TestParametersUtil.getKieBaseCloudConfigurations(false);
-    }
-
-    @Test
-    public void testExtends() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtends(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         //Test Base Fact Type
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Extends.drl");
         KieSession ksession = kbase.newKieSession();
@@ -88,8 +82,9 @@ public class ExtendsTest {
     }
 
 
-    @Test
-    public void testGeneratedMethods() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGeneratedMethods(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Extends.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -136,8 +131,9 @@ public class ExtendsTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testDeepExt() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeepExt(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Extends.drl");
         KieSession ksession = kbase.newKieSession();
         
@@ -156,16 +152,18 @@ public class ExtendsTest {
 
 
 
-     @Test
-    public void testIllegalExtendsLegacy() throws Exception {
+     @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIllegalExtendsLegacy(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         //Test Base Fact Type
         KieBuilder kieBuilder = KieUtil.getKieBuilderFromClasspathResources(kieBaseTestConfiguration, getClass(), false, "test_ExtLegacyIllegal.drl");
         List<Message> errors = kieBuilder.getResults().getMessages(Message.Level.ERROR);
          assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testExtendsLegacy() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendsLegacy(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ExtLegacy.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -185,8 +183,9 @@ public class ExtendsTest {
 
     }
 
-    @Test
-     public void testExtendsAcrossFiles() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+     public void testExtendsAcrossFiles(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Ext1.drl", "test_Ext2.drl", "test_Ext3.drl", "test_Ext4.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -214,8 +213,9 @@ public class ExtendsTest {
 
 
 
-    @Test
-     public void testFieldInit() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+     public void testFieldInit(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ExtFieldInit.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -245,8 +245,9 @@ public class ExtendsTest {
     }
 
 
-    @Test
-    public void testBoxedFieldInit() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBoxedFieldInit(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ExtFieldInit.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -271,8 +272,9 @@ public class ExtendsTest {
     }
 
 
-    @Test
-    public void testExpressionFieldInit() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExpressionFieldInit(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ExtFieldInit.drl");
         KieSession ksession = kbase.newKieSession();
         FactType test = ksession.getKieBase().getFactType("org.drools.compiler","MyBoxExpressionBean");
@@ -316,8 +318,9 @@ public class ExtendsTest {
         System.out.println(x);
     }
 
-    @Test
-    public void testHierarchy() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testHierarchy(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_ExtHierarchy.drl");
         KieSession ksession = kbase.newKieSession();
         ksession.setGlobal("list",new LinkedList());
@@ -327,8 +330,9 @@ public class ExtendsTest {
         assertThat(((List) ksession.getGlobal("list")).size()).isEqualTo(1);
     }
 
-    @Test
-    public void testExtendOverride() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendOverride(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         String drl = "package test.beans;\n" +
                 "\n" +
@@ -377,8 +381,9 @@ public class ExtendsTest {
         assertThat(x instanceof ArrayList).isTrue();
     }
 
-    @Test
-    public void testRedefineDefaults() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testRedefineDefaults(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         //Test Base Fact Type
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_Extends.drl");
         KieSession ksession = kbase.newKieSession();
@@ -397,8 +402,9 @@ public class ExtendsTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testExtendFromOtherPackage() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendFromOtherPackage(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
 
         String s1 = "package org.drools.mvel.compiler.test.pack1;\n" +
                 "\n" +
@@ -446,8 +452,9 @@ public class ExtendsTest {
         assertThat(kSession.fireAllRules()).isEqualTo(3);
     }
 
-    @Test
-    public void testInheritAnnotationsInOtherPackage() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInheritAnnotationsInOtherPackage(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
 
         String s1 = "package org.drools.mvel.compiler.test.pack1;\n" +
                 "global java.util.List list;" +
@@ -525,8 +532,9 @@ public class ExtendsTest {
 
     }
 
-    @Test
-    public void testInheritFromClassWithDefaults() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInheritFromClassWithDefaults(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
 
         // car is a java class with attributes
         // brand (default ferrari)
@@ -566,8 +574,9 @@ public class ExtendsTest {
     }
 
 
-    @Test
-    public void testExtendSelf() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendSelf(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String s1 = "package org.drools;\n" +
                     "global java.util.List list;\n" +
                     "\n" +
@@ -580,8 +589,9 @@ public class ExtendsTest {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testExtendCircular() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendCircular(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String s1 = "package org.drools;\n" +
                     "global java.util.List list;\n" +
                     "\n" +
@@ -605,8 +615,9 @@ public class ExtendsTest {
         assertThat(errors.toString().contains("circular")).isTrue();
     }
 
-    @Test
-    public void testExtendsDump() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendsDump(KieBaseTestConfiguration kieBaseTestConfiguration) {
         PackageDescrBuilder pkgd = DescrFactory.newPackage();
         pkgd.name( "org.test" )
             .newDeclare().type().name( "Foo" )
@@ -642,8 +653,9 @@ public class ExtendsTest {
     }
 
 
-    @Test
-    public void testDeclareInheritance() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclareInheritance(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String s1 = "package org.drools;\n" +
                     "import org.drools.mvel.integrationtests.ExtendsTest.*;\n" +
                     "\n" +
@@ -671,8 +683,9 @@ public class ExtendsTest {
 
     }
 
-    @Test
-    public void testDeclareExtendsJavaParent() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclareExtendsJavaParent(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.test; \n" +
                      "import org.drools.mvel.compiler.Person; \n" +
                      "declare Student extends Person end \n" +
@@ -683,8 +696,9 @@ public class ExtendsTest {
         assertThat(errors.isEmpty()).as(errors.toString()).isTrue();
     }
 
-    @Test
-    public void testDeclareExtendsJavaParentOuterPackaga() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclareExtendsJavaParentOuterPackaga(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.test; \n" +
                      "import org.drools.mvel.integrationtests.ExtendsTest.X; \n" +
                      "declare Student extends X end \n" +
@@ -695,8 +709,9 @@ public class ExtendsTest {
         assertThat(errors.isEmpty()).as(errors.toString()).isTrue();
     }
 
-    @Test
-    public void testDeclareExtendsMissingJavaParent() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclareExtendsMissingJavaParent(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.test; \n" +
                      "import org.drools.mvel.integrationtests.ExtendsTest.Y; \n" +
                      "declare Student extends Y end \n" +
@@ -707,8 +722,9 @@ public class ExtendsTest {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testDeclareExtendsWithFullyQualifiedName() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclareExtendsWithFullyQualifiedName(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.extends.test; \n" +
                      "" +
                      "declare org.drools.extends.test.Foo end \n" +
@@ -721,8 +737,9 @@ public class ExtendsTest {
 
     }
 
-    @Test
-    public void testExtendsBasic() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendsBasic(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "extend_rule_test.drl");
         KieSession session = kbase.newKieSession();
 
@@ -779,8 +796,9 @@ public class ExtendsTest {
         assertThat(list.size()).isEqualTo(0);
     }
 
-    @Test
-    public void testExtendsBasic2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendsBasic2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_RuleExtend.drl");
         KieSession ksession = kbase.newKieSession();
 

@@ -1,26 +1,32 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.lang.ast;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.kie.dmn.feel.lang.EvaluationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IterationContextNode
         extends BaseNode {
+
+    private static final Logger LOG = LoggerFactory.getLogger(IterationContextNode.class);
 
     private NameDefNode name;
     private BaseNode    expression;
@@ -37,6 +43,13 @@ public class IterationContextNode
         this.name = name;
         this.expression = expression;
         this.rangeEndExpr = rangeEndExpr;
+    }
+
+    public IterationContextNode(NameDefNode name, BaseNode expression, BaseNode rangeEndExpr, String text) {
+        this.name = name;
+        this.expression = expression;
+        this.rangeEndExpr = rangeEndExpr;
+        this.setText(text);
     }
 
     public NameDefNode getName() {
@@ -60,15 +73,18 @@ public class IterationContextNode
     }
 
     public String evaluateName(EvaluationContext ctx) {
+        LOG.trace("evaluateName {}", name);
         return this.name.evaluate(ctx);
     }
 
     @Override
     public Object evaluate(EvaluationContext ctx) {
+        LOG.trace("evaluate {}", expression);
         return expression != null ? expression.evaluate( ctx ) : null;
     }
 
     public Object evaluateRangeEnd(EvaluationContext ctx) {
+        LOG.trace("evaluateRangeEnd {}", rangeEndExpr);
         return rangeEndExpr != null ? rangeEndExpr.evaluate(ctx) : null;
     }
 

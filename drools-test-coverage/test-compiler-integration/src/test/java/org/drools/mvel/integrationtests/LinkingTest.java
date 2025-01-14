@@ -1,23 +1,26 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.base.base.ClassObjectType;
 import org.drools.core.common.InternalAgenda;
@@ -25,12 +28,12 @@ import org.drools.core.common.InternalAgendaGroup;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.MemoryFactory;
 import org.drools.core.impl.InternalRuleBase;
+import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.RightInputAdapterNode.RiaPathMemory;
 import org.drools.kiesession.session.StatefulKnowledgeSessionImpl;
 import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.phreak.RuleExecutor;
 import org.drools.core.phreak.RuntimeSegmentUtilities;
-import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.EvalConditionNode;
 import org.drools.core.reteoo.ExistsNode;
 import org.drools.core.reteoo.JoinNode;
@@ -45,30 +48,21 @@ import org.drools.core.reteoo.SegmentMemory;
 import org.drools.core.reteoo.Tuple;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class LinkingTest {
 
     // Note: Replaced class D with X : See DROOLS-6032
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public LinkingTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
     public static class A {
@@ -211,8 +205,9 @@ public class LinkingTest {
         }
     }
 
-    @Test
-    public void testSubNetworkSharing() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSubNetworkSharing(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // Checks the network is correctly formed, with sharing
         String str = "";
         str += "package org.kie \n";
@@ -274,8 +269,9 @@ public class LinkingTest {
         assertThat(((RightInputAdapterNode) joinNodeD.getSinkPropagator().getSinks()[1]).getObjectSinkPropagator().getSinks()[0]).isSameAs(existsNode3);
     }
 
-    @Test
-    public void testSubNetworkSharingMemories() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSubNetworkSharingMemories(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // checks the memory sharing works, and linking, uses the already checked network from testSubNetworkSharing
         String str = "";
         str += "package org.kie \n";
@@ -338,9 +334,9 @@ public class LinkingTest {
 
         LiaNodeMemory liam = wm.getNodeMemory(liaNodeA);
 
-        BetaMemory bm1 = ( BetaMemory ) wm.getNodeMemory( joinNodeB );
-        BetaMemory bm2 = ( BetaMemory ) wm.getNodeMemory( joinNodeC );
-        BetaMemory bm3 = ( BetaMemory ) wm.getNodeMemory( joinNodeD1 );
+        BetaMemory bm1 = (BetaMemory) wm.getNodeMemory(joinNodeB);
+        BetaMemory bm2 = (BetaMemory) wm.getNodeMemory(joinNodeC);
+        BetaMemory bm3 = (BetaMemory) wm.getNodeMemory(joinNodeD1);
         assertThat(liam.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm1.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm2.getNodePosMaskBit()).isEqualTo(2);
@@ -350,8 +346,8 @@ public class LinkingTest {
         assertThat(bm2.getSegmentMemory()).isSameAs(bm1.getSegmentMemory());
         assertThat(bm3.getSegmentMemory()).isNotSameAs(bm2.getSegmentMemory());
 
-        BetaMemory bm4 = ( BetaMemory ) wm.getNodeMemory( existsNode2 );
-        BetaMemory bm5 = ( BetaMemory ) wm.getNodeMemory( joinNodeD2 );
+        BetaMemory bm4 = (BetaMemory) wm.getNodeMemory(existsNode2);
+        BetaMemory bm5 = (BetaMemory) wm.getNodeMemory(joinNodeD2);
         assertThat(bm4.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm5.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm5.getSegmentMemory()).isSameAs(bm4.getSegmentMemory());
@@ -367,8 +363,8 @@ public class LinkingTest {
         wm.insert( new E() );
         wm.flushPropagations();
 
-        BetaMemory bm6 = ( BetaMemory ) wm.getNodeMemory( existsNode3 );
-        BetaMemory bm7 = ( BetaMemory ) wm.getNodeMemory( joinNodeE );
+        BetaMemory bm6 = (BetaMemory) wm.getNodeMemory(existsNode3);
+        BetaMemory bm7 = (BetaMemory) wm.getNodeMemory(joinNodeE);
         assertThat(bm6.getNodePosMaskBit()).isEqualTo(1);
         assertThat(bm7.getNodePosMaskBit()).isEqualTo(2);
         assertThat(bm7.getSegmentMemory()).isSameAs(bm6.getSegmentMemory());
@@ -384,8 +380,9 @@ public class LinkingTest {
         assertThat(rs3.isRuleLinked()).isFalse();
     }
 
-    @Test
-    public void testSubNetworkRiaLinking() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSubNetworkRiaLinking(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -427,7 +424,7 @@ public class LinkingTest {
         RuleTerminalNode rtn = ( RuleTerminalNode ) eNode.getSinkPropagator().getSinks()[0];
 
         RuntimeSegmentUtilities.getOrCreateSegmentMemory(exists1n, wm);
-        BetaMemory existsBm = ( BetaMemory ) wm.getNodeMemory( exists1n );
+        BetaMemory existsBm = (BetaMemory) wm.getNodeMemory(exists1n);
 
         assertThat(existsBm.getSegmentMemory().getLinkedNodeMask()).isEqualTo(0);
 
@@ -467,8 +464,9 @@ public class LinkingTest {
         assertThat(rs.isRuleLinked()).isTrue();
     }
 
-    @Test
-    public void testNonReactiveSubNetworkInShareMasks() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNonReactiveSubNetworkInShareMasks(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -511,15 +509,16 @@ public class LinkingTest {
         assertThat(pmem.getAllLinkedMaskTest()).isEqualTo(7); // D is in the exists segment
 
 
-        BetaMemory bm =  ( BetaMemory ) wm.getNodeMemory(dNode);
+        BetaMemory bm =  (BetaMemory) wm.getNodeMemory(dNode);
         assertThat(bm.getSegmentMemory()).isNull(); // check lazy initialization
         wm.insert(new X());
         wm.flushPropagations();
         assertThat(bm.getSegmentMemory().getAllLinkedMaskTest()).isEqualTo(2); // only X can be linked in
     }
 
-    @Test
-    public void testNonReactiveSubNetworkOwnSegmentMasks() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNonReactiveSubNetworkOwnSegmentMasks(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -579,8 +578,9 @@ public class LinkingTest {
         assertThat(riaMem.getAllLinkedMaskTest()).isEqualTo(0); // no segments to be linked in
     }
 
-    @Test
-    public void testNestedSubNetwork() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNestedSubNetwork(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -655,8 +655,9 @@ public class LinkingTest {
         assertThat(rs.isRuleLinked()).isFalse();
     }
 
-    @Test
-    public void testNestedSubNetworkMasks() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNestedSubNetworkMasks(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -707,15 +708,15 @@ public class LinkingTest {
         wm.insert(  new G() );
         wm.flushPropagations();
 
-        LiaNodeMemory liaMem = wm.getNodeMemory(liaNode);
-        BetaMemory bMem = ( BetaMemory )   wm.getNodeMemory( bNode );
-        BetaMemory exists1Mem = ( BetaMemory ) wm.getNodeMemory( exists1n );
-        BetaMemory cMem = ( BetaMemory )   wm.getNodeMemory( cNode );
-        BetaMemory dMem = ( BetaMemory )   wm.getNodeMemory( dNode );
-        BetaMemory exists2Mem = ( BetaMemory ) wm.getNodeMemory( exists2n );
-        BetaMemory eMem = ( BetaMemory )   wm.getNodeMemory( eNode );
-        BetaMemory fMem = ( BetaMemory )   wm.getNodeMemory( fNode );
-        BetaMemory gMem = ( BetaMemory )   wm.getNodeMemory( gNode );
+        LiaNodeMemory  liaMem     = wm.getNodeMemory(liaNode);
+        BetaMemory bMem       = (BetaMemory)   wm.getNodeMemory(bNode);
+        BetaMemory exists1Mem = (BetaMemory) wm.getNodeMemory(exists1n);
+        BetaMemory cMem       = (BetaMemory)   wm.getNodeMemory(cNode);
+        BetaMemory dMem       = (BetaMemory)   wm.getNodeMemory(dNode);
+        BetaMemory exists2Mem = (BetaMemory) wm.getNodeMemory(exists2n);
+        BetaMemory eMem       = (BetaMemory)   wm.getNodeMemory(eNode);
+        BetaMemory fMem       = (BetaMemory)   wm.getNodeMemory(fNode);
+        BetaMemory gMem       = (BetaMemory)   wm.getNodeMemory(gNode);
 
         RiaPathMemory riaMem1 = (RiaPathMemory) wm.getNodeMemory(riaNode1);
         RiaPathMemory riaMem2 = (RiaPathMemory) wm.getNodeMemory(riaNode2);
@@ -822,8 +823,9 @@ public class LinkingTest {
         assertThat(eMem.getSegmentMemory().getLinkedNodeMask()).isEqualTo(2);
         assertThat(riaMem2.getLinkedSegmentMask()).isEqualTo(0);
     }
-    @Test
-    public void testJoinNodes() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJoinNodes(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -870,9 +872,9 @@ public class LinkingTest {
         JoinNode bNode = ( JoinNode) aNode.getSinkPropagator().getSinks()[0];        
         JoinNode cNode = ( JoinNode) bNode.getSinkPropagator().getSinks()[0];                
         
-        LiaNodeMemory amem = wm.getNodeMemory(aNode);
-        BetaMemory bmem = ( BetaMemory ) wm.getNodeMemory( bNode );
-        BetaMemory cmem = ( BetaMemory ) wm.getNodeMemory( cNode );
+        LiaNodeMemory  amem = wm.getNodeMemory(aNode);
+        BetaMemory bmem = (BetaMemory) wm.getNodeMemory(bNode);
+        BetaMemory cmem = (BetaMemory) wm.getNodeMemory(cNode);
         
         // amem.getSegmentMemory().getStagedLeftTuples().insertSize() == 3
         assertThat(amem.getSegmentMemory().getStagedLeftTuples().getInsertFirst()).isNotNull();
@@ -901,8 +903,9 @@ public class LinkingTest {
         assertThat(list.contains("0:0:25")).isTrue();    
     }    
     
-    @Test
-    public void testExistsNodes1() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExistsNodes1(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -942,8 +945,9 @@ public class LinkingTest {
         assertThat(list.size()).isEqualTo(1);        
     }      
     
-    @Test
-    public void testExistsNodes2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExistsNodes2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1001,8 +1005,9 @@ public class LinkingTest {
         assertThat(list.size()).isEqualTo(9);            
     }   
     
-    @Test
-    public void testNotNodeUnlinksWithNoConstriants() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotNodeUnlinksWithNoConstriants(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1077,8 +1082,9 @@ public class LinkingTest {
         assertThat(list.size()).isEqualTo(1);        
     }
     
-    @Test
-    public void testNotNodeDoesNotUnlinksWithConstriants() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotNodeDoesNotUnlinksWithConstriants(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1130,8 +1136,9 @@ public class LinkingTest {
         assertThat(amem.getSegmentMemory().getLinkedNodeMask()).isEqualTo(7);
     }    
     
-    @Test
-    public void testNotNodes1() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotNodes1(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1172,8 +1179,9 @@ public class LinkingTest {
     }  
     
     
-    @Test
-    public void testNotNodes2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotNodes2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1235,8 +1243,9 @@ public class LinkingTest {
         assertThat(list.size()).isEqualTo(9);            
     }
 
-    @Test
-    public void testNotNodeMasksWithConstraints() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotNodeMasksWithConstraints(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1288,8 +1297,9 @@ public class LinkingTest {
         assertThat(pmem.isRuleLinked()).isTrue();
     }
 
-    @Test
-    public void testNotNodeMasksWithoutConstraints() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotNodeMasksWithoutConstraints(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1341,8 +1351,9 @@ public class LinkingTest {
         assertThat(pmem.isRuleLinked()).isTrue();
     }
     
-    @Test
-    public void testForallNodes() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testForallNodes(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1408,8 +1419,9 @@ public class LinkingTest {
 //        assertEquals( 9, list.size() );            
     }      
     
-    @Test
-    public void testAccumulateNodes1() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAccumulateNodes1(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1448,8 +1460,9 @@ public class LinkingTest {
         assertThat(list.get(0)).isEqualTo(4);        
     }       
     
-    @Test
-    public void testAccumulateNodes2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAccumulateNodes2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1494,8 +1507,9 @@ public class LinkingTest {
     } 
     
     
-    @Test
-    public void testSubnetwork() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSubnetwork(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;
@@ -1547,8 +1561,9 @@ public class LinkingTest {
         assertThat(list.size()).isEqualTo(1); // check it doesn't double fire        
     }
     
-    @Test
-    public void testNestedSubnetwork() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNestedSubnetwork(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import " + A.class.getCanonicalName() + "\n" ;

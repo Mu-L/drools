@@ -1,27 +1,26 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.common;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.drools.base.common.RuleBasePartitionId;
-import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.base.rule.EntryPointId;
 import org.drools.base.time.JobHandle;
+import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.time.TimerService;
 import org.drools.core.time.impl.DefaultJobHandle;
 import org.drools.core.util.LinkedList;
@@ -37,12 +36,9 @@ public class DefaultEventHandle extends DefaultFactHandle implements EventHandle
     private long              duration;
     private boolean           expired;
     private boolean           pendingRemoveFromStore;
-    private long              activationsCount;
     private int               otnCount;
 
     private DefaultEventHandle linkedFactHandle;
-
-    private AtomicInteger     notExpiredPartitions;
 
     private final transient LinkedList<DefaultJobHandle> jobs = new LinkedList<>();
 
@@ -50,6 +46,13 @@ public class DefaultEventHandle extends DefaultFactHandle implements EventHandle
         super();
         this.startTimestamp = 0;
         this.duration = 0;
+    }
+
+    public DefaultEventHandle(long id, EntryPointId entryPointId) {
+        super(id, null);
+        this.startTimestamp = 0;
+        this.duration = 0;
+        this.entryPointId = entryPointId;
     }
 
     /**
@@ -70,10 +73,6 @@ public class DefaultEventHandle extends DefaultFactHandle implements EventHandle
         super( id, object, recency, wmEntryPoint );
         this.startTimestamp = timestamp;
         this.duration = duration;
-
-        if ( wmEntryPoint.getKnowledgeBase() != null && wmEntryPoint.getKnowledgeBase().getRuleBaseConfiguration().isMultithreadEvaluation() ) {
-            notExpiredPartitions = new AtomicInteger( RuleBasePartitionId.PARALLEL_PARTITIONS_NUMBER );
-        }
     }
 
     protected DefaultEventHandle(long id,
@@ -168,14 +167,6 @@ public class DefaultEventHandle extends DefaultFactHandle implements EventHandle
         }
     }
 
-    public boolean expirePartition() {
-        if ( linkedFactHandle != null ) {
-            return linkedFactHandle.expirePartition();
-        }  else {
-            return notExpiredPartitions == null || notExpiredPartitions.decrementAndGet() == 0;
-        }
-    }
-
     public void setExpired(boolean expired) {
         if ( linkedFactHandle != null ) {
             linkedFactHandle.setExpired(expired);
@@ -197,38 +188,6 @@ public class DefaultEventHandle extends DefaultFactHandle implements EventHandle
             linkedFactHandle.setPendingRemoveFromStore(pendingRemove);
         }  else {
             this.pendingRemoveFromStore = pendingRemove;
-        }
-    }
-
-    public long getActivationsCount() {
-        if ( linkedFactHandle != null ) {
-            return linkedFactHandle.getActivationsCount();
-        } else {
-            return activationsCount;
-        }
-    }
-    
-    public void setActivationsCount(long activationsCount) {
-        if ( linkedFactHandle != null ) {
-            linkedFactHandle.setActivationsCount( activationsCount );
-        }  else {
-            this.activationsCount = activationsCount;
-        }
-    }
-
-    public void increaseActivationsCount() {
-        if ( linkedFactHandle != null ) {
-            linkedFactHandle.increaseActivationsCount();
-        }  else {
-            this.activationsCount++;
-        }
-    }
-
-    public void decreaseActivationsCount() {
-        if ( linkedFactHandle != null ) {
-            linkedFactHandle.decreaseActivationsCount();
-        }  else {
-            this.activationsCount--;
         }
     }
 
@@ -256,7 +215,6 @@ public class DefaultEventHandle extends DefaultFactHandle implements EventHandle
                                                           getStartTimestamp(),
                                                           getDuration(),
                                                           getEntryPointId() );
-        clone.setActivationsCount( getActivationsCount() );
         clone.setOtnCount( getOtnCount() );
         clone.setExpired( isExpired() );
         clone.setEqualityKey( getEqualityKey() );
@@ -274,11 +232,10 @@ public class DefaultEventHandle extends DefaultFactHandle implements EventHandle
                                                           getStartTimestamp(),
                                                           getDuration(),
                                                           getEntryPointId() );
-        clone.setActivationsCount( getActivationsCount() );
         clone.setOtnCount( getOtnCount() );
         clone.setExpired( isExpired() );
         clone.setEqualityKey( getEqualityKey() );
-        clone.linkedTuples = this.linkedTuples.newInstance();
+        clone.linkedTuples = this.linkedTuples.cloneEmpty();
         clone.setObjectHashCode(getObjectHashCode());
         clone.wmEntryPoint = this.wmEntryPoint;
         return clone;

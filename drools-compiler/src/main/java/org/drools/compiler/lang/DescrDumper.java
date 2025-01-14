@@ -1,15 +1,20 @@
-/* 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.drools.compiler.lang;
 
@@ -19,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.drools.drl.parser.DrlExprParser;
+import org.drools.base.rule.XpathBackReference;
 import org.drools.drl.ast.descr.AtomicExprDescr;
 import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.BindingDescr;
@@ -28,8 +33,9 @@ import org.drools.drl.ast.descr.ConstraintConnectiveDescr;
 import org.drools.drl.ast.descr.ExprConstraintDescr;
 import org.drools.drl.ast.descr.OperatorDescr;
 import org.drools.drl.ast.descr.RelationalExprDescr;
+import org.drools.drl.parser.DrlExprParser;
+import org.drools.drl.parser.DrlExprParserFactory;
 import org.drools.drl.parser.impl.Operator;
-import org.drools.base.rule.XpathBackReference;
 import org.kie.internal.builder.conf.LanguageLevelOption;
 
 import static org.drools.compiler.rule.builder.dialect.DialectUtil.findClassByName;
@@ -132,7 +138,7 @@ public class DescrDumper extends ReflectiveVisitor implements ExpressionRewriter
     }
 
     private void processConstraint(StringBuilder sbuilder, ExprConstraintDescr base, boolean isInsideRelCons, DumperContext context) {
-        DrlExprParser expr = new DrlExprParser( context.getRuleContext().getConfiguration().getOption(LanguageLevelOption.KEY));
+        DrlExprParser expr = DrlExprParserFactory.getDrlExprParser(context.getRuleContext().getConfiguration().getOption(LanguageLevelOption.KEY));
         ConstraintConnectiveDescr result = expr.parse( base.getExpression() );
         if ( result.getDescrs().size() == 1 ) {
             dump( sbuilder,

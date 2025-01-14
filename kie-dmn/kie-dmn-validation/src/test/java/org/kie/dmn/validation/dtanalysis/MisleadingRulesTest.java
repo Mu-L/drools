@@ -1,25 +1,27 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.validation.dtanalysis;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.core.DMNMessage;
 import org.kie.dmn.api.core.DMNMessageType;
 import org.kie.dmn.feel.runtime.Range.RangeBoundary;
@@ -34,10 +36,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.dmn.validation.DMNValidator.Validation.ANALYZE_DECISION_TABLE;
 import static org.kie.dmn.validation.DMNValidator.Validation.VALIDATE_COMPILATION;
 
-public class MisleadingRulesTest extends AbstractDTAnalysisTest {
+class MisleadingRulesTest extends AbstractDTAnalysisTest {
 
     @Test
-    public void testMisleadingRules() {
+    void misleadingRules() {
         List<DMNMessage> validate = validator.validate(getReader("MisleadingRules.dmn"), VALIDATE_COMPILATION, ANALYZE_DECISION_TABLE);
         DTAnalysis analysis = getAnalysis(validate, "_BA703D04-803A-44AA-8A31-F5EEDD4FD54E");
         assertThat(analysis.getGaps()).hasSize(0);
@@ -73,7 +75,7 @@ public class MisleadingRulesTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void testMisleadingRules2() {
+    void misleadingRules2() {
         List<DMNMessage> validate = validator.validate(getReader("MisleadingRules2.dmn"), VALIDATE_COMPILATION, ANALYZE_DECISION_TABLE);
         DTAnalysis analysis = getAnalysis(validate, "_0cffdf05-071b-423b-94b9-182c2cc2435c");
 

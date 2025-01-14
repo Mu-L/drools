@@ -1,39 +1,42 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.drools.base.rule.ContextEntry;
+import org.drools.base.rule.IndexableConstraint;
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.base.rule.ContextEntry;
-import org.drools.base.rule.IndexableConstraint;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.core.util.index.IndexFactory;
 import org.kie.internal.conf.IndexPrecedenceOption;
 
 import static org.drools.base.util.index.IndexUtil.compositeAllowed;
 import static org.drools.base.util.index.IndexUtil.isIndexableForNode;
 
-public abstract class MultipleBetaConstraint implements BetaConstraints {
-    protected BetaNodeFieldConstraint[] constraints;
-    protected boolean[]                 indexed;
+public abstract class MultipleBetaConstraint implements BetaConstraints<ContextEntry[]> {
+    protected BetaConstraint<ContextEntry>[] constraints;
+    protected boolean[]                      indexed;
     protected IndexPrecedenceOption     indexPrecedenceOption;
     protected transient boolean         disableIndexing;
 
@@ -41,13 +44,13 @@ public abstract class MultipleBetaConstraint implements BetaConstraints {
 
     public MultipleBetaConstraint() { }
 
-    public MultipleBetaConstraint( BetaNodeFieldConstraint[] constraints,
+    public MultipleBetaConstraint( BetaConstraint[] constraints,
                                    RuleBaseConfiguration conf,
                                    boolean disableIndexing) {
         this(constraints, conf.getIndexPrecedenceOption(), disableIndexing);
     }
 
-    protected MultipleBetaConstraint( BetaNodeFieldConstraint[] constraints,
+    protected MultipleBetaConstraint( BetaConstraint[] constraints,
                                       IndexPrecedenceOption indexPrecedenceOption,
                                       boolean disableIndexing) {
         this.constraints = constraints;
@@ -56,7 +59,7 @@ public abstract class MultipleBetaConstraint implements BetaConstraints {
     }
 
     public final void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        constraints = (BetaNodeFieldConstraint[])in.readObject();
+        constraints = (BetaConstraint[])in.readObject();
         indexed = (boolean[]) in.readObject();
         indexPrecedenceOption = (IndexPrecedenceOption) in.readObject();
     }
@@ -67,7 +70,7 @@ public abstract class MultipleBetaConstraint implements BetaConstraints {
         out.writeObject(indexPrecedenceOption);
     }
 
-    public final void init(BuildContext context, short betaNodeType) {
+    public final void init(BuildContext context, int betaNodeType) {
         RuleBaseConfiguration config = context.getRuleBase().getRuleBaseConfiguration();
 
         if ( disableIndexing || (!config.isIndexLeftBetaMemory() && !config.isIndexRightBetaMemory()) ) {
@@ -83,7 +86,7 @@ public abstract class MultipleBetaConstraint implements BetaConstraints {
         }
     }
 
-    public final void initIndexes(int depth, short betaNodeType, RuleBaseConfiguration config) {
+    public final void initIndexes(int depth, int betaNodeType, RuleBaseConfiguration config) {
         indexed = isIndexableForNode(indexPrecedenceOption, betaNodeType, depth, constraints, config);
     }
 
@@ -102,18 +105,18 @@ public abstract class MultipleBetaConstraint implements BetaConstraints {
     }
 
     public BetaMemory createBetaMemory(final RuleBaseConfiguration config,
-                                       final short nodeType) {
+                                       final int nodeType) {
         return IndexFactory.createBetaMemory(config, nodeType, constraints);
     }
 
-    public final BetaNodeFieldConstraint[] getConstraints() {
+    public final BetaConstraint[] getConstraints() {
         return constraints;
     }
 
     public final ContextEntry[] createContext() {
         ContextEntry[] entries = new ContextEntry[constraints.length];
         for (int i = 0; i < constraints.length; i++) {
-            entries[i] = constraints[i].createContextEntry();
+            entries[i] = constraints[i].createContext();
         }
         return entries;
     }
@@ -130,7 +133,7 @@ public abstract class MultipleBetaConstraint implements BetaConstraints {
     }
 
     private boolean calcLeftUpdateOptimizationAllowed() {
-        for (BetaNodeFieldConstraint constraint : constraints) {
+        for (BetaConstraint constraint : constraints) {
             if ( !(constraint instanceof IndexableConstraint && ((IndexableConstraint)constraint).getConstraintType().isEquality()) ) {
                 return false;
             }

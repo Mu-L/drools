@@ -1,32 +1,22 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
-
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import org.drools.model.codegen.execmodel.FunctionsTest.Pojo;
 import org.drools.model.codegen.execmodel.domain.Address;
@@ -39,23 +29,36 @@ import org.drools.model.codegen.execmodel.domain.PetPerson;
 import org.drools.model.codegen.execmodel.domain.Toy;
 import org.drools.model.codegen.execmodel.domain.ToysStore;
 import org.drools.model.codegen.execmodel.domain.Woman;
-import org.junit.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieServices;
 import org.kie.api.builder.model.KieModuleModel;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FromTest extends BaseModelTest {
 
-    public FromTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test
-    public void testFromGlobal() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromGlobal(RUN_TYPE runType) throws Exception {
         String str = "global java.util.List list         \n" +
                      "rule R when                        \n" +
                      "  $o : String(length > 3) from list\n" +
@@ -63,7 +66,7 @@ public class FromTest extends BaseModelTest {
                      "  insert($o);                      \n" +
                      "end                                ";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         List<String> strings = Arrays.asList("a", "Hello World!", "xyz");
 
@@ -77,8 +80,9 @@ public class FromTest extends BaseModelTest {
         assertThat(results.contains("xyz")).isFalse();
     }
 
-    @Test
-    public void testFromVariable() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromVariable(RUN_TYPE runType) {
         final String str =
                 "import org.drools.model.codegen.execmodel.domain.*;\n" +
                 "global java.util.List list\n" +
@@ -90,7 +94,7 @@ public class FromTest extends BaseModelTest {
                 "  list.add( $child.getName() );\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         final List<String> list = new ArrayList<>();
         ksession.setGlobal( "list", list );
@@ -110,8 +114,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder("Charles");
     }
 
-    @Test
-    public void testFromExpression() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromExpression(RUN_TYPE runType) {
         final String str =
                 "import org.drools.model.codegen.execmodel.domain.*;\n" +
                 "global java.util.List list\n" +
@@ -123,7 +128,7 @@ public class FromTest extends BaseModelTest {
                 "  list.add( $child.getName() );\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         final List<String> list = new ArrayList<>();
         ksession.setGlobal( "list", list );
@@ -143,8 +148,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder("Charles");
     }
 
-    @Test
-    public void testModifyWithFrom() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testModifyWithFrom(RUN_TYPE runType) {
         // DROOLS-6486
         final String str =
                 "import org.drools.model.codegen.execmodel.domain.*;\n" +
@@ -156,7 +162,7 @@ public class FromTest extends BaseModelTest {
                 "  modify( $child ) { setName($child.getName() + \"x\") };\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         final Woman alice = new Woman( "Alice", 38 );
         final Man bob = new Man( "Bob", 40 );
@@ -174,8 +180,9 @@ public class FromTest extends BaseModelTest {
         assertThat(charlie.getName()).isEqualTo("Charlesx");
     }
 
-    @Test
-    public void testModifyWithFromAndReevaluate() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testModifyWithFromAndReevaluate(RUN_TYPE runType) {
         // DROOLS-7203
         final String str =
                 "import org.drools.model.codegen.execmodel.domain.*;\n" +
@@ -204,7 +211,7 @@ public class FromTest extends BaseModelTest {
                            "  delete($s);\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> results = new ArrayList<>();
         ksession.setGlobal("results", results);
 
@@ -237,8 +244,10 @@ public class FromTest extends BaseModelTest {
         assertThat(results).containsExactly("executed"); // R1 should not be executed twice because age is modified to 13
     }
 
-    @Test(timeout = 20000)
-    public void testModifyWithFromSudoku() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    @Timeout(20000)
+    public void testModifyWithFromSudoku(RUN_TYPE runType) {
         // DROOLS-7203 : Slimmed down Sudoku
         final String str =
                 "import " + Setting.class.getCanonicalName() + ";\n" +
@@ -255,7 +264,7 @@ public class FromTest extends BaseModelTest {
                            "rule \"set a value\" when\n" +
                            "  $s : Setting( $rn: rowNo, $cn: colNo, $v: value )\n" +
                            "  $c : Cell( rowNo == $rn, colNo == $cn, value == null)\n" +
-                           "  $ctr : Counter( $count: count )\n" +
+                           "  $ctr : Counter( $count: count != 0 )\n" +
                            "then\n" +
                            "  System.out.println(\"set a value [\" + $v + \"] to $c = \" + $c);\n" +
                            "  modify( $c ){ setValue( $v ) }\n" +
@@ -265,6 +274,7 @@ public class FromTest extends BaseModelTest {
                            "  $s: Setting( $rn: rowNo, $cn: colNo, $v: value )\n" +
                            "  Cell( rowNo == $rn, colNo == $cn, value == $v, $exCells: exCells )\n" +
                            "  $c: Cell( free contains $v ) from $exCells\n" +
+                           "  Counter( $count: count != 0 )\n" +
                            "then\n" +
                            "  System.out.println(\"eliminate a value [\" + $v + \"] from Cell : $c = \" + $c);\n" +
                            "  modify( $c ){ blockValue( $v ) }\n" +
@@ -276,6 +286,7 @@ public class FromTest extends BaseModelTest {
                            "    not( $x: Cell( free contains $v )\n" +
                            "         and\n" +
                            "         Cell( this == $c, exCells contains $x ) )\n" +
+                           "    Counter( $count: count != 0 )\n" +
                            "then\n" +
                            "    System.out.println( \"done setting cell \" + $c.toString() ); \n" +
                            "    delete( $s );\n" +
@@ -284,13 +295,14 @@ public class FromTest extends BaseModelTest {
                            "when\n" +
                            "    not Setting()\n" +
                            "    $c: Cell( $rn: rowNo, $cn: colNo, freeCount == 1 )\n" +
+                           "    Counter( $count: count != 0 )\n" +
                            "then\n" +
                            "    Integer i = $c.getFreeValue();\n" +
                            "    System.out.println( \"single \" + i + \" at \" + $c.toString() );\n" +
                            "    insert( new Setting( $rn, $cn, i ) );\n" +
                            "end\n";
 
-        KieSession ksession = getKieSession(getDisablePropertyReactivityKieModuleModel(), str);
+        KieSession ksession = getKieSession(runType, getDisablePropertyReactivityKieModuleModel(), str);
 
         Cell c1 = new Cell(0, 0, null);
         c1.setFree(new HashSet<>(Arrays.asList(1, 2, 3)));
@@ -489,8 +501,9 @@ public class FromTest extends BaseModelTest {
         return s.length() + offset;
     }
 
-    @Test
-    public void testFromExternalFunction() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromExternalFunction(RUN_TYPE runType) {
         final String str =
                 "import " + FromTest.class.getCanonicalName() + ";\n" +
                         "global java.util.List list\n" +
@@ -502,7 +515,7 @@ public class FromTest extends BaseModelTest {
                         "  list.add( \"received long message: \" + $s);\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         final List<String> list = new ArrayList<>();
         ksession.setGlobal( "list", list );
@@ -513,8 +526,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder("received long message: Hello World!");
     }
 
-    @Test
-    public void testFromExternalFunctionMultipleBindingArguments() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromExternalFunctionMultipleBindingArguments(RUN_TYPE runType) {
         final String str =
                 "import " + FromTest.class.getCanonicalName() + ";\n" +
                         "global java.util.List list\n" +
@@ -527,7 +541,7 @@ public class FromTest extends BaseModelTest {
                         "  list.add( \"received long message: \" + $s);\n" +
                         "end\n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         final List<String> list = new ArrayList<>();
         ksession.setGlobal( "list", list );
@@ -539,8 +553,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder("received long message: Hello!");
     }
 
-    @Test
-    public void testFromConstant() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromConstant(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                 "global java.util.List list\n" +
@@ -551,7 +566,7 @@ public class FromTest extends BaseModelTest {
                 "   list.add( $s );\n" +
                 "end \n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         final List<String> list = new ArrayList<>();
         ksession.setGlobal("list", list);
@@ -561,8 +576,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list.get(0)).isEqualTo("test");
     }
 
-    @Test
-    public void testFromConstructor() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromConstructor(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -576,7 +592,7 @@ public class FromTest extends BaseModelTest {
                 "   list.add( $p );\n" +
                 "end \n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         final List<Person> list = new ArrayList<>();
         ksession.setGlobal("list", list);
@@ -590,8 +606,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list.get(0)).isEqualTo(new Person("Mario", 44));
     }
 
-    @Test
-    public void testFromMapValues() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromMapValues(RUN_TYPE runType) {
         // DROOLS-3661
         String str =
                 "package org.drools.compiler.test  \n" +
@@ -604,7 +621,7 @@ public class FromTest extends BaseModelTest {
                 "then\n" +
                 "end \n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         PetPerson petPerson = new PetPerson( "me" );
         Map<String, Pet> petMap = new HashMap<>();
@@ -616,8 +633,9 @@ public class FromTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testGlobalInFromExpression() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGlobalInFromExpression(RUN_TYPE runType) {
         // DROOLS-4999
         String str =
                 "package org.drools.compiler.test  \n" +
@@ -631,7 +649,7 @@ public class FromTest extends BaseModelTest {
                 "then\n" +
                 "end \n";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.setGlobal( "petName", "Dog" );
 
@@ -645,8 +663,9 @@ public class FromTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testLiteralFrom() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testLiteralFrom(RUN_TYPE runType) {
         // DROOLS-5217
         String str =
                 "package com.sample\n" +
@@ -658,15 +677,16 @@ public class FromTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new Pojo( Arrays.asList(1,2,3) ) );
         int rulesFired = ksession.fireAllRules();
         assertThat(rulesFired).isEqualTo(2);
     }
 
-    @Test
-    public void testLiteralFrom2() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testLiteralFrom2(RUN_TYPE runType) {
         // DROOLS-5217
         String str =
                 "package com.sample\n" +
@@ -678,15 +698,16 @@ public class FromTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new Pojo( Arrays.asList(1,2,3) ) );
         int rulesFired = ksession.fireAllRules();
         assertThat(rulesFired).isEqualTo(1);
     }
 
-    @Test
-    public void testFromCollect() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromCollect(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                      "import " + Person.class.getCanonicalName() + "\n" +
@@ -697,7 +718,7 @@ public class FromTest extends BaseModelTest {
                      "then\n" +
                      "end \n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Person p1 = new Person("John", 32);
         Person p2 = new Person("Paul", 30);
@@ -710,8 +731,51 @@ public class FromTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testThisArray() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromCollectCustomSet(RUN_TYPE runType) {
+        // DROOLS-7534
+        String str =
+                "package org.drools.compiler.test  \n" +
+                     "import " + Person.class.getCanonicalName() + "\n" +
+                     "import " + MyHashSet.class.getCanonicalName() + "\n" +
+                     "import " + FromTest.class.getCanonicalName() + "\n" +
+                     "rule R\n" +
+                     "when\n" +
+                     "    $set : MyHashSet (size == 2) from collect (Person (age >= 30))\n" +
+                     "then\n" +
+                     "    FromTest.printPersons($set);" +
+                     "end \n";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        Person p1 = new Person("John", 32);
+        Person p1a = new Person("John", 32);
+        Person p2 = new Person("Paul", 30);
+        Person p3 = new Person("George", 29);
+
+        ksession.insert(p1);
+        ksession.insert(p1a);
+        ksession.insert(p2);
+        ksession.insert(p3);
+
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
+    }
+
+    public static void printPersons(MyHashSet<Person> persons) {
+        System.out.println("persons found: " + persons);
+    }
+
+    public static class MyHashSet<T> extends HashSet<T> {
+
+        public MyHashSet() {
+            super();
+        }
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testThisArray(RUN_TYPE runType) {
         // This test verifies the behavior when ArrayType is used as "_this" (which $childrenA is converted to) in from clause.
         String str =
                 "package org.drools.compiler.test  \n" +
@@ -725,7 +789,7 @@ public class FromTest extends BaseModelTest {
                      "    list.add($i);\n" +
                      "end \n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<Integer> list = new ArrayList<>();
         ksession.setGlobal("list", list);
 
@@ -738,8 +802,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder(2);
     }
 
-    @Test
-    public void testFromArray() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromArray(RUN_TYPE runType) {
         // This test verifies the behavior when the return type is ArrayType
         String str =
                 "package org.drools.compiler.test  \n" +
@@ -754,7 +819,7 @@ public class FromTest extends BaseModelTest {
                      "    list.add($p.getName());\n" +
                      "end \n";
         
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> list = new ArrayList<>();
         ksession.setGlobal("list", list);
 
@@ -767,8 +832,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder("Julian", "Sean");
     }
 
-    @Test
-    public void testInnerClassCollection() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testInnerClassCollection(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                      "import " + MyPerson.class.getCanonicalName() + "\n" +
@@ -779,7 +845,7 @@ public class FromTest extends BaseModelTest {
                      "then\n" +
                      "end \n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         MyPerson john = new MyPerson("John");
         Collection<MyPerson> kids = new ArrayList<>();
@@ -792,8 +858,9 @@ public class FromTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testInnerClassWithInstanceMethod() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testInnerClassWithInstanceMethod(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                      "import " + MyPerson.class.getCanonicalName() + "\n" +
@@ -806,7 +873,7 @@ public class FromTest extends BaseModelTest {
                      "    list.add($d.getName());" +
                      "end \n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> list = new ArrayList<>();
         ksession.setGlobal("list", list);
 
@@ -817,8 +884,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder("Dummy");
     }
 
-    @Test
-    public void testInnerClassWithStaticMethod() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testInnerClassWithStaticMethod(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                      "import " + MyPerson.class.getCanonicalName() + "\n" +
@@ -830,7 +898,7 @@ public class FromTest extends BaseModelTest {
                      "    list.add($d.getName());" +
                      "end \n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> list = new ArrayList<>();
         ksession.setGlobal("list", list);
 
@@ -838,8 +906,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder("Dummy");
     }
 
-    @Test
-    public void testInnerClassWithStaticMethodWithArg() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testInnerClassWithStaticMethodWithArg(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                      "import " + MyPerson.class.getCanonicalName() + "\n" +
@@ -852,7 +921,7 @@ public class FromTest extends BaseModelTest {
                      "    list.add($d.getName());" +
                      "end \n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> list = new ArrayList<>();
         ksession.setGlobal("list", list);
 
@@ -917,8 +986,9 @@ public class FromTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testNew() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNew(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                      "import " + Person.class.getCanonicalName() + "\n" +
@@ -930,7 +1000,7 @@ public class FromTest extends BaseModelTest {
                      "    list.add($p);\n" +
                      "end \n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<Integer> list = new ArrayList<>();
         ksession.setGlobal("list", list);
 
@@ -939,8 +1009,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testFromOr() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromOr(RUN_TYPE runType) {
         String str =
                 "package org.drools.compiler.test  \n" +
                      "import " + Person.class.getCanonicalName() + "\n" +
@@ -960,7 +1031,7 @@ public class FromTest extends BaseModelTest {
                      "    list.add($store.getStoreName());\n" +
                      "end \n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> list = new ArrayList<>();
         ksession.setGlobal("list", list);
 
@@ -1018,8 +1089,9 @@ public class FromTest extends BaseModelTest {
         }
      }
 
-    @Test
-    public void testFromFunctionCall() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromFunctionCall(RUN_TYPE runType) {
         // DROOLS-5548
         String str =
                 "package com.sample;" +
@@ -1053,7 +1125,7 @@ public class FromTest extends BaseModelTest {
                         " controlSet.add($colorVal);\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         HashSet<Object> hashSet = new HashSet<>();
         ksession.setGlobal("controlSet", hashSet);
@@ -1066,8 +1138,9 @@ public class FromTest extends BaseModelTest {
         assertThat(hashSet.iterator().next()).isEqualTo("red");
     }
 
-    @Test
-    public void testFromMap() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromMap(RUN_TYPE runType) {
         // DROOLS-5549
         String str =
                 "package com.sample;" +
@@ -1089,7 +1162,7 @@ public class FromTest extends BaseModelTest {
                         " controlSet.add($colorVal);\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         HashSet<Object> hashSet = new HashSet<>();
         ksession.setGlobal("controlSet", hashSet);
@@ -1102,8 +1175,9 @@ public class FromTest extends BaseModelTest {
         assertThat(hashSet.iterator().next()).isEqualTo("red");
     }
 
-    @Test
-    public void testFromChainedCall() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromChainedCall(RUN_TYPE runType) {
         // DROOLS-5608
         String str =
                 "package com.sample;" +
@@ -1122,7 +1196,7 @@ public class FromTest extends BaseModelTest {
                         " controlSet.add($colorVal);\n" +
                         "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         HashSet<Object> hashSet = new HashSet<>();
         ksession.setGlobal("controlSet", hashSet);
@@ -1152,8 +1226,9 @@ public class FromTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testNestedService() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNestedService(RUN_TYPE runType) {
         // DROOLS-5609
         String str =
                 "package com.sample;" +
@@ -1170,7 +1245,7 @@ public class FromTest extends BaseModelTest {
                 " controlSet.add($colorVal);\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         HashSet<Object> hashSet = new HashSet<>();
         ksession.setGlobal("controlSet", hashSet);
@@ -1185,8 +1260,9 @@ public class FromTest extends BaseModelTest {
     }
 
 
-    @Test
-    public void testMultipleFrom() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultipleFrom(RUN_TYPE runType) {
         // DROOLS-5542
         String str =
                 "package com.sample;" +
@@ -1206,7 +1282,7 @@ public class FromTest extends BaseModelTest {
                 " controlSet.add($colorVal);\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         HashSet<Object> hashSet = new HashSet<>();
         ksession.setGlobal("controlSet", hashSet);
@@ -1220,8 +1296,9 @@ public class FromTest extends BaseModelTest {
         assertThat(hashSet.iterator().next()).isEqualTo("red");
     }
 
-    @Test
-    public void testMultipleFromFromBinding() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultipleFromFromBinding(RUN_TYPE runType) {
         // DROOLS-5591
         String str =
                 "package com.sample;" +
@@ -1238,7 +1315,7 @@ public class FromTest extends BaseModelTest {
                 " controlSet.add($colorVal);\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         HashSet<Object> hashSet = new HashSet<>();
         ksession.setGlobal("controlSet", hashSet);
@@ -1252,8 +1329,9 @@ public class FromTest extends BaseModelTest {
         assertThat(hashSet.iterator().next()).isEqualTo("red");
     }
 
-    @Test
-    public void testMultipleFromList() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultipleFromList(RUN_TYPE runType) {
         // DROOLS-5590
         String str =
                 "package com.sample;" +
@@ -1276,7 +1354,7 @@ public class FromTest extends BaseModelTest {
                 " controlSet.add($colorVal);\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         HashSet<Object> hashSet = new HashSet<>();
         ksession.setGlobal("controlSet", hashSet);
@@ -1290,8 +1368,9 @@ public class FromTest extends BaseModelTest {
         assertThat(hashSet.iterator().next()).isEqualTo("red");
     }
 
-    @Test
-    public void tesFromMethodCall() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void tesFromMethodCall(RUN_TYPE runType) {
         // DROOLS-5641
         String str =
                 "package com.sample;" +
@@ -1313,7 +1392,7 @@ public class FromTest extends BaseModelTest {
                 " controlSet.add($colorVal);\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         HashSet<Object> hashSet = new HashSet<>();
         ksession.setGlobal("controlSet", hashSet);
@@ -1328,8 +1407,9 @@ public class FromTest extends BaseModelTest {
         assertThat(hashSet.iterator().next()).isEqualTo("red");
     }
 
-    @Test
-    public void testFromStringConcatenation() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromStringConcatenation(RUN_TYPE runType) {
         // DROOLS-5640
         String str =
                 "global java.util.List list;\n" +
@@ -1341,7 +1421,7 @@ public class FromTest extends BaseModelTest {
                 "  list.add($c);\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
         final List<String> list = new ArrayList<>();
         ksession.setGlobal("list", list);
 
@@ -1352,8 +1432,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list).containsExactlyInAnyOrder("AA", "AB", "BA", "BB");
     }
 
-    @Test
-    public void testFromBoolean() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromBoolean(RUN_TYPE runType) {
         // DROOLS-5830
         String str =
                 "rule R when\n" +
@@ -1363,14 +1444,15 @@ public class FromTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( "A" );
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testFromCollectWithOr() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromCollectWithOr(RUN_TYPE runType) {
         // DROOLS-6531
         String str =
                 "import java.util.List;\n" +
@@ -1384,7 +1466,7 @@ public class FromTest extends BaseModelTest {
                 "        $list.addAll($values);\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         List<String> list = new ArrayList<>();
         ksession.insert(list);
@@ -1396,8 +1478,9 @@ public class FromTest extends BaseModelTest {
         assertThat(list.size()).isEqualTo(2);
     }
 
-    @Test
-    public void fromWithTernaryExpressionBoolean() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void fromWithTernaryExpressionBoolean(RUN_TYPE runType) {
         // DROOLS-7236
         String str =
                 "global java.util.List results;\n" +
@@ -1409,7 +1492,7 @@ public class FromTest extends BaseModelTest {
                      "    results.add($bar);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<Boolean> results = new ArrayList<>();
         ksession.setGlobal("results", results);
 
@@ -1419,8 +1502,9 @@ public class FromTest extends BaseModelTest {
         assertThat(results).containsExactly(true);
     }
 
-    @Test
-    public void fromWithTernaryExpressionBooleanWithMethodCall() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void fromWithTernaryExpressionBooleanWithMethodCall(RUN_TYPE runType) {
         // DROOLS-7236
         String str =
                 "import " + MyFact.class.getCanonicalName() + ";\n" +
@@ -1433,7 +1517,7 @@ public class FromTest extends BaseModelTest {
                      "    results.add($bar);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<Boolean> results = new ArrayList<>();
         ksession.setGlobal("results", results);
 
@@ -1443,8 +1527,9 @@ public class FromTest extends BaseModelTest {
         assertThat(results).containsExactly(true);
     }
 
-    @Test
-    public void fromWithTernaryExpressionStringWithMethodCall() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void fromWithTernaryExpressionStringWithMethodCall(RUN_TYPE runType) {
         // DROOLS-7236
         String str =
                 "import " + MyFact.class.getCanonicalName() + ";\n" +
@@ -1457,7 +1542,7 @@ public class FromTest extends BaseModelTest {
                      "    results.add($bar);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> results = new ArrayList<>();
         ksession.setGlobal("results", results);
 
@@ -1494,5 +1579,63 @@ public class FromTest extends BaseModelTest {
             this.strValue = strValue;
         }
 
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFromGlobalWithDuplicates(RUN_TYPE runType) {
+        String str =
+                "import java.util.concurrent.atomic.AtomicInteger;\n" +
+                        "import " + NamedPerson.class.getCanonicalName() + ";\n" +
+                        "global java.util.List list         \n" +
+                        "rule R when                        \n" +
+                        "  $i : AtomicInteger()\n" +
+                        "  $o : NamedPerson(age > $i.get()) from list\n" +
+                        "then                               \n" +
+                        "  insert($o);                      \n" +
+                        "end                                ";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        List<NamedPerson> strings = Arrays.asList(new NamedPerson("Mario", 1), new NamedPerson("Mario", 2));
+
+        ksession.setGlobal("list", strings);
+
+        AtomicInteger i = new AtomicInteger(0);
+        FactHandle fh = ksession.insert(i);
+
+        assertThat(ksession.fireAllRules()).isEqualTo(2);
+
+        i.incrementAndGet();
+        ksession.update(fh, i);
+
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
+    }
+
+    public static class NamedPerson {
+        private final String name;
+        private final int age;
+
+        public NamedPerson(String name, int age) {
+            this.name = name;
+            this.age = age;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NamedPerson myPerson = (NamedPerson) o;
+            return Objects.equals(name, myPerson.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
+
+        public int getAge() {
+            return age;
+        }
     }
 }

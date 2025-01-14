@@ -1,20 +1,21 @@
-/*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.bigdecimaltest;
 
 import java.math.BigDecimal;
@@ -22,19 +23,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.drools.model.codegen.execmodel.BaseModelTest;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BigDecimalTest extends BaseModelTest {
 
-    public BigDecimalTest(RUN_TYPE testRunType) {
-        super(testRunType);
-    }
-
-    @Test
-    public void testBigDecimalGreaterThan() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalGreaterThan(RUN_TYPE runType) {
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
                         "import " + Customer.class.getCanonicalName() + ";\n" +
@@ -49,7 +48,7 @@ public class BigDecimalTest extends BaseModelTest {
                         "update($policy);\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer customer = new Customer();
         customer.setCode("code1");
@@ -66,8 +65,9 @@ public class BigDecimalTest extends BaseModelTest {
 
     }
 
-    @Test
-    public void testBigDecimalCompare() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalCompare(RUN_TYPE runType) {
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
                         "import " + Customer.class.getCanonicalName() + ";\n" +
@@ -82,7 +82,7 @@ public class BigDecimalTest extends BaseModelTest {
                         "update($policy);\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer customer = new Customer();
         customer.setCode("code1");
@@ -99,8 +99,9 @@ public class BigDecimalTest extends BaseModelTest {
 
     }
 
-    @Test
-    public void testBigDecimalEqualsToNull() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalEqualsToNull(RUN_TYPE runType) {
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
                 "import " + Customer.class.getCanonicalName() + ";\n" +
@@ -111,7 +112,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer customer = new Customer();
 
@@ -119,8 +120,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testBigDecimalNotEqualsToNull() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalNotEqualsToNull(RUN_TYPE runType) {
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
                 "import " + Customer.class.getCanonicalName() + ";\n" +
@@ -131,7 +133,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer customer = new Customer();
         customer.setCode("code1");
@@ -141,8 +143,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testBigDecimalNotEqualsToLiteralNull() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalNotEqualsToLiteralNull(RUN_TYPE runType) {
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
                 "import " + Customer.class.getCanonicalName() + ";\n" +
@@ -153,7 +156,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer customer = new Customer();
         customer.setCode("code1");
@@ -163,8 +166,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testBigDecimalNotEqualsToLiteralValue() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalNotEqualsToLiteralValue(RUN_TYPE runType) {
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
                 "import " + Customer.class.getCanonicalName() + ";\n" +
@@ -175,7 +179,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer customer = new Customer();
         customer.setCode("code1");
@@ -185,8 +189,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testBigDecimalGreaterThanNull() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalGreaterThanNull(RUN_TYPE runType) {
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
                 "import " + Customer.class.getCanonicalName() + ";\n" +
@@ -197,7 +202,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer customer = new Customer();
         customer.setCode("code1");
@@ -207,8 +212,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testBigDecimalEquals() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalEquals(RUN_TYPE runType) {
         // DROOLS-3527
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -219,7 +225,7 @@ public class BigDecimalTest extends BaseModelTest {
                         "then\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer customer = new Customer();
         customer.setRate(new BigDecimal("12.111"));
@@ -230,8 +236,9 @@ public class BigDecimalTest extends BaseModelTest {
 
     }
 
-    @Test
-    public void testBigDecimalAdd() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalAdd(RUN_TYPE runType) {
         // RHDM-1635
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -242,7 +249,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer c1 = new Customer();
         c1.setRate(new BigDecimal("10"));
@@ -255,8 +262,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testBigDecimalRemainder() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalRemainder(RUN_TYPE runType) {
         // RHDM-1635
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -267,7 +275,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Customer c1 = new Customer();
         c1.setRate(new BigDecimal("20"));
@@ -312,8 +320,9 @@ public class BigDecimalTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testNonTerminatingDecimalExpansion() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testNonTerminatingDecimalExpansion(RUN_TYPE runType) {
         // DROOLS-6804
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -324,7 +333,7 @@ public class BigDecimalTest extends BaseModelTest {
                         "    $o.setTax($price - ($price / ($taxRate + 1)));\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Order order = new Order();
         order.setPrice(new BigDecimal("100000000"));
@@ -335,8 +344,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(order.getTax()).isEqualTo(new BigDecimal("9090909.09090909090909090909090909"));
     }
 
-    @Test
-    public void testBigDecimalAndStringComparison() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalAndStringComparison(RUN_TYPE runType) {
         // DROOLS-6823
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -347,7 +357,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Order order = new Order();
         order.setPrice(new BigDecimal(300));
@@ -357,8 +367,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testStringAndBigDecimalComparison() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testStringAndBigDecimalComparison(RUN_TYPE runType) {
         // DROOLS-6823
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -369,7 +380,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         Order order = new Order();
         order.setPrice(new BigDecimal(300));
@@ -411,62 +422,73 @@ public class BigDecimalTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testMultiply() {
-        testBigDecimalArithmeticOperation("BdHolder(bd2 == bd1 * 10)", "10", "100");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultiply(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder(bd2 == bd1 * 10)", "10", "100");
     }
 
-    @Test
-    public void testMultiplyWithNegativeValue() {
-        testBigDecimalArithmeticOperation("BdHolder(bd2 == bd1 * -1)", "10", "-10");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultiplyWithNegativeValue(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder(bd2 == bd1 * -1)", "10", "-10");
     }
 
-    @Test
-    public void testMultiplyWithBindVariable() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == $bd1 * 10)", "10", "100");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultiplyWithBindVariable(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == $bd1 * 10)", "10", "100");
     }
 
-    @Test
-    public void testMultiplyWithBindVariableWithNegativeValue() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == $bd1 * -1)", "10", "-10");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultiplyWithBindVariableWithNegativeValue(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == $bd1 * -1)", "10", "-10");
     }
 
-    @Test
-    public void testMultiplyWithBindVariableWithNegativeValueEnclosed() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == $bd1 * (-1))", "10", "-10");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultiplyWithBindVariableWithNegativeValueEnclosed(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == $bd1 * (-1))", "10", "-10");
     }
 
-    @Test
-    public void testMultiplyWithBindVariableWithNegativeValueEnclosedBoth() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == ($bd1 * -1))", "10", "-10");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultiplyWithBindVariableWithNegativeValueEnclosedBoth(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == ($bd1 * -1))", "10", "-10");
     }
 
-    @Test
-    public void testMultiplyWithBindVariableWithNegativeValueEnclosedNest() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == ($bd1 * (-1)))", "10", "-10");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMultiplyWithBindVariableWithNegativeValueEnclosedNest(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == ($bd1 * (-1)))", "10", "-10");
     }
 
-    @Test
-    public void testAddWithBindVariable() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == $bd1 + 10)", "10", "20");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testAddWithBindVariable(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == $bd1 + 10)", "10", "20");
     }
 
-    @Test
-    public void testSubtractWithBindVariable() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == $bd1 - 10)", "10", "0");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testSubtractWithBindVariable(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == $bd1 - 10)", "10", "0");
     }
 
-    @Test
-    public void testDivideWithBindVariable() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == $bd1 / 10)", "10", "1");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDivideWithBindVariable(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == $bd1 / 10)", "10", "1");
     }
 
-    @Test
-    public void testModWithBindVariable() {
-        testBigDecimalArithmeticOperation("BdHolder($bd1 : bd1, bd2 == $bd1 % 10)", "10", "0");
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testModWithBindVariable(RUN_TYPE runType) {
+        testBigDecimalArithmeticOperation(runType, "BdHolder($bd1 : bd1, bd2 == $bd1 % 10)", "10", "0");
     }
 
-    private void testBigDecimalArithmeticOperation(String pattern, String bd1, String bd2) {
+    private void testBigDecimalArithmeticOperation(RUN_TYPE runType, String pattern, String bd1, String bd2) {
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
                      "import " + BdHolder.class.getCanonicalName() + ";\n" +
@@ -475,7 +497,7 @@ public class BigDecimalTest extends BaseModelTest {
                      "then\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         BdHolder holder = new BdHolder(new BigDecimal(bd1), new BigDecimal(bd2));
         ksession.insert(holder);
@@ -483,8 +505,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testBigDecimalLiteralLhsNegative() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalLiteralLhsNegative(RUN_TYPE runType) {
         // DROOLS-6596
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -494,7 +517,7 @@ public class BigDecimalTest extends BaseModelTest {
                      "then\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         BdHolder holder = new BdHolder();
         holder.setBd1(new BigDecimal("10"));
@@ -504,8 +527,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(fired).isEqualTo(1);
     }
 
-    @Test
-    public void testBigDecimalLiteralRhsNegative() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalLiteralRhsNegative(RUN_TYPE runType) {
         // DROOLS-6596
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -516,7 +540,7 @@ public class BigDecimalTest extends BaseModelTest {
                      "    $holder.bd1 = -10.5B;\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         BdHolder holder = new BdHolder();
         ksession.insert(holder);
@@ -525,8 +549,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(holder.getBd1()).isEqualTo(new BigDecimal("-10.5"));
     }
 
-    @Test
-    public void testBigDecimalLiteralWithBinding() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBigDecimalLiteralWithBinding(RUN_TYPE runType) {
         // DROOLS-6936
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -539,7 +564,7 @@ public class BigDecimalTest extends BaseModelTest {
                         "    result.add($zero);\n" +
                         "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<BigDecimal> result = new ArrayList<>();
         ksession.setGlobal("result", result);
 
@@ -551,8 +576,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(result).containsExactly(new BigDecimal("0"));
     }
 
-    @Test
-    public void testModifyWithNegativeBigDecimal() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testModifyWithNegativeBigDecimal(RUN_TYPE runType) {
         // DROOLS-7324
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -564,7 +590,7 @@ public class BigDecimalTest extends BaseModelTest {
                 "    modify($bd) { bd1 = -1 }\n" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<BigDecimal> result = new ArrayList<>();
         ksession.setGlobal("result", result);
 
@@ -576,8 +602,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(fires).isEqualTo(1);
     }
 
-    @Test
-    public void bigDecimalArithmeticInMethodCallScope() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bigDecimalArithmeticInMethodCallScope(RUN_TYPE runType) {
         // DROOLS-7364
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -591,7 +618,7 @@ public class BigDecimalTest extends BaseModelTest {
                      "        result.add($ans);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<Long> result = new ArrayList<>();
         ksession.setGlobal("result", result);
 
@@ -603,8 +630,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(result).contains(2000L);
     }
 
-    @Test
-    public void bigDecimalArithmeticInMethodCallScopeInMethodCallArgument() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bigDecimalArithmeticInMethodCallScopeInMethodCallArgument(RUN_TYPE runType) {
         // DROOLS-7364
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -618,7 +646,7 @@ public class BigDecimalTest extends BaseModelTest {
                      "        result.add($ans);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> result = new ArrayList<>();
         ksession.setGlobal("result", result);
 
@@ -630,8 +658,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(result).contains("2,000");
     }
 
-    @Test
-    public void nonBigDecimalArithmeticInMethodCallScopeInMethodCallArgument() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void nonBigDecimalArithmeticInMethodCallScopeInMethodCallArgument(RUN_TYPE runType) {
         // DROOLS-7364
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -645,7 +674,7 @@ public class BigDecimalTest extends BaseModelTest {
                      "        result.add($ans);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> result = new ArrayList<>();
         ksession.setGlobal("result", result);
 
@@ -657,8 +686,9 @@ public class BigDecimalTest extends BaseModelTest {
         assertThat(result).contains("2,000");
     }
 
-    @Test
-    public void bigDecimalArithmeticInMethodCallArgumentWithoutEnclosedExpr() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bigDecimalArithmeticInMethodCallArgumentWithoutEnclosedExpr(RUN_TYPE runType) {
         // DROOLS-7364
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -673,7 +703,7 @@ public class BigDecimalTest extends BaseModelTest {
                      "        result.add($ans);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<String> result = new ArrayList<>();
         ksession.setGlobal("result", result);
 
@@ -692,8 +722,9 @@ public class BigDecimalTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void bigDecimalEqualityWithDifferentScale_shouldBeEqual() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bigDecimalEqualityWithDifferentScale_shouldBeEqual(RUN_TYPE runType) {
         // DROOLS-7414
         String str =
                 "package org.drools.modelcompiler.bigdecimals\n" +
@@ -707,7 +738,7 @@ public class BigDecimalTest extends BaseModelTest {
                      "        result.add($rate);\n" +
                      "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
         List<BigDecimal> result = new ArrayList<>();
         ksession.setGlobal("result", result);
 
@@ -719,5 +750,146 @@ public class BigDecimalTest extends BaseModelTest {
 
         // BigDecimal("1.0") and BigDecimal("1.00") are considered as equal because exec-model uses EvaluationUtil.equals() which is based on compareTo()
         assertThat(result).contains(new BigDecimal("1.00"));
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bigDecimalCoercionInMethodArgument_shouldNotFailToBuild(RUN_TYPE runType) {
+        // KIE-748
+        String str =
+                "package org.drools.modelcompiler.bigdecimals\n" +
+                        "import " + BDFact.class.getCanonicalName() + ";\n" +
+                        "import static " + BigDecimalTest.class.getCanonicalName() + ".intToString;\n" +
+                        "rule \"Rule 1a\"\n" +
+                        "    when\n" +
+                        "        BDFact( intToString(value2 - 1) == \"2\" )\n" +
+                        "    then\n" +
+                        "end";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        BDFact bdFact = new BDFact();
+        bdFact.setValue2(new BigDecimal("3"));
+
+        ksession.insert(bdFact);
+
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bigDecimalCoercionInNestedMethodArgument_shouldNotFailToBuild(RUN_TYPE runType) {
+        // KIE-748
+        String str =
+                "package org.drools.modelcompiler.bigdecimals\n" +
+                     "import " + BDFact.class.getCanonicalName() + ";\n" +
+                     "import static " + BigDecimalTest.class.getCanonicalName() + ".intToString;\n" +
+                     "rule \"Rule 1a\"\n" +
+                     "    when\n" +
+                     "        BDFact( intToString(value1 * (value2 - 1)) == \"20\" )\n" +
+                     "    then\n" +
+                     "end";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        BDFact bdFact = new BDFact();
+        bdFact.setValue1(new BigDecimal("10"));
+        bdFact.setValue2(new BigDecimal("3"));
+
+        ksession.insert(bdFact);
+
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
+    }
+
+    public static String intToString(int value) {
+        return Integer.toString(value);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bindVariableToBigDecimalCoercion2Operands_shouldBindCorrectResult(RUN_TYPE runType) {
+        bindVariableToBigDecimalCoercion(runType, "$var : (1000 * value1)");
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bindVariableToBigDecimalCoercion3Operands_shouldBindCorrectResult(RUN_TYPE runType) {
+        bindVariableToBigDecimalCoercion(runType, "$var : (100000 * value1 / 100)");
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bindVariableToBigDecimalCoercion3OperandsWithParentheses_shouldBindCorrectResult(RUN_TYPE runType) {
+        bindVariableToBigDecimalCoercion(runType, "$var : ((100000 * value1) / 100)");
+    }
+
+    private void bindVariableToBigDecimalCoercion(RUN_TYPE runType, String binding) {
+        // KIE-775
+        String str =
+                "package org.drools.modelcompiler.bigdecimals\n" +
+                        "import " + BDFact.class.getCanonicalName() + ";\n" +
+                        "global java.util.List result;\n" +
+                        "rule R1\n" +
+                        "    when\n" +
+                        "        BDFact( " + binding +  " )\n" +
+                        "    then\n" +
+                        "        result.add($var);\n" +
+                        "end";
+
+        KieSession ksession = getKieSession(runType, str);
+        List<BigDecimal> result = new ArrayList<>();
+        ksession.setGlobal("result", result);
+
+        BDFact bdFact = new BDFact();
+        bdFact.setValue1(new BigDecimal("80"));
+
+        ksession.insert(bdFact);
+        ksession.fireAllRules();
+
+        assertThat(result).contains(new BigDecimal("80000"));
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bigDecimalInWithInt_shouldNotFailToBuild(RUN_TYPE runType) {
+        String str =
+                "package org.drools.modelcompiler.bigdecimals\n" +
+                        "import " + BDFact.class.getCanonicalName() + ";\n" +
+                        "rule \"Rule 1a\"\n" +
+                        "    when\n" +
+                        "        BDFact( value1 in (100, 200) )\n" +
+                        "    then\n" +
+                        "end";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        BDFact bdFact = new BDFact();
+        bdFact.setValue1(new BigDecimal("100"));
+
+        ksession.insert(bdFact);
+
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void bigDecimalInWithBD_shouldNotFailToBuild(RUN_TYPE runType) {
+        String str =
+                "package org.drools.modelcompiler.bigdecimals\n" +
+                        "import " + BDFact.class.getCanonicalName() + ";\n" +
+                        "rule \"Rule 1a\"\n" +
+                        "    when\n" +
+                        "        BDFact( value1 in (100B, 200B) )\n" +
+                        "    then\n" +
+                        "end";
+
+        KieSession ksession = getKieSession(runType, str);
+
+        BDFact bdFact = new BDFact();
+        bdFact.setValue1(new BigDecimal("100"));
+
+        ksession.insert(bdFact);
+
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 }

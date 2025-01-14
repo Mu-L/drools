@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.lang.ast;
 
 import java.util.ArrayList;
@@ -29,8 +31,8 @@ import org.kie.dmn.feel.lang.impl.MapBackedType;
 import org.kie.dmn.feel.runtime.functions.CustomFEELFunction;
 import org.kie.dmn.feel.runtime.functions.DTInvokerFunction;
 import org.kie.dmn.feel.runtime.functions.JavaFunction;
-import org.kie.dmn.feel.util.EvalHelper;
 import org.kie.dmn.feel.util.Msg;
+import org.kie.dmn.feel.util.StringEvalHelper;
 
 public class ContextNode
         extends BaseNode {
@@ -44,11 +46,15 @@ public class ContextNode
 
     public ContextNode(ParserRuleContext ctx, ListNode list) {
         super( ctx );
-        for( BaseNode node : list.getElements() ) {
-            ContextEntryNode entry = (ContextEntryNode) node;
-            entries.add( entry );
-            parsedResultType.addField(entry.getName().getText(), entry.getResultType());
-        }
+        List<ContextEntryNode> entryNodes = list.getElements().stream()
+                .map(ContextEntryNode.class::cast)
+                .toList();
+        setListNode(entryNodes);
+    }
+
+    public ContextNode(List<ContextEntryNode> entryNodes, String text) {
+        setListNode(entryNodes);
+        this.setText(text);
     }
 
     public List<ContextEntryNode> getEntries() {
@@ -65,7 +71,7 @@ public class ContextNode
             ctx.enterFrame();
             Map<String, Object> c = new LinkedHashMap<>();
             for( ContextEntryNode cen : entries ) {
-                String name = EvalHelper.normalizeVariableName( cen.evaluateName( ctx ) );
+                String name = StringEvalHelper.normalizeVariableName(cen.evaluateName(ctx ) );
                 if (c.containsKey(name)) {
                     ctx.notifyEvt( astEvent( FEELEvent.Severity.ERROR, Msg.createMessage( Msg.DUPLICATE_KEY_CTX, name)) );
                     return null;
@@ -102,5 +108,12 @@ public class ContextNode
     @Override
     public <T> T accept(Visitor<T> v) {
         return v.visit(this);
+    }
+
+    private void setListNode(List<ContextEntryNode> entryNodes) {
+        for( ContextEntryNode entry : entryNodes ) {
+            entries.add( entry );
+            parsedResultType.addField(entry.getName().getText(), entry.getResultType());
+        }
     }
 }

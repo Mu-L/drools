@@ -1,19 +1,21 @@
-/*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests.incrementalcompilation;
 
 import java.io.ByteArrayOutputStream;
@@ -21,19 +23,19 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import org.drools.base.base.ClassObjectType;
-import org.drools.kiesession.entrypoints.NamedEntryPoint;
-import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.base.base.ObjectType;
+import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.time.impl.PseudoClockScheduler;
+import org.drools.kiesession.entrypoints.NamedEntryPoint;
 import org.drools.testcoverage.common.model.ChildEventA;
 import org.drools.testcoverage.common.model.ChildEventB;
 import org.drools.testcoverage.common.model.Message;
@@ -43,13 +45,14 @@ import org.drools.testcoverage.common.model.Person;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieSessionTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieServices;
 import org.kie.api.builder.ReleaseId;
 import org.kie.api.builder.Results;
+import org.kie.api.definition.type.Expires;
+import org.kie.api.definition.type.Key;
 import org.kie.api.definition.type.Role;
 import org.kie.api.marshalling.KieMarshallers;
 import org.kie.api.marshalling.Marshaller;
@@ -59,28 +62,22 @@ import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.api.runtime.conf.ClockTypeOption;
 import org.kie.api.runtime.conf.TimedRuleExecutionOption;
 import org.kie.api.runtime.conf.TimerJobFactoryOption;
+import org.kie.api.runtime.rule.EntryPoint;
 import org.kie.api.runtime.rule.FactHandle;
 import org.kie.api.time.SessionPseudoClock;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class IncrementalCompilationCepTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public IncrementalCompilationCepTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseStreamConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseStreamConfigurations(true);
-    }
-
-    @Test
-    public void testRemoveRuleAndThenFactInStreamMode() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveRuleAndThenFactInStreamMode(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-731
         final String header = "package org.some.test\n" +
                 "import " + MyFact.class.getCanonicalName() + "\n";
@@ -120,8 +117,9 @@ public class IncrementalCompilationCepTest {
         ksession.delete(fh);
     }
 
-    @Test
-    public void testAlphaNodeSharingIsOK() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAlphaNodeSharingIsOK(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // inspired by drools-usage Fmt9wZUFi8g
         // check timer -scheduled activations are preserved if rule untouched by incremental compilation even with alpha node sharing.
 
@@ -210,8 +208,9 @@ public class IncrementalCompilationCepTest {
         assertThat(list2.size()).as("1. RS is preserved").isEqualTo(1);
     }
 
-    @Test
-    public void testRemoveRuleWithNonInitializedPath() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveRuleWithNonInitializedPath(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1177
         final String drl1 =
                 "import " + MyEvent.class.getCanonicalName() + "\n" +
@@ -268,8 +267,9 @@ public class IncrementalCompilationCepTest {
         }
     }
 
-    @Test
-    public void testUpdateWithDeclarationPresent() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUpdateWithDeclarationPresent(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-560
         final String header = "package org.drools.compiler\n"
                 + "import " + FooEvent.class.getCanonicalName() + ";\n"
@@ -321,8 +321,9 @@ public class IncrementalCompilationCepTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testChangeWindowTime() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testChangeWindowTime(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-853
         final String drl1 =
                 "import " + MyEvent.class.getCanonicalName() + "\n" +
@@ -397,8 +398,9 @@ public class IncrementalCompilationCepTest {
         assertThat(result.get()).isEqualTo(0);
     }
 
-    @Test
-    public void testIncrementalCompilationWithSlidingWindow() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithSlidingWindow(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-881
         final String drl1 =
                 "import " + MyEvent.class.getCanonicalName() + "\n" +
@@ -461,8 +463,9 @@ public class IncrementalCompilationCepTest {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testDrlRenamingWithEvents() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDrlRenamingWithEvents(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-965
         final String drl1 =
                 "import " + SimpleEvent.class.getCanonicalName() + ";\n" +
@@ -562,8 +565,9 @@ public class IncrementalCompilationCepTest {
         }
     }
 
-    @Test
-    public void testIncrementalCompilationWithTimerNode() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithTimerNode(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1195
         final String drl1 = "package org.drools.test\n" +
                 "import " + DummyEvent.class.getCanonicalName() + "\n" +
@@ -709,8 +713,9 @@ public class IncrementalCompilationCepTest {
         }
     }
 
-    @Test
-    public void testEventDeclarationInSeparatedDRL() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testEventDeclarationInSeparatedDRL(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1241
         final String drl1 =
                 "import " + SimpleEvent.class.getCanonicalName() + ";\n" +
@@ -772,8 +777,9 @@ public class IncrementalCompilationCepTest {
         assertThat(list.get(0)).isEqualTo("YOUR_CODE");
     }
 
-    @Test
-    public void testKeepBuilderConfAfterIncrementalUpdate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKeepBuilderConfAfterIncrementalUpdate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1282
         final String drl1 = "import " + DummyEvent.class.getCanonicalName() + "\n" +
                 "rule R1 when\n" +
@@ -805,8 +811,9 @@ public class IncrementalCompilationCepTest {
         assertThat(results.getMessages().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testIncrementalCompilationWithNewEvent() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithNewEvent(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1395
         final String drl1 = "package org.drools.test\n" +
                 "import " + DummyEvent.class.getCanonicalName() + "\n" +
@@ -889,8 +896,9 @@ public class IncrementalCompilationCepTest {
         }
     }
 
-    @Test
-    public void testAddRuleWithSlidingWindows() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAddRuleWithSlidingWindows(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-2292
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + List.class.getCanonicalName() + "\n" +
@@ -947,8 +955,9 @@ public class IncrementalCompilationCepTest {
         }
     }
 
-    @Test
-    public void testObjectTypeNodeExpirationOffset() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testObjectTypeNodeExpirationOffset(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6296
         final String drl1 = "package org.drools.test;\n" +
                             "import " + ParentEvent.class.getCanonicalName() + "\n" +
@@ -1103,5 +1112,73 @@ public class IncrementalCompilationCepTest {
         assertThat(kieSession2.getFactCount()).isEqualTo(0);
 
         kieSession2.dispose();
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithExpiringEvent(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        incrementalCompilationWithExpiringEventFromEntryPoint(kieBaseTestConfiguration, false);
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithExpiringEventFromEntryPoint(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        incrementalCompilationWithExpiringEventFromEntryPoint(kieBaseTestConfiguration, true);
+    }
+
+    private void incrementalCompilationWithExpiringEventFromEntryPoint(KieBaseTestConfiguration kieBaseTestConfiguration, boolean useEntryPoint) {
+        // DROOLS-7582
+        final String drl1 =
+                "import " + ExpiringEvent.class.getCanonicalName() + "\n" +
+                "rule \"Old Rule\" when\n" +
+                "    $e : ExpiringEvent($id : id)\n" + (useEntryPoint ? " from entry-point \"events\"" : "\n") +
+                "then\n" +
+                "    System.out.println(\"received event in old rule: \" + $id);\n" +
+                "end";
+
+        final String drl2 =
+                "import " + ExpiringEvent.class.getCanonicalName() + "\n" +
+                "rule \"New Rule\" when\n" +
+                "    $e : ExpiringEvent($id : id)\n" + (useEntryPoint ? " from entry-point \"events\"" : "\n") +
+                "then\n" +
+                "    System.out.println(\"received event in new rule: \" + $id);\n" +
+                "end";
+
+        final KieServices ks = KieServices.Factory.get();
+        final ReleaseId releaseId1 = ks.newReleaseId("org.kie", "test-upgrade", "1.0.0");
+        KieUtil.getKieModuleFromDrls(releaseId1, kieBaseTestConfiguration, KieSessionTestConfiguration.STATEFUL_PSEUDO,
+                                     new HashMap<>(), drl1);
+        final ReleaseId releaseId2 = ks.newReleaseId("org.kie", "test-upgrade", "1.1.0");
+        KieUtil.getKieModuleFromDrls(releaseId2, kieBaseTestConfiguration, KieSessionTestConfiguration.STATEFUL_PSEUDO,
+                                     new HashMap<>(), drl2);
+
+        final KieContainer kc = ks.newKieContainer(releaseId1);
+        final KieSession ksession = kc.newKieSession();
+        EntryPoint entryPoint = useEntryPoint ? ksession.getEntryPoint("events") : ksession;
+
+        final PseudoClockScheduler clock = ksession.getSessionClock();
+
+        entryPoint.insert(new ExpiringEvent(1));
+        clock.advanceTime(3, TimeUnit.SECONDS);
+        assertThat( ksession.fireAllRules() ).isEqualTo(1);
+
+        kc.updateToVersion(releaseId2);
+
+        clock.advanceTime(3, TimeUnit.SECONDS);
+        assertThat( ksession.fireAllRules() ).isEqualTo(1);
+    }
+
+    @Role(Role.Type.EVENT)
+    @Expires("5s")
+    public static class ExpiringEvent {
+        @Key
+        private int id;
+        public ExpiringEvent(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
     }
 }

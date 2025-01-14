@@ -1,26 +1,28 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.validation.dtanalysis;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.core.DMNMessage;
 import org.kie.dmn.api.core.DMNMessageType;
 import org.kie.dmn.feel.runtime.Range.RangeBoundary;
@@ -37,10 +39,10 @@ import static org.kie.dmn.validation.DMNValidator.Validation.ANALYZE_DECISION_TA
 import static org.kie.dmn.validation.DMNValidator.Validation.VALIDATE_COMPILATION;
 import static org.kie.dmn.validation.DMNValidator.Validation.VALIDATE_MODEL;
 
-public class StringWithoutEnumNoGapTest extends AbstractDTAnalysisTest {
+class StringWithoutEnumNoGapTest extends AbstractDTAnalysisTest {
 
     @Test
-    public void test() {
+    void test() {
         List<DMNMessage> validate = validator.validate(getReader("stringWithoutEnumNoGap.dmn"), VALIDATE_COMPILATION, VALIDATE_MODEL, ANALYZE_DECISION_TABLE);
         assertThat(validate).hasSize(3); // no gap but no enum "skip Gap analysis" message, (omit 2 overlaps DROOLS-5363), 2 masked, (omit 2 misleading as redundant with Masked).
         debugValidatorMsg(validate);

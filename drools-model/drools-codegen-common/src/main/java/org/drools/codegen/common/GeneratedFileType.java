@@ -1,17 +1,20 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.drools.codegen.common;
 
@@ -30,6 +33,13 @@ public interface GeneratedFileType {
     GeneratedFileType STATIC_HTTP_RESOURCE = of(Category.STATIC_HTTP_RESOURCE);
     GeneratedFileType COMPILED_CLASS = of(Category.COMPILED_CLASS);
 
+    GeneratedFileType RULE = of("RULE", Category.SOURCE);
+
+    GeneratedFileType CONFIG = of("CONFIG", Category.SOURCE);
+    GeneratedFileType DECLARED_TYPE = of("DECLARED_TYPE", Category.SOURCE);
+
+    GeneratedFileType REST = of("REST", Category.SOURCE, true, true);
+
     String name();
 
     Category category();
@@ -47,7 +57,7 @@ public interface GeneratedFileType {
         /**
          * Represent a cp resource automatically generated during codegen, so after generate-resources maven phase.
          * This means to add it to target/classes both for Quarkus or using kogito-maven-plugin (SB). For additional
-         * information see {@link org.kie.kogito.codegen.utils.GeneratedFileWriter#write(GeneratedFile)}
+         * information see {@link org.drools.codegen.common.GeneratedFileWriter#write(GeneratedFile)}
          * For Quarkus it will be subject of GeneratedResourceBuildItem and NativeImageResourceBuildItem too
          */
         INTERNAL_RESOURCE,

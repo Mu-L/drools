@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.management;
 
 import java.lang.management.ManagementFactory;
@@ -21,12 +23,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.management.StandardMBean;
 
+import org.drools.base.RuleBase;
 import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.kie.api.builder.model.KieSessionModel;
 import org.kie.api.event.KieRuntimeEventManager;
@@ -44,8 +47,8 @@ import static org.drools.base.util.Drools.isNativeImage;
  */
 public interface DroolsManagementAgent extends KieManagementAgentMBean {
 
-	String CONTAINER_NAME_PREFIX = "org.kie";
-	
+    String CONTAINER_NAME_PREFIX = "org.kie";
+    
     Logger logger = LoggerFactory.getLogger(DroolsManagementAgent.class);
 
     class DroolsManagementAgentHolder {
@@ -56,23 +59,23 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
         return DroolsManagementAgentHolder.INSTANCE;
     }
 
-	static ObjectName createObjectNameFor(InternalRuleBase kbase) {
-		return DroolsManagementAgent.createObjectName(
-					DroolsManagementAgent.createObjectNameBy(kbase.getContainerId())
-					+ ",kbaseId=" + ObjectName.quote(kbase.getId())
-					);
-	}
-	
-	static ObjectName createObjectNameFor(InternalWorkingMemory ksession) {
-		return DroolsManagementAgent.createObjectName(
-				DroolsManagementAgent.createObjectNameFor(ksession.getKnowledgeBase()) + 
-				",group=Sessions,ksessionId=Session-"+ksession.getIdentifier());
-	}
-	
-	static ObjectName createObjectNameBy(String containerId) {
-		return DroolsManagementAgent.createObjectName(CONTAINER_NAME_PREFIX + ":kcontainerId="+ObjectName.quote(containerId));
-	}
-	
+    static ObjectName createObjectNameFor(RuleBase kbase) {
+        return DroolsManagementAgent.createObjectName(
+                    DroolsManagementAgent.createObjectNameBy(kbase.getContainerId())
+                    + ",kbaseId=" + ObjectName.quote(kbase.getId())
+                    );
+    }
+    
+    static ObjectName createObjectNameFor(InternalWorkingMemory ksession) {
+        return DroolsManagementAgent.createObjectName(
+                DroolsManagementAgent.createObjectNameFor(ksession.getKnowledgeBase()) + 
+                ",group=Sessions,ksessionId=Session-"+ksession.getIdentifier());
+    }
+
+    static ObjectName createObjectNameBy(String containerId) {
+        return DroolsManagementAgent.createObjectName(CONTAINER_NAME_PREFIX + ":kcontainerId="+ObjectName.quote(containerId));
+    }
+
     static ObjectName createObjectNameBy(String containerId, String kbaseId, KieSessionModel.KieSessionType ksessionType, String ksessionName) {
         return DroolsManagementAgent.createObjectName(CONTAINER_NAME_PREFIX + ":kcontainerId="+ObjectName.quote(containerId) 
                     + ",kbaseId=" + ObjectName.quote(kbaseId) 
@@ -98,9 +101,9 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
 
     long getNextKnowledgeSessionId();
 
-    void registerKnowledgeBase(InternalRuleBase kbase);
+    void registerKnowledgeBase(RuleBase kbase);
     
-    void unregisterKnowledgeBase(InternalRuleBase kbase);
+    void unregisterKnowledgeBase(RuleBase kbase);
     
     void registerKnowledgeSessionUnderName(CBSKey cbsKey, KieRuntimeEventManager ksession);
 
@@ -161,28 +164,37 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (!(obj instanceof CBSKey))
+            }
+            if (!(obj instanceof CBSKey)) {
                 return false;
+            }
             CBSKey other = (CBSKey) obj;
             if (kbaseId == null) {
-                if (other.kbaseId != null)
+                if (other.kbaseId != null) {
                     return false;
-            } else if (!kbaseId.equals(other.kbaseId))
+                }
+            } else if (!kbaseId.equals(other.kbaseId)) {
                 return false;
+            }
             if (kcontainerId == null) {
-                if (other.kcontainerId != null)
+                if (other.kcontainerId != null) {
                     return false;
-            } else if (!kcontainerId.equals(other.kcontainerId))
+                }
+            } else if (!kcontainerId.equals(other.kcontainerId)) {
                 return false;
+            }
             if (ksessionName == null) {
-                if (other.ksessionName != null)
+                if (other.ksessionName != null) {
                     return false;
-            } else if (!ksessionName.equals(other.ksessionName))
+                }
+            } else if (!ksessionName.equals(other.ksessionName)) {
                 return false;
+            }
             return true;
         }
 
@@ -228,7 +240,7 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
         }
 
         @Override
-        public void registerKnowledgeBase(InternalRuleBase kbase) {
+        public void registerKnowledgeBase(RuleBase kbase) {
             KnowledgeBaseMonitoring mbean = new KnowledgeBaseMonitoring( kbase );
             registerMBean( kbase,
                     mbean,
@@ -236,7 +248,7 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
         }
 
         @Override
-        public void unregisterKnowledgeBase(InternalRuleBase kbase) {
+        public void unregisterKnowledgeBase(RuleBase kbase) {
             unregisterMBeansFromOwner(kbase);
         }
 
@@ -405,12 +417,12 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
         }
 
         @Override
-        public void registerKnowledgeBase(InternalRuleBase kbase) {
+        public void registerKnowledgeBase(RuleBase kbase) {
 
         }
 
         @Override
-        public void unregisterKnowledgeBase(InternalRuleBase kbase) {
+        public void unregisterKnowledgeBase(RuleBase kbase) {
 
         }
 

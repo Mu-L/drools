@@ -1,26 +1,32 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.phreak;
 
 import java.util.Date;
 import java.util.List;
 
+import org.drools.base.common.NetworkNode;
+import org.drools.base.time.JobHandle;
+import org.drools.base.time.Trigger;
+import org.drools.base.time.impl.Timer;
 import org.drools.core.common.ActivationsManager;
 import org.drools.core.common.InternalFactHandle;
-import org.drools.base.common.NetworkNode;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.TupleSets;
@@ -34,13 +40,12 @@ import org.drools.core.reteoo.SegmentMemory;
 import org.drools.core.reteoo.TimerNode;
 import org.drools.core.reteoo.TimerNode.TimerNodeMemory;
 import org.drools.core.reteoo.Tuple;
+import org.drools.core.reteoo.TupleFactory;
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.time.Job;
 import org.drools.core.time.JobContext;
-import org.drools.base.time.JobHandle;
 import org.drools.core.time.TimerService;
-import org.drools.base.time.Trigger;
 import org.drools.core.time.impl.DefaultJobHandle;
-import org.drools.base.time.impl.Timer;
 import org.drools.core.util.LinkedList;
 import org.drools.core.util.index.TupleList;
 import org.kie.api.definition.rule.Rule;
@@ -61,9 +66,9 @@ public class PhreakTimerNode {
                        SegmentMemory smem,
                        LeftTupleSink sink,
                        ActivationsManager activationsManager,
-                       TupleSets<LeftTuple> srcLeftTuples,
-                       TupleSets<LeftTuple> trgLeftTuples,
-                       TupleSets<LeftTuple> stagedLeftTuples) {
+                       TupleSets srcLeftTuples,
+                       TupleSets trgLeftTuples,
+                       TupleSets stagedLeftTuples) {
 
         if ( srcLeftTuples.getDeleteFirst() != null ) {
             doLeftDeletes( timerNode, tm, pmem, sink, activationsManager, srcLeftTuples, trgLeftTuples, stagedLeftTuples );
@@ -88,16 +93,16 @@ public class PhreakTimerNode {
                               SegmentMemory smem,
                               LeftTupleSink sink,
                               ActivationsManager activationsManager,
-                              TupleSets<LeftTuple> srcLeftTuples,
-                              TupleSets<LeftTuple> trgLeftTuples) {
+                              TupleSets srcLeftTuples,
+                              TupleSets trgLeftTuples) {
         Timer timer = timerNode.getTimer();
         TimerService timerService = activationsManager.getReteEvaluator().getTimerService();
         long timestamp = timerService.getCurrentTime();
         String[] calendarNames = timerNode.getCalendarNames();
         Calendars calendars = activationsManager.getReteEvaluator().getCalendars();
 
-        for ( LeftTuple leftTuple = srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
-            LeftTuple next = leftTuple.getStagedNext();
+        for (TupleImpl leftTuple = srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
+            TupleImpl next = leftTuple.getStagedNext();
 
             scheduleLeftTuple( timerNode, tm, pmem, smem, sink, activationsManager, timer, timerService, timestamp, calendarNames, calendars, leftTuple, trgLeftTuples, null );
 
@@ -112,9 +117,9 @@ public class PhreakTimerNode {
                               SegmentMemory smem,
                               LeftTupleSink sink,
                               ActivationsManager activationsManager,
-                              TupleSets<LeftTuple> srcLeftTuples,
-                              TupleSets<LeftTuple> trgLeftTuples,
-                              TupleSets<LeftTuple> stagedLeftTuples) {
+                              TupleSets srcLeftTuples,
+                              TupleSets trgLeftTuples,
+                              TupleSets stagedLeftTuples) {
         Timer timer = timerNode.getTimer();
 
         // Variables may have changed for ExpressionIntervalTimer, so it must be rescheduled
@@ -123,8 +128,8 @@ public class PhreakTimerNode {
         String[] calendarNames = timerNode.getCalendarNames();
         Calendars calendars = activationsManager.getReteEvaluator().getCalendars();
 
-        for ( LeftTuple leftTuple = srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
-            LeftTuple next = leftTuple.getStagedNext();
+        for ( TupleImpl leftTuple = srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+            TupleImpl next = leftTuple.getStagedNext();
 
             DefaultJobHandle jobHandle = (DefaultJobHandle) leftTuple.getContextObject();
             if ( jobHandle != null ) {
@@ -143,16 +148,16 @@ public class PhreakTimerNode {
                               PathMemory pmem,
                               LeftTupleSink sink,
                               ActivationsManager activationsManager,
-                              TupleSets<LeftTuple> srcLeftTuples,
-                              TupleSets<LeftTuple> trgLeftTuples,
-                              TupleSets<LeftTuple> stagedLeftTuples) {
+                              TupleSets srcLeftTuples,
+                              TupleSets trgLeftTuples,
+                              TupleSets stagedLeftTuples) {
         TimerService timerService = activationsManager.getReteEvaluator().getTimerService();
 
         TupleList leftTuples = tm.getInsertOrUpdateLeftTuples();
         TupleList deletes = tm.getDeleteLeftTuples();
         if ( !deletes.isEmpty() ) {
-            for ( LeftTuple leftTuple = (LeftTuple) deletes.getFirst(); leftTuple != null; ) {
-                LeftTuple next = (LeftTuple) leftTuple.getNext();
+            for ( TupleImpl leftTuple = deletes.getFirst(); leftTuple != null; ) {
+                TupleImpl next = leftTuple.getNext();
                 srcLeftTuples.addDelete( leftTuple );
                 if ( log.isTraceEnabled() ) {
                     log.trace( "Timer Add Postponed Delete {}", leftTuple );
@@ -162,8 +167,8 @@ public class PhreakTimerNode {
             }
             deletes.clear();
         }
-        for ( LeftTuple leftTuple = srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
-            LeftTuple next = leftTuple.getStagedNext();
+        for ( TupleImpl leftTuple = srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+            TupleImpl next = leftTuple.getStagedNext();
             PropagationContext pctx = leftTuple.findMostRecentPropagationContext();
 
             Object obj = leftTuple.getContextObject();
@@ -188,7 +193,7 @@ public class PhreakTimerNode {
 
             if ( leftTuple.getMemory() == null ) {
                 // if it's != null, then it's already been postponed, and the existing child propagated
-                LeftTuple childLeftTuple = leftTuple.getFirstChild(); // only has one child
+                TupleImpl childLeftTuple = leftTuple.getFirstChild(); // only has one child
                 if ( childLeftTuple != null ) {
                     childLeftTuple.setPropagationContext( leftTuple.getPropagationContext() );
                     RuleNetworkEvaluator.deleteChildLeftTuple( childLeftTuple, trgLeftTuples, stagedLeftTuples );
@@ -214,9 +219,9 @@ public class PhreakTimerNode {
                                    final long timestamp,
                                    final String[] calendarNames,
                                    final Calendars calendars,
-                                   final LeftTuple leftTuple,
-                                   final TupleSets<LeftTuple> trgLeftTuples,
-                                   final TupleSets<LeftTuple> stagedLeftTuples) {
+                                   final TupleImpl leftTuple,
+                                   final TupleSets trgLeftTuples,
+                                   final TupleSets stagedLeftTuples) {
         ReteEvaluator reteEvaluator = activationsManager.getReteEvaluator();
         if ( leftTuple.getPropagationContext().getReaderContext() == null ) {
             final Trigger trigger = createTrigger( timerNode, reteEvaluator, timer, timestamp, calendarNames, calendars, leftTuple );
@@ -248,7 +253,7 @@ public class PhreakTimerNode {
                                   final long timestamp,
                                   final String[] calendarNames,
                                   final Calendars calendars,
-                                  final LeftTuple leftTuple) {
+                                  final TupleImpl leftTuple) {
         Object obj = leftTuple.getContextObject();
         DefaultJobHandle jobHandle = obj instanceof DefaultJobHandle ? (DefaultJobHandle) obj : null;
         return timer.createTrigger( timestamp, leftTuple, jobHandle, calendarNames, calendars, timerNode.getStartEndDeclarations(), reteEvaluator );
@@ -266,9 +271,9 @@ public class PhreakTimerNode {
                                ReteEvaluator reteEvaluator,
                                TimerService timerService,
                                long timestamp,
-                               LeftTuple leftTuple,
-                               TupleSets<LeftTuple> trgLeftTuples,
-                               TupleSets<LeftTuple> stagedLeftTuples,
+                               TupleImpl leftTuple,
+                               TupleSets trgLeftTuples,
+                               TupleSets stagedLeftTuples,
                                Trigger trigger) {
         if ( trigger.hasNextFireTime() == null ) {
             return;
@@ -280,7 +285,7 @@ public class PhreakTimerNode {
                 log.trace( "Timer Fire Now {}", leftTuple );
             }
 
-            LeftTuple childLeftTuple = doPropagateChildLeftTuple( sink, trgLeftTuples, stagedLeftTuples, leftTuple );
+            TupleImpl childLeftTuple = doPropagateChildLeftTuple(sink, trgLeftTuples, stagedLeftTuples, leftTuple );
             if (childLeftTuple.getStagedType() != LeftTuple.NONE) {
                 // Flag the newly created childLeftTuple to avoid a reevaluation in case it gets
                 // rescheduled before the end of this doNode loop
@@ -311,11 +316,11 @@ public class PhreakTimerNode {
 
     private static void doPropagateChildLeftTuples(TimerNodeMemory tm,
                                                    LeftTupleSink sink,
-                                                   TupleSets<LeftTuple> trgLeftTuples,
-                                                   TupleSets<LeftTuple> stagedLeftTuples) {
+                                                   TupleSets trgLeftTuples,
+                                                   TupleSets stagedLeftTuples) {
         TupleList leftTuples = tm.getInsertOrUpdateLeftTuples();
-        for ( LeftTuple leftTuple = (LeftTuple) leftTuples.getFirst(); leftTuple != null; ) {
-            LeftTuple next = (LeftTuple) leftTuple.getNext();
+        for ( TupleImpl leftTuple = leftTuples.getFirst(); leftTuple != null; ) {
+            TupleImpl next = leftTuple.getNext();
 
             doPropagateChildLeftTuple( sink, trgLeftTuples, stagedLeftTuples, leftTuple );
 
@@ -330,13 +335,13 @@ public class PhreakTimerNode {
         leftTuples.clear();
     }
 
-    private static LeftTuple doPropagateChildLeftTuple(LeftTupleSink sink,
-                                                       TupleSets<LeftTuple> trgLeftTuples,
-                                                       TupleSets<LeftTuple> stagedLeftTuples,
-                                                       LeftTuple leftTuple) {
-        LeftTuple childLeftTuple = leftTuple.getFirstChild();
+    private static TupleImpl doPropagateChildLeftTuple(LeftTupleSink sink,
+                                                       TupleSets trgLeftTuples,
+                                                       TupleSets stagedLeftTuples,
+                                                       TupleImpl leftTuple) {
+        TupleImpl childLeftTuple = leftTuple.getFirstChild();
         if ( childLeftTuple == null ) {
-            childLeftTuple = sink.createLeftTuple( leftTuple, sink, leftTuple.getPropagationContext(), true );
+            childLeftTuple = TupleFactory.createLeftTuple(leftTuple, sink, leftTuple.getPropagationContext(), true);
             trgLeftTuples.addInsert(childLeftTuple);
             if ( log.isTraceEnabled() ) {
                 log.trace( "Timer Insert {}", childLeftTuple );
@@ -386,7 +391,7 @@ public class PhreakTimerNode {
 
         public void execute( final ReteEvaluator reteEvaluator, boolean needEvaluation ) {
             TupleList leftTuples = timerJobCtx.getTimerNodeMemory().getInsertOrUpdateLeftTuples();
-            Tuple lt = timerJobCtx.getTuple();
+            TupleImpl lt = timerJobCtx.getTuple();
 
             if ( log.isTraceEnabled() ) {
                 log.trace( "Timer Executor {} {}", timerJobCtx.getTrigger(), lt );
@@ -423,7 +428,7 @@ public class PhreakTimerNode {
 
         private void evaluateAndFireRule(PathMemory pmem, ActivationsManager activationsManager) {
             RuleExecutor ruleExecutor = pmem.getRuleAgendaItem().getRuleExecutor();
-            ruleExecutor.reEvaluateNetwork( activationsManager );
+            ruleExecutor.evaluateNetworkIfDirty( activationsManager );
             ruleExecutor.fire( activationsManager );
         }
     }
@@ -432,7 +437,7 @@ public class PhreakTimerNode {
                                  ActivationsManager activationsManager,
                                  LeftTupleSink sink,
                                  TimerNodeMemory tm,
-                                 TupleSets<LeftTuple> trgLeftTuples) {
+                                 TupleSets trgLeftTuples) {
         SegmentMemory[] smems = pmem.getSegmentMemories();
         SegmentMemory sm = tm.getSegmentMemory();
         int smemIndex = 0;
@@ -461,7 +466,7 @@ public class PhreakTimerNode {
         private       JobHandle             jobHandle;
         private final Trigger               trigger;
 
-        private final Tuple                 tuple;
+        private final TupleImpl             tuple;
         private final int                   timerNodeId;
         private final TimerNodeMemory       tm;
 
@@ -471,7 +476,7 @@ public class PhreakTimerNode {
 
         public TimerNodeJobContext(int timerNodeId,
                                    Trigger trigger,
-                                   Tuple tuple,
+                                   TupleImpl tuple,
                                    TimerNodeMemory tm,
                                    LeftTupleSink sink,
                                    List<PathMemory> pmems,
@@ -502,7 +507,7 @@ public class PhreakTimerNode {
             return sink;
         }
 
-        public Tuple getTuple() {
+        public TupleImpl getTuple() {
             return tuple;
         }
 

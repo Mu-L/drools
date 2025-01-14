@@ -1,29 +1,33 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.util;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.util.StringUtils.getPkgUUID;
 import static org.drools.util.StringUtils.indexOfOutOfQuotes;
 import static org.drools.util.StringUtils.md5Hash;
 import static org.drools.util.StringUtils.splitStatements;
+import static org.drools.util.StringUtils.splitStatementsAcrossBlocks;
 
 public class StringUtilsTest {
 
@@ -236,6 +240,111 @@ public class StringUtilsTest {
     }
 
     @Test
+    public void testExtractFirstIdentifierWithStringBuilder() {
+        // Not-quoted string, interpreted as identifier
+        String string = "IDENTIFIER";
+        String expected = string;
+        StringBuilder builder = new StringBuilder();
+        int start = 0;
+        int retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length()); // retrieved size is equals to the length of given string
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        // Quoted string, not interpreted as identifier
+        string = "\"IDENTIFIER\"";
+        expected = "";
+        builder = new StringBuilder();
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length());
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        // Only the not-quoted string, and its size, is returned
+        string = "IDENTIFIER \"";
+        expected = "IDENTIFIER";
+        builder = new StringBuilder();
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(expected.length()); // it returns the index where the identifier ends
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        string = "IDENTIFIER \"the_identifier";
+        expected = "IDENTIFIER";
+        builder = new StringBuilder();
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(expected.length()); // it returns the index where the identifier ends
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        string = "\"the_identifier\" IDENTIFIER";
+        expected = "IDENTIFIER";
+        builder = new StringBuilder();
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length()); // it returns the index where the identifier ends
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        // Quoted string, not interpreted as identifier, starting at arbitrary position
+        string = "THIS IS BEFORE \"IDENTIFIER\"";
+        expected = "";
+        builder = new StringBuilder();
+        start = 14;
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length());
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        // Only the not-quoted string, and its size, is returned, starting at arbitrary position
+        string = "THIS IS BEFORE IDENTIFIER \"";
+        expected = "IDENTIFIER";
+        builder = new StringBuilder();
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(25); // it returns the index where the identifier ends
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        string = "IDENTIFIER \"the_identifier";
+        expected = "";
+        builder = new StringBuilder();
+        start = 10;
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length()); // it returns the index where the identifier ends
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        string = "IDENTIFIER \"the_identifier";
+        expected = "";
+        builder = new StringBuilder();
+        start = 10;
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length()); // it returns the index where the identifier ends
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        string = "\"not an ' identifier\"";
+        expected = "";
+        builder = new StringBuilder();
+        start = 0;
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length()); // it returns the whole string length
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        string = "'not an \" identifier'";
+        expected = "";
+        builder = new StringBuilder();
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length()); // it returns the whole string length
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        string = "'not an \" identifier\"'";
+        expected = "";
+        builder = new StringBuilder();
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length()); // it returns the whole string length
+        assertThat(builder.toString()).isEqualTo(expected);
+
+        string = "\"an \" IDENTIFIER";
+        expected = "IDENTIFIER";
+        builder = new StringBuilder();
+        retrieved = StringUtils.extractFirstIdentifier(string, builder, start);
+        assertThat(retrieved).isEqualTo(string.length()); // it returns the index where the identifier ends
+        assertThat(builder.toString()).isEqualTo(expected);
+
+    }
+
+    @Test
     public void testSplitStatements() {
         String text =
                 "System.out.println(\"'\");" +
@@ -246,5 +355,89 @@ public class StringUtilsTest {
         assertThat(statements.get(0)).isEqualTo("System.out.println(\"'\")");
         assertThat(statements.get(1)).isEqualTo("$visaApplication.setValidation( Validation.FAILED )");
         assertThat(statements.get(2)).isEqualTo("drools.update($visaApplication)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksIf() {
+        String text = "if (true) {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "}";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("if (true)");
+        assertThat(statements.get(1)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(2)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksDoWhile() {
+        String text = "do {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "} while (false);";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("do");
+        assertThat(statements.get(1)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(2)).isEqualTo("drools.update($fact)");
+        assertThat(statements.get(3)).isEqualTo("while (false)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksFor() {
+        String text = "for (int i = 0; i < 1; i++) {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "}";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("for (int i = 0; i < 1; i++)");
+        assertThat(statements.get(1)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(2)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksCommentedIf() {
+        String text = "// if (true) {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "// }";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(1)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksCommentedIfMissingStartingBrace() {
+        String text = "// if (true)\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "// }";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(1)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksCommentedIfMissingEndingBrace() {
+        String text = "// if (true) {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "//";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(1)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksIfInsideAndOutsideAssginment() {
+        String text = "$fact.value1 = 2;\n" +
+                      "if (true) {\n" +
+                      "  $fact.value2 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "}";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(1)).isEqualTo("if (true)");
+        assertThat(statements.get(2)).isEqualTo("$fact.value2 = 2");
+        assertThat(statements.get(3)).isEqualTo("drools.update($fact)");
     }
 }

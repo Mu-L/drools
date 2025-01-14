@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.traits.core.definitions.impl;
 
 import java.io.ByteArrayInputStream;
@@ -101,7 +103,7 @@ public class TraitKnowledgePackageImpl extends MVELKnowledgePackageImpl {
             out.writeObject(this.staticImports);
             out.writeObject(this.functions);
             out.writeObject(this.accumulateFunctions);
-            out.writeObject(this.factTemplates);
+            out.writeObject(this.prototypes);
             out.writeObject(this.globals);
             out.writeBoolean(this.valid);
             out.writeBoolean(this.needStreamMode);
@@ -139,7 +141,7 @@ public class TraitKnowledgePackageImpl extends MVELKnowledgePackageImpl {
         this.staticImports = (Set) in.readObject();
         this.functions = (Map<String, Function>) in.readObject();
         this.accumulateFunctions = (Map<String, AccumulateFunction>) in.readObject();
-        this.factTemplates = (Map) in.readObject();
+        this.prototypes = (Map) in.readObject();
         this.globals = (Map<String, Type>) in.readObject();
         this.valid = in.readBoolean();
         this.needStreamMode = in.readBoolean();

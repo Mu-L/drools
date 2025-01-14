@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.lang.ast;
 
 import java.time.Period;
@@ -26,12 +28,13 @@ import org.kie.dmn.feel.lang.types.BuiltInType;
 import org.kie.dmn.feel.lang.types.impl.ComparablePeriod;
 import org.kie.dmn.feel.runtime.Range;
 import org.kie.dmn.feel.runtime.impl.RangeImpl;
+import org.kie.dmn.feel.runtime.impl.UndefinedValueComparable;
 import org.kie.dmn.feel.util.Msg;
 
 public class RangeNode
         extends BaseNode {
 
-    public static enum IntervalBoundary {
+    public enum IntervalBoundary {
         OPEN, CLOSED;
         public static IntervalBoundary low(String input) {
             switch (input) {
@@ -62,6 +65,14 @@ public class RangeNode
         this.upperBound = upperBound;
         this.start = start;
         this.end = end;
+    }
+
+    public RangeNode(IntervalBoundary lowerBound, IntervalBoundary upperBound, BaseNode start, BaseNode end, String text) {
+        this.lowerBound = lowerBound;
+        this.upperBound = upperBound;
+        this.start = start;
+        this.end = end;
+        this.setText(text);
     }
 
     public IntervalBoundary getLowerBound() {
@@ -103,13 +114,17 @@ public class RangeNode
         
         Type sType = BuiltInType.determineTypeFromInstance(s);
         Type eType = BuiltInType.determineTypeFromInstance(e);
-        if (s != null && e != null && sType != eType && !s.getClass().isAssignableFrom(e.getClass())) {
+        boolean withUndefined = s instanceof UndefinedValueComparable || e instanceof UndefinedValueComparable;
+        if (s != null && e != null &&
+                !withUndefined &&
+                sType != eType &&
+                !s.getClass().isAssignableFrom(e.getClass())) {
             ctx.notifyEvt( astEvent(Severity.ERROR, Msg.createMessage(Msg.X_TYPE_INCOMPATIBLE_WITH_Y_TYPE, "Start", "End")));
             return null;
         }
 
-        Comparable start = convertToComparable( ctx, s );
-        Comparable end = convertToComparable( ctx, e );
+        Comparable start = s instanceof UndefinedValueComparable ? (Comparable) s : convertToComparable(ctx, s );
+        Comparable end = e instanceof UndefinedValueComparable ? (Comparable) e : convertToComparable( ctx, e );
 
         return new RangeImpl( lowerBound==IntervalBoundary.OPEN ? Range.RangeBoundary.OPEN : Range.RangeBoundary.CLOSED,
                               start,

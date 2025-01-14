@@ -1,17 +1,20 @@
-/*
- * Copyright 2011 Red Hat Inc.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.drools.persistence.jta;
 
@@ -20,10 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.transaction.RollbackException;
-import javax.transaction.UserTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.transaction.RollbackException;
+import jakarta.transaction.UserTransaction;
 
 import org.drools.commands.impl.CommandBasedStatefulKnowledgeSessionImpl;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
@@ -32,10 +35,9 @@ import org.drools.persistence.PersistableRunner;
 import org.drools.persistence.api.TransactionManager;
 import org.drools.persistence.jpa.JpaPersistenceContextManager;
 import org.drools.persistence.util.DroolsPersistenceUtil;
-import org.hibernate.TransientObjectException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.io.ResourceType;
@@ -73,7 +75,7 @@ public class JtaTransactionManagerTest {
             + "end\n" 
             + "\n";
 
-    @Before
+    @BeforeEach
     public void setup() {
         // This test does only plays with tx's, it doesn't actually persist
         // any interersting (wrt marshalling) SessionInfo objects
@@ -83,7 +85,7 @@ public class JtaTransactionManagerTest {
         emf = (EntityManagerFactory) context.get(PersistenceUtil.ENTITY_MANAGER_FACTORY);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         DroolsPersistenceUtil.cleanUp(context);
     }
@@ -147,7 +149,7 @@ public class JtaTransactionManagerTest {
             tx.commit();
         }
         catch( Exception e ) { 
-            if( e instanceof RollbackException || e.getCause() instanceof TransientObjectException ) {
+            if ( e instanceof RollbackException  ) {
                 rollBackExceptionthrown = true;
 
                 if( tx.getStatus() == 1 ) {

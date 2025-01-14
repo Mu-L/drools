@@ -1,19 +1,21 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.util;
 
 import org.kie.dmn.api.core.DMNMessageType;
@@ -108,9 +110,10 @@ public final class Msg {
     public static final Message2 ERR_COMPILING_FEEL_EXPR_ON_DT_PARAM                 = new Message2( DMNMessageType.ERR_COMPILING_FEEL, "Error compiling FEEL expression '%s' parameter of invocation of decision table '%s'");
     public static final Message2 ERR_COMPILING_FEEL_EXPR_ON_DT                       = new Message2( DMNMessageType.ERR_COMPILING_FEEL, "Error compiling FEEL expression '%s' on decision table '%s'" );
     public static final Message2 ERR_COMPILING_ALLOWED_VALUES_LIST_ON_ITEM_DEF       = new Message2( DMNMessageType.ERR_COMPILING_FEEL, "Error compiling allowed values list '%s' on item definition '%s'" );
+    public static final Message2 ERR_COMPILING_TYPE_CONSTRAINT_LIST_ON_ITEM_DEF       = new Message2( DMNMessageType.ERR_COMPILING_FEEL, "Error compiling type constraint list '%s' on item definition '%s'" );
     public static final Message4 ERR_COMPILING_FEEL_EXPR_FOR_NAME_ON_NODE            = new Message4( DMNMessageType.ERR_COMPILING_FEEL, "Error compiling FEEL expression '%s' for name '%s' on node '%s': %s" );
-    public static final Message2 ERR_EVAL_CTX_ENTRY_ON_CTX                           = new Message2( DMNMessageType.ERR_EVAL_CTX, "Error evaluating context extry '%s' on context '%s'" );
-    public static final Message3 ERR_EVAL_CTX_ENTRY_ON_CTX_MSG                       = new Message3( DMNMessageType.ERR_EVAL_CTX, "Unrecoverable error evaluating context extry '%s' on context '%s': %s" );
+    public static final Message2 ERR_EVAL_CTX_ENTRY_ON_CTX                           = new Message2( DMNMessageType.ERR_EVAL_CTX, "Error evaluating context entry '%s' on context '%s'" );
+    public static final Message3 ERR_EVAL_CTX_ENTRY_ON_CTX_MSG                       = new Message3( DMNMessageType.ERR_EVAL_CTX, "Unrecoverable error evaluating context entry '%s' on context '%s': %s" );
     public static final Message1 DECISION_NOT_FOUND_FOR_NAME                         = new Message1( DMNMessageType.DECISION_NOT_FOUND, "Decision not found for name '%s'" );
     public static final Message1 DECISION_NOT_FOUND_FOR_ID                           = new Message1( DMNMessageType.DECISION_NOT_FOUND, "Decision not found for type '%s'" );
     public static final Message1 DECISION_SERVICE_NOT_FOUND_FOR_NAME                 = new Message1( DMNMessageType.DECISION_NOT_FOUND, "Decision Service not found for name '%s'");
@@ -169,6 +172,8 @@ public final class Msg {
     public static final Message2 MISSING_EXPRESSION_FOR_FILTER                       = new Message2( DMNMessageType.MISSING_EXPRESSION, "Missing %s expression for Filter node '%s'" );
     public static final Message2 CONDITION_RESULT_NOT_BOOLEAN                        = new Message2( DMNMessageType.ERROR_EVAL_NODE, "The if condition on node %s returned a non boolean result: '%s'" );
     public static final Message1 IN_RESULT_NULL                                      = new Message1( DMNMessageType.ERROR_EVAL_NODE, "The in condition on node %s returned null.");
+    public static final Message1 FILTER_EXPRESSION_RESULT_NOT_BOOLEAN                = new Message1( DMNMessageType.ERROR_EVAL_NODE, "The filter expression on node %s returned a non boolean result");
+    public static final Message1 ITERATOR_EXPRESSION_RESULT_NOT_BOOLEAN              = new Message1( DMNMessageType.ERROR_EVAL_NODE, "The satisfy expression on node %s returned a non boolean result");
     public static final Message2 INDEX_OUT_OF_BOUND                                  = new Message2( DMNMessageType.ERROR_EVAL_NODE, "Index out of bound: list of %s elements, index %s; will evaluate as FEEL null");
 
 

@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.metric;
 
 import java.util.Collection;
@@ -24,9 +26,10 @@ import java.util.stream.IntStream;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.search.Search;
+import org.drools.metric.util.MetricLogUtils;
 import org.drools.mvel.compiler.Address;
 import org.drools.mvel.compiler.Person;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 
@@ -37,6 +40,24 @@ public class MetricLogUtilsTest extends AbstractMetricTest {
     @Test
     public void testJoin() {
 
+        runJoinRules();
+
+        // 2 nodes expected
+        Collection<Timer> timers = Search.in(registry)
+                .name("org.drools.metric.elapsed.time.per.evaluation")
+                .timers();
+        assertThat(timers).hasSize(2);
+        Collection<Timer> timers2 = Search.in(registry)
+                .name("org.drools.metric.elapsed.time")
+                .timers();
+        assertThat(timers2).hasSize(2);
+        Collection<Counter> counters = Search.in(registry)
+                .name("org.drools.metric.evaluation.count")
+                .counters();
+        assertThat(counters).hasSize(2);
+    }
+
+    private void runJoinRules() {
         String str =
                 "import " + Address.class.getCanonicalName() + "\n" +
                         "import " + Person.class.getCanonicalName() + "\n" +
@@ -65,20 +86,26 @@ public class MetricLogUtilsTest extends AbstractMetricTest {
         int fired = ksession.fireAllRules();
         ksession.dispose();
         assertThat(fired).isEqualTo(36);
+    }
 
-        // 2 nodes expected
-        Collection<Timer> timers = Search.in(registry)
-                .name("org.drools.metric.elapsed.time.per.evaluation")
-                .timers();
-        assertThat(timers).hasSize(2);
-        Collection<Timer> timers2 = Search.in(registry)
-                .name("org.drools.metric.elapsed.time")
-                .timers();
-        assertThat(timers2).hasSize(2);
-        Collection<Counter> counters = Search.in(registry)
-                .name("org.drools.metric.evaluation.count")
-                .counters();
-        assertThat(counters).hasSize(2);
+    @Test
+    public void micrometerDisabled() {
+
+        try {
+            System.setProperty(MetricLogUtils.METRIC_MICROMETER_DISABLED, "true");
+            MetricLogUtils.recreateInstance();
+
+            runJoinRules();
+
+            // Micrometer is disabled
+            Collection<Timer> timers = Search.in(registry)
+                    .name("org.drools.metric.elapsed.time.per.evaluation")
+                    .timers();
+            assertThat(timers).isEmpty();
+        } finally {
+            System.clearProperty(MetricLogUtils.METRIC_MICROMETER_DISABLED); // default is false
+            MetricLogUtils.recreateInstance();
+        }
     }
 
     @Test

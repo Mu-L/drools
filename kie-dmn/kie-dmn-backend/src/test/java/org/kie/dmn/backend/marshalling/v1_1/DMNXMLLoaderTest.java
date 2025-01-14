@@ -1,29 +1,30 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.backend.marshalling.v1_1;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.XMLConstants;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.marshalling.DMNMarshaller;
 import org.kie.dmn.backend.marshalling.v1_1.xstream.extensions.DecisionServicesExtensionRegister;
 import org.kie.dmn.backend.marshalling.v1x.DMNMarshallerFactory;
@@ -35,10 +36,10 @@ import org.kie.dmn.model.api.LiteralExpression;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DMNXMLLoaderTest {
+class DMNXMLLoaderTest {
 
     @Test
-    public void testLoadingDefinitions() {
+    void loadingDefinitions() {
         final DMNMarshaller DMNMarshaller = DMNMarshallerFactory.newDefaultMarshaller();
 
         final InputStream is = this.getClass().getResourceAsStream( "0001-input-data-string.dmn" );
@@ -79,7 +80,7 @@ public class DMNXMLLoaderTest {
     }
 
     @Test
-    public void testLoadingDecisionServices() {
+    void loadingDecisionServices() {
         final DMNMarshaller DMNMarshaller = DMNMarshallerFactory.newMarshallerWithExtensions(List.of(new DecisionServicesExtensionRegister()));
 
         final InputStream is = this.getClass().getResourceAsStream("0004-decision-services.dmn");
@@ -111,7 +112,7 @@ public class DMNXMLLoaderTest {
     }
 
     @Test
-    public void testLoadingWithNoDecisionServices() {
+    void loadingWithNoDecisionServices() {
         final DMNMarshaller DMNMarshaller = DMNMarshallerFactory.newMarshallerWithExtensions(List.of(new DecisionServicesExtensionRegister()));
 
         final InputStream is = this.getClass().getResourceAsStream("0001-input-data-string.dmn");
@@ -122,7 +123,7 @@ public class DMNXMLLoaderTest {
     }
 
     @Test
-    public void test0004_multiple_extensions() throws Exception {
+    void test0004_multiple_extensions() throws Exception {
         DMNMarshaller marshaller = DMNMarshallerFactory.newMarshallerWithExtensions(List.of(new DecisionServicesExtensionRegister()));
 
         final InputStream is = this.getClass().getResourceAsStream("0004-decision-services_multiple_extensions.dmn");
@@ -134,7 +135,7 @@ public class DMNXMLLoaderTest {
     }
 
     @Test
-    public void testLoadingExample() {
+    void loadingExample() {
         final DMNMarshaller DMNMarshaller = DMNMarshallerFactory.newDefaultMarshaller();
 
         final InputStream is = this.getClass().getResourceAsStream("ch11example.xml");
@@ -147,7 +148,7 @@ public class DMNXMLLoaderTest {
     }
 
     @Test
-    public void testLoadingDishDecision() {
+    void loadingDishDecision() {
         final DMNMarshaller DMNMarshaller = DMNMarshallerFactory.newDefaultMarshaller();
 
         final InputStream is = this.getClass().getResourceAsStream("dish-decision.xml");

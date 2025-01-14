@@ -1,26 +1,30 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -52,12 +56,10 @@ public class DMNRuntimeTypeCheckTest extends BaseInterpretedVsCompiledTest {
 
     private static final KieServices ks = KieServices.Factory.get();
 
-    public DMNRuntimeTypeCheckTest(final boolean useExecModelCompiler) {
-        super(useExecModelCompiler);
-    }
-
-    @Test
-    public void testDefaultNoTypeCheck() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void defaultNoTypeCheck(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         // do NOT use the DMNRuntimeUtil as that enables typeSafe check override for runtime.
         final KieContainer kieContainer = KieHelper.getKieContainer(ks.newReleaseId("org.kie", "dmn-test-" + UUID.randomUUID(), "1.0"),
                                                                     ks.getResources().newClassPathResource("forTypeCheckTest.dmn", this.getClass()));
@@ -65,14 +67,18 @@ public class DMNRuntimeTypeCheckTest extends BaseInterpretedVsCompiledTest {
         assertNoTypeCheck(runtime);
     }
 
-    @Test
-    public void testAskTypeCheckInKModule() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void askTypeCheckInKModule(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         final DMNRuntime runtime = getRuntimeWithTypeCheckOption("true", ks.getResources().newClassPathResource("forTypeCheckTest.dmn", this.getClass()));
         assertPerformTypeCheck(runtime);
     }
 
-    @Test
-    public void testAskTypeCheckWithGlobalEnvVariable() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void askTypeCheckWithGlobalEnvVariable(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         System.setProperty(RuntimeTypeCheckOption.PROPERTY_NAME, "true");
         // do NOT use the DMNRuntimeUtil as that enables typeSafe check override for runtime.
         final KieContainer kieContainer = KieHelper.getKieContainer(ks.newReleaseId("org.kie", "dmn-test-" + UUID.randomUUID(), "1.0"),
@@ -82,26 +88,34 @@ public class DMNRuntimeTypeCheckTest extends BaseInterpretedVsCompiledTest {
         System.clearProperty(RuntimeTypeCheckOption.PROPERTY_NAME);
     }
 
-    @Test
-    public void testExplicitDisableTypeCheckInKModule() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void explicitDisableTypeCheckInKModule(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         final DMNRuntime runtime = getRuntimeWithTypeCheckOption("false", ks.getResources().newClassPathResource("forTypeCheckTest.dmn", this.getClass()));
         assertNoTypeCheck(runtime);
     }
 
-    @Test
-    public void testUnreckonOptionTypeCheckInKModuleDefaultsToNoTypeCheck() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void unreckonOptionTypeCheckInKModuleDefaultsToNoTypeCheck(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         final DMNRuntime runtime = getRuntimeWithTypeCheckOption("boh", ks.getResources().newClassPathResource("forTypeCheckTest.dmn", this.getClass()));
         assertNoTypeCheck(runtime);
     }
 
-    @Test
-    public void testEmptyOptionTypeCheckInKModuleDefaultsToNoTypeCheck() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void emptyOptionTypeCheckInKModuleDefaultsToNoTypeCheck(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         final DMNRuntime runtime = getRuntimeWithTypeCheckOption("", ks.getResources().newClassPathResource("forTypeCheckTest.dmn", this.getClass()));
         assertNoTypeCheck(runtime);
     }
 
-    @Test
-    public void testDefaultNoTypeCheckButOverrideRuntime() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void defaultNoTypeCheckButOverrideRuntime(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         // do NOT use the DMNRuntimeUtil as that enables typeSafe check override for runtime.
         final KieContainer kieContainer = KieHelper.getKieContainer(ks.newReleaseId("org.kie", "dmn-test-" + UUID.randomUUID(), "1.0"),
                                                                     ks.getResources().newClassPathResource("forTypeCheckTest.dmn", this.getClass()));
@@ -110,15 +124,19 @@ public class DMNRuntimeTypeCheckTest extends BaseInterpretedVsCompiledTest {
         assertPerformTypeCheck(runtime);
     }
 
-    @Test
-    public void testExplicitDisableTypeCheckInKModuleButOverrideRuntime() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void explicitDisableTypeCheckInKModuleButOverrideRuntime(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         final DMNRuntime runtime = getRuntimeWithTypeCheckOption("false", ks.getResources().newClassPathResource("forTypeCheckTest.dmn", this.getClass()));
         ((DMNRuntimeImpl) runtime).setOption(new RuntimeTypeCheckOption(true));
         assertPerformTypeCheck(runtime);
     }
 
-    @Test
-    public void testAskTypeCheckInKModuleButOverrideRuntime() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void askTypeCheckInKModuleButOverrideRuntime(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         final DMNRuntime runtime = getRuntimeWithTypeCheckOption("true", ks.getResources().newClassPathResource("forTypeCheckTest.dmn", this.getClass()));
         ((DMNRuntimeImpl) runtime).setOption(new RuntimeTypeCheckOption(false));
         assertPerformTypeCheck(runtime);
@@ -188,8 +206,10 @@ public class DMNRuntimeTypeCheckTest extends BaseInterpretedVsCompiledTest {
         assertThat(hundredMinusNumber.getEvaluationStatus()).isEqualTo(DecisionEvaluationStatus.SKIPPED); // dependency failed type check
     }
 
-    @Test
-    public void testMisleadingNPEbyAPIusage() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void misleadingNPEbyAPIusage(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         // do NOT use the DMNRuntimeUtil as that enables typeSafe check override for runtime.
         final KieContainer kieContainer = KieHelper.getKieContainer(ks.newReleaseId("org.kie", "dmn-test-" + UUID.randomUUID(), "1.0"),
                                                                     ks.getResources().newClassPathResource("simple-item-def.dmn", this.getClass()));
@@ -213,8 +233,10 @@ public class DMNRuntimeTypeCheckTest extends BaseInterpretedVsCompiledTest {
         }
     }
 
-    @Test
-    public void testSqrtString() {
+    @ParameterizedTest
+    @MethodSource("params")
+    void sqrtString(boolean useExecModelCompiler) {
+        init(useExecModelCompiler);
         // do NOT use the DMNRuntimeUtil as that enables typeSafe check override for runtime.
         final KieContainer kieContainer = KieHelper.getKieContainer(ks.newReleaseId("org.kie", "dmn-test-" + UUID.randomUUID(), "1.0"),
                                                                     ks.getResources().newClassPathResource("notypecheck/sqrtstring.dmn", this.getClass()));

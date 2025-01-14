@@ -1,54 +1,49 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.compiler.integrationtests;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.model.Primitives;
 import org.drools.testcoverage.common.model.TestParam;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class ArrayTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public ArrayTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testEqualsOnIntArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testEqualsOnIntArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl =
             "package org.drools.compiler;\n" +
@@ -79,8 +74,9 @@ public class ArrayTest {
         }
     }
 
-    @Test
-    public void testContainsBooleanArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testContainsBooleanArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Boolean", false, "true"));
@@ -103,8 +99,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testNotContainsBooleanArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNotContainsBooleanArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
             "package org.drools.compiler;\n" +
             "import " + Primitives.class.getCanonicalName() + ";\n" +
@@ -142,8 +139,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testContainsByteArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testContainsByteArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Byte", false, "1"));
         final KieSession kieSession = kbase.newKieSession();
@@ -165,8 +163,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testNotContainsByteArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNotContainsByteArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Byte", true, "1"));
         final KieSession kieSession = kbase.newKieSession();
@@ -188,8 +187,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testContainsShortArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testContainsShortArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Short", false, "1"));
         final KieSession kieSession = kbase.newKieSession();
@@ -211,8 +211,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testNotContainsShortArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNotContainsShortArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Short", true, "1"));
         final KieSession kieSession = kbase.newKieSession();
@@ -234,8 +235,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testContainsCharArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testContainsCharArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Character", false, "'c'"));
         final KieSession kieSession = kbase.newKieSession();
@@ -257,8 +259,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testNotContainsCharArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNotContainsCharArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Character", true, "'c'"));
         final KieSession kieSession = kbase.newKieSession();
@@ -280,8 +283,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testContainsIntArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testContainsIntArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Integer", false, "10"));
         final KieSession kieSession = kbase.newKieSession();
@@ -303,8 +307,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testNotContainsIntArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNotContainsIntArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Integer", true, "10"));
         final KieSession kieSession = kbase.newKieSession();
@@ -326,8 +331,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testContainsLongArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testContainsLongArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Long", false, "10"));
         final KieSession kieSession = kbase.newKieSession();
@@ -349,8 +355,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testNotContainsLongArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNotContainsLongArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Long", true, "10"));
         final KieSession kieSession = kbase.newKieSession();
@@ -372,8 +379,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testContainsFloatArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testContainsFloatArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Float", false, "10f"));
         final KieSession kieSession = kbase.newKieSession();
@@ -395,8 +403,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testNotContainsFloatArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNotContainsFloatArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Float", true, "10f"));
         final KieSession kieSession = kbase.newKieSession();
@@ -418,8 +427,9 @@ public class ArrayTest {
         }
     }
 
-    @Test
-    public void testContainsDoubleArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testContainsDoubleArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Double", false, "10"));
         final KieSession kieSession = kbase.newKieSession();
@@ -441,8 +451,9 @@ public class ArrayTest {
         }
     }
     
-    @Test
-    public void testNotContainsDoubleArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNotContainsDoubleArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("array-test", kieBaseTestConfiguration,
                                                                          getDrl("Double", true, "10"));
         final KieSession kieSession = kbase.newKieSession();
@@ -525,8 +536,9 @@ public class ArrayTest {
         assertThat(resultsList.size()).isEqualTo(2);
     }
 
-    @Test
-    public void testPrimitiveArray() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testPrimitiveArray(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler\n" +
                 "import " + Primitives.class.getCanonicalName() + "\n" +
                 "global java.util.List result;\n" +
@@ -584,8 +596,9 @@ public class ArrayTest {
         }
     }
 
-    @Test
-    public void testArrayUsage() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testArrayUsage(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "import " + TestParam.class.getCanonicalName() + "\n" +
                 "global java.util.List list;\n" +

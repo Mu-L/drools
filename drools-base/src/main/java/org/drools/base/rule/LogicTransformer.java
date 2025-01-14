@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.base.rule;
 
 import java.lang.reflect.Type;
@@ -25,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.drools.base.rule.accessor.DataProvider;
-import org.drools.base.rule.accessor.DeclarationScopeResolver;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.extractors.ArrayElementReader;
 import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
+import org.drools.base.rule.accessor.DataProvider;
+import org.drools.base.rule.accessor.DeclarationScopeResolver;
 import org.drools.base.rule.constraint.Constraint;
 
 /**
@@ -158,8 +160,7 @@ public class LogicTransformer {
     private void processElement(final DeclarationScopeResolver resolver,
                                 final Deque<RuleConditionElement> contextList,
                                 final RuleConditionElement element) {
-        if ( element instanceof Pattern ) {
-            Pattern pattern = (Pattern) element;
+        if ( element instanceof Pattern pattern ) {
             for ( RuleConditionElement ruleConditionElement : pattern.getNestedElements() ) {
                 processElement( resolver,
                                 contextList,
@@ -172,18 +173,17 @@ public class LogicTransformer {
                 replaceDeclarations( resolver, pattern, constraint );
             }
 
-        } else if ( element instanceof EvalCondition ) {
-            processEvalCondition(resolver, (EvalCondition) element);
+        } else if ( element instanceof EvalCondition eval ) {
+            processEvalCondition(resolver, eval);
 
-        } else if ( element instanceof Accumulate ) {
+        } else if ( element instanceof Accumulate accumulate ) {
             for ( RuleConditionElement rce : element.getNestedElements() ) {
                 processElement( resolver, contextList, rce );
             }
-            Accumulate accumulate = (Accumulate)element;
             replaceDeclarations( resolver, accumulate );
 
-        } else if ( element instanceof From ) {
-            DataProvider provider = ((From) element).getDataProvider();
+        } else if ( element instanceof From from ) {
+            DataProvider provider = from.getDataProvider();
             Declaration[] decl = provider.getRequiredDeclarations();
             for (Declaration aDecl : decl) {
                 Declaration resolved = resolver.getDeclaration(aDecl.getIdentifier());
@@ -200,8 +200,7 @@ public class LogicTransformer {
                 }
             }
 
-        } else if ( element instanceof QueryElement ) {
-            QueryElement qe = ( QueryElement ) element;
+        } else if ( element instanceof QueryElement qe ) {
             Pattern pattern = qe.getResultPattern();
 
             for ( Entry<String, Declaration> entry : pattern.getInnerDeclarations().entrySet() ) {
@@ -237,8 +236,8 @@ public class LogicTransformer {
             }
             qe.setVariableIndexes( toIntArray( varIndexes ) );
 
-        }  else if ( element instanceof ConditionalBranch ) {
-            processBranch( resolver, (ConditionalBranch) element );
+        }  else if ( element instanceof ConditionalBranch cb ) {
+            processBranch( resolver, cb );
 
         } else {
             contextList.push( element );
@@ -357,9 +356,7 @@ public class LogicTransformer {
         ce.pack();
 
         for (Object child : ce.getChildren().toArray()) {
-            if (child instanceof GroupElement) {
-                final GroupElement group = (GroupElement) child;
-
+            if (child instanceof GroupElement group) {
                 processTree(group, result);
                 if ((group.isOr() || group.isAnd()) && group.getType() == ce.getType()) {
                     group.pack(ce);
@@ -431,9 +428,9 @@ public class LogicTransformer {
             int permutations = 1;
             int index = 0;
             for (final RuleConditionElement child : parent.getChildren()) {
-                if ((child instanceof GroupElement) && ((GroupElement) child).isOr()) {
-                    permutations *= ((GroupElement) child).getChildren().size();
-                    orsList.add((GroupElement)child);
+                if ( child instanceof GroupElement ge && ge.isOr()) {
+                    permutations *= ge.getChildren().size();
+                    orsList.add(ge);
                 } else {
                     others[index] = child;
                 }

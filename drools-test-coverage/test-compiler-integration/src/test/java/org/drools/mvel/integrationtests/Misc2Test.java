@@ -1,23 +1,24 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests;
 
 import java.io.Serializable;
-import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -40,11 +41,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.drools.base.base.ValueResolver;
 import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
-import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
-import org.drools.core.ClassObjectFilter;
+import org.kie.api.runtime.ClassObjectFilter;
 import org.drools.base.InitialFact;
 import org.drools.base.base.ClassObjectType;
 import org.drools.core.common.DefaultFactHandle;
@@ -53,20 +54,15 @@ import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.Memory;
 import org.drools.core.common.NodeMemories;
-import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.definitions.rule.impl.RuleImpl;
-import org.drools.base.facttemplates.FactTemplate;
-import org.drools.base.facttemplates.FactTemplateImpl;
-import org.drools.base.facttemplates.FieldTemplate;
-import org.drools.base.facttemplates.FieldTemplateImpl;
 import org.drools.core.impl.InternalRuleBase;
-import org.drools.core.reteoo.CoreComponentFactory;
 import org.drools.core.reteoo.LeftInputAdapterNode;
-import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.ObjectTypeNode;
+import org.drools.core.reteoo.ObjectTypeNodeId;
 import org.drools.core.reteoo.Rete;
 import org.drools.core.reteoo.SegmentMemory;
 import org.drools.base.rule.accessor.Salience;
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.drl.ast.descr.PatternDescr;
 import org.drools.drl.ast.descr.RuleDescr;
@@ -85,11 +81,11 @@ import org.drools.mvel.integrationtests.facts.FactWithString;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
@@ -135,32 +131,25 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.drools.mvel.compiler.TestUtil.assertDrlHasCompilationError;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * Run all the tests with the ReteOO engine implementation
  */
-@RunWith(Parameterized.class)
 public class Misc2Test {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public Misc2Test(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-     // TODO: EM failed with some tests. File JIRAs
-        return TestParametersUtil.getKieBaseCloudConfigurations(false);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        // TODO: EM failed with some tests. File JIRAs
+        return TestParametersUtil2.getKieBaseCloudConfigurations(false).stream();
     }
 
     private static final Logger logger = LoggerFactory.getLogger( Misc2Test.class );
 
-    @Test
-    public void testUpdateWithNonEffectiveActivations() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testUpdateWithNonEffectiveActivations(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // JBRULES-3604
         String str = "package inheritance\n" +
                      "\n" +
@@ -205,8 +194,9 @@ public class Misc2Test {
         ksession.dispose();
     }
 
-    @Test
-    public void testNPEOnMutableGlobal() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNPEOnMutableGlobal(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // BZ-1019473
         String str = "package org.drools.mvel.compiler\n" +
                      "global java.util.List context\n" +
@@ -232,8 +222,9 @@ public class Misc2Test {
         ksession.dispose();
     }
 
-    @Test
-    public void testAnalyzeConditionWithVariableRegExp() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAnalyzeConditionWithVariableRegExp(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // JBRULES-3659
         String str =
                 "dialect \"mvel\"\n" +
@@ -268,8 +259,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testShareAlphaNodesRegardlessDoubleOrSingleQuotes() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testShareAlphaNodesRegardlessDoubleOrSingleQuotes(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3640
         String str =
                 "declare RecordA\n" +
@@ -317,8 +309,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(4);
     }
 
-    @Test
-    public void testCorrectDeclarationsInConsequence() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCorrectDeclarationsInConsequence(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // This showed up a bug where consequences declarations were being held onto and not replaced
 
         Address barcelonaCityCenter;
@@ -409,8 +402,9 @@ public class Misc2Test {
         return address;
     }
 
-    @Test
-    public void testEvalBeforeNot() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEvalBeforeNot(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str =
                 "package org.drools.mvel.compiler.integration; \n" +
                 "import " + A.class.getCanonicalName() + ";\n" +
@@ -439,8 +433,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testKnowledgeBaseEventSupportLeak() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testKnowledgeBaseEventSupportLeak(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // JBRULES-3666
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration);
         KieBaseEventListener listener = new DefaultKieBaseEventListener();
@@ -451,8 +446,9 @@ public class Misc2Test {
         assertThat(kbase.getKieBaseEventListeners().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testReuseAgendaAfterException() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testReuseAgendaAfterException(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // JBRULES-3677
 
         String str = "import org.drools.mvel.compiler.Person;\n" +
@@ -537,8 +533,9 @@ public class Misc2Test {
 
     }
 
-    @Test
-    public void testBooleanPropertyStartingWithEmpty() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBooleanPropertyStartingWithEmpty(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3690
         String str =
                 "declare Fact\n" +
@@ -554,8 +551,9 @@ public class Misc2Test {
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, str);
     }
 
-    @Test
-    public void testMVELForLoop() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMVELForLoop(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // JBRULES-3717
         String str = "rule demo\n" +
                      "dialect \"mvel\"\n" +
@@ -571,8 +569,9 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as(errors.toString()).isTrue();
     }
 
-    @Test
-    public void testBigDecimalComparison() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBigDecimalComparison(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // JBRULES-3715
         String str = "import org.drools.mvel.compiler.Person;\n" +
                      "rule \"Big Decimal Comparison\"\n" +
@@ -593,8 +592,10 @@ public class Misc2Test {
         ksession.dispose();
     }
 
-    @Test(timeout = 5000)
-    public void testInfiniteLoopCausedByInheritance() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(5000)
+    public void testInfiniteLoopCausedByInheritance(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-13
         String str =
                 "declare Parent\n" +
@@ -631,8 +632,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testIntSorting() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIntSorting(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-15
         String str =
                 "global java.util.List list\n" +
@@ -663,8 +665,9 @@ public class Misc2Test {
         assertThat(list).isEqualTo(asList(1, 2, 4, 5, 6));
     }
 
-    @Test
-    public void testIntSorting2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIntSorting2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-15
         String str =
                 "global java.util.List list\n" +
@@ -697,8 +700,10 @@ public class Misc2Test {
         assertThat(list).isEqualTo(asList(7, 6, 5, 4, 3, 2, 1));
     }
 
-    @Test(timeout = 10000)
-    public void testPropertyReactiveOnAlphaNodeFollowedByAccumulate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testPropertyReactiveOnAlphaNodeFollowedByAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-16
         String str =
                 "package org.kie.pmml.pmml_4_1.test;\n" +
@@ -768,8 +773,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(3);
     }
 
-    @Test
-    public void testPropertyReactiveAccumulateModification() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPropertyReactiveAccumulateModification(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-16
         String str =
                 "package org.drools.mvel.compiler.test;\n" +
@@ -836,8 +842,9 @@ public class Misc2Test {
         assertThat(ksession.getQueryResults("getNeuron").iterator().next().get("$value")).isEqualTo(2.0);
     }
 
-    @Test
-    public void testMvelAssignmentToPublicField() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMvelAssignmentToPublicField(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str =
                 "import " + Misc2Test.Foo.class.getCanonicalName() + "\n" +
                 "rule R\n" +
@@ -860,8 +867,9 @@ public class Misc2Test {
         assertThat(foo2.x).isEqualTo(1);
     }
 
-    @Test
-    public void testMvelInvokeAsList() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMvelInvokeAsList(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str =
                 "import java.util.List;\n" +
                 "import java.util.Arrays;\n" +
@@ -898,8 +906,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testDynamicAddRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDynamicAddRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-17
         String str =
                 "import " + Misc2Test.A.class.getCanonicalName() + "\n" +
@@ -939,8 +948,8 @@ public class Misc2Test {
         // this second insert forces the regeneration of the otnIds
         ksession.insert( new A( 2, 2, 2, 2 ) );
 
-        LeftTuple leftTuple = ( (DefaultFactHandle) fh ).getFirstLeftTuple();
-        ObjectTypeNode.Id letTupleOtnId = leftTuple.getInputOtnId();
+        TupleImpl        leftTuple     = ( (DefaultFactHandle) fh ).getFirstLeftTuple();
+        ObjectTypeNodeId letTupleOtnId = leftTuple.getInputOtnId();
         leftTuple = leftTuple.getHandleNext();
         while ( leftTuple != null ) {
             assertThat(letTupleOtnId.before(leftTuple.getInputOtnId())).isTrue();
@@ -1009,8 +1018,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testNumberCoercionOnNonGenericMap() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNumberCoercionOnNonGenericMap(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3708
         String str =
                 "package com.ilesteban.jit;\n" +
@@ -1051,8 +1061,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testPropertyReactivityWithNestedAccessorsInModify() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPropertyReactivityWithNestedAccessorsInModify(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3691
         String str =
                 "package com.ilesteban.rulenotbeingfired;\n" +
@@ -1123,8 +1134,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testMvelResolvingGenericVariableDeclaredInParentClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMvelResolvingGenericVariableDeclaredInParentClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3684
         String str =
                 "import " + Misc2Test.AbstractBase.class.getCanonicalName() + "\n" +
@@ -1154,8 +1166,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testMvelParsingParenthesisInString() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMvelParsingParenthesisInString(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3698
         String str =
                 "rule \"Test Rule\"\n" +
@@ -1176,8 +1189,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testCompilationMustFailComparingAClassLiteral() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCompilationMustFailComparingAClassLiteral(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-20
         String str =
                 "import Misc2Test.Answer\n" +
@@ -1193,8 +1207,9 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testDeclaredTypeExtendingInnerClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclaredTypeExtendingInnerClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-27
         String str =
                 "import " + Misc2Test.StaticPerson.class.getCanonicalName() + "\n" +
@@ -1228,8 +1243,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testAllowEqualityBetweenObjectAndPrimitiveInt() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAllowEqualityBetweenObjectAndPrimitiveInt(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-20
         String str =
                 "declare Bean\n" +
@@ -1258,8 +1274,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testJitConstraintWithOperationOnBigDecimal() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJitConstraintWithOperationOnBigDecimal(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-32
         String str =
                 "import " + Misc2Test.Model.class.getCanonicalName() + "\n" +
@@ -1307,8 +1324,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testJitComparable() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJitComparable(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-37
         String str =
                 "import " + Misc2Test.IntegerWrapperImpl.class.getCanonicalName() + "\n" +
@@ -1352,8 +1370,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testJitComparableNoGeneric() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJitComparableNoGeneric(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-37 BZ-1233976
         String str =
                 "import " + ComparableInteger.class.getCanonicalName() + "\n" +
@@ -1390,8 +1409,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testJitComparable2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJitComparable2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-469
         String str =
                 "import " + Misc2Test.IntegerWrapperImpl2.class.getCanonicalName() + "\n" +
@@ -1435,8 +1455,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testEqualityOfDifferentTypes() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEqualityOfDifferentTypes(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-42
         String str =
                 "declare Person\n" +
@@ -1472,8 +1493,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testUnificationInRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testUnificationInRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-45
         String str =
                 "declare A\n" +
@@ -1503,8 +1525,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testDeclarationsScopeUsingOR() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclarationsScopeUsingOR(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-44
         String str =
                 "declare A\n" +
@@ -1541,8 +1564,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testDeclarationsScopeUsingOR2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclarationsScopeUsingOR2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-44
         String str =
                 "declare A\n" +
@@ -1575,8 +1599,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testDeclarationsScopeUsingOR3() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclarationsScopeUsingOR3(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-44
         String str =
                 "declare A\n" +
@@ -1615,8 +1640,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(3);
     }
 
-    @Test
-    public void testDeclarationsScopeUsingOR4() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeclarationsScopeUsingOR4(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-44
         String str =
                 "declare A\n" +
@@ -1647,8 +1673,9 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testQueryAfterEvalInsideOR() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testQueryAfterEvalInsideOR(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-54
         String str =
                 "package pakko\n" +
@@ -1688,8 +1715,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testPackageVisibility() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPackageVisibility(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-61
         String str =
                 "package org.drools.integrationtests;\n" +
@@ -1705,8 +1733,9 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testNullValueInFrom() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNullValueInFrom(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-71
         String str =
                 "global java.util.List list\n" +
@@ -1730,8 +1759,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testNumberInQuotes() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNumberInQuotes(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-68
         String str =
                 "declare A\n" +
@@ -1760,8 +1790,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testStringCoercionComparison() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStringCoercionComparison(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-167
         String str = "import " + Person.class.getName() + ";\n" +
                      "rule R1 when\n" +
@@ -1775,8 +1806,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testAvoidUnwantedSemicolonWhenDelimitingExpression() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAvoidUnwantedSemicolonWhenDelimitingExpression(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-86
         String str =
                 "global java.util.List l\n" +
@@ -1799,8 +1831,9 @@ public class Misc2Test {
         assertThat(l.get(0)).isEqualTo("http://onefineday.123");
     }
 
-    @Test
-    public void testJitCastOfPrimitiveType() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJitCastOfPrimitiveType(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-79
         String str =
                 "rule R when\n" +
@@ -1816,8 +1849,9 @@ public class Misc2Test {
     }
 
 
-    @Test
-    public void testSelfChangingRuleSet() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSelfChangingRuleSet(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-92
         String str =
                 "package org.drools.mvel.integrationtests;\n" +
@@ -1887,8 +1921,9 @@ public class Misc2Test {
 
     }
 
-    @Test
-    public void testMatchIntegers() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMatchIntegers(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-94
         String str =
                 "global java.util.List list; \n" +
@@ -1930,8 +1965,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testDurationAnnotation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDurationAnnotation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-94
         String str =
                 "package org.drools.mvel.integrationtests;\n" +
@@ -1945,8 +1981,9 @@ public class Misc2Test {
         KieSession ksession = kbase.newKieSession();
     }
 
-    @Test
-    public void testDurationAnnotationOnKie() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDurationAnnotationOnKie(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-94
         String str =
                 "package org.drools.mvel.integrationtests;\n" +
@@ -1960,8 +1997,9 @@ public class Misc2Test {
         KieSession ksession = kbase.newKieSession();
     }
 
-    @Test
-    public void testDurationAnnotationWithError() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDurationAnnotationWithError(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-94
         String str =
                 "package org.drools.mvel.integrationtests;\n" +
@@ -1976,8 +2014,9 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testPhreakWithConcurrentUpdates() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPhreakWithConcurrentUpdates(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-7
         String str =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -2029,8 +2068,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testPhreakWith2Nots() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPhreakWith2Nots(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-7
         String str =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -2073,8 +2113,9 @@ public class Misc2Test {
         assertThat((int) list.get(0)).isEqualTo(31);
     }
 
-    @Test
-    public void testPhreakTMS() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPhreakTMS(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-7
         String str =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -2104,8 +2145,9 @@ public class Misc2Test {
         assertThat(ksession.getObjects(new ClassObjectFilter( Cheese.class )).size()).isEqualTo(1);
     }
 
-    @Test
-    public void testHelloWorld() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testHelloWorld(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-145
         String drl = "package org.drools.test\n" +
                      "declare Message\n" +
@@ -2195,8 +2237,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testPhreakInnerJoinNot() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPhreakInnerJoinNot(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-7
         String str =
                 "import org.drools.mvel.integrationtests.Misc2Test.Lecture\n" +
@@ -2247,8 +2290,9 @@ public class Misc2Test {
         assertThat(list.contains("B")).isTrue();
     }
 
-    @Test
-    public void testPhreakAccumulate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPhreakAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-7
         String str =
                 "import org.drools.mvel.integrationtests.Misc2Test.Lecture\n" +
@@ -2305,8 +2349,9 @@ public class Misc2Test {
         list.clear();
     }
 
-    @Test
-    public void testQueryAndRetract() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testQueryAndRetract(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-7
         String str =
                 "global java.util.List list\n" +
@@ -2341,8 +2386,10 @@ public class Misc2Test {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test(timeout = 5000)
-    public void testPhreakNoLoop() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(5000)
+    public void testPhreakNoLoop(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-7
         String str =
                 "declare Person \n" +
@@ -2368,8 +2415,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testAddSameResourceTwice() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAddSameResourceTwice(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-180
         String str =
                 "rule R when\n" +
@@ -2382,8 +2430,9 @@ public class Misc2Test {
         assertThat(messages.isEmpty()).as("Should have any message").isFalse(); // Duplicate rule name
     }
 
-    @Test
-    public void testTwoTimers() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTwoTimers(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-980385
         String str =
                 "import java.util.Date\n" +
@@ -2420,8 +2469,9 @@ public class Misc2Test {
         KieSession ksession = ks.newKieContainer( ks.getRepository().getDefaultReleaseId() ).newKieSession();
     }
 
-    @Test
-    public void testUnsupportedPolymorphicDeclaration() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testUnsupportedPolymorphicDeclaration(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-162
         String drl = "package org.drools.test; \n" +
                      "" +
@@ -2448,8 +2498,9 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testUnaryNegation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testUnaryNegation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-177
         String str =
                 "rule R when\n" +
@@ -2507,8 +2558,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testNotNodeUpdateBlocker() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotNodeUpdateBlocker(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str =
                 "import org.drools.mvel.integrationtests.Misc2Test.Conversation;\n" +
                 "global java.util.List list;" +
@@ -2565,8 +2617,9 @@ public class Misc2Test {
         assertThat(conversations.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testFailedStaticImport() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFailedStaticImport(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-155
         String drl = "package org.drools.test; \n" +
                      "" +
@@ -2581,8 +2634,9 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testNamedConsequence() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNamedConsequence(KieBaseTestConfiguration kieBaseTestConfiguration) {
         List<String> firedRules = new ArrayList<>();
         String str =
                 "import " + Foo.class.getCanonicalName() + "\n" +
@@ -2612,8 +2666,9 @@ public class Misc2Test {
         assertThat(firedRules.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testNamedConsequenceWithNot() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNamedConsequenceWithNot(KieBaseTestConfiguration kieBaseTestConfiguration) {
         List<String> firedRules = new ArrayList<>();
         String str =
                 "import " + Foo.class.getCanonicalName() + "\n" +
@@ -2675,8 +2730,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testBetaNodeInSubnetworkInStreamMode() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBetaNodeInSubnetworkInStreamMode(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-995408
         String str =
                 "import " + Foo.class.getCanonicalName() + "\n" +
@@ -2695,7 +2751,7 @@ public class Misc2Test {
                 "    $f.setX( 2 );\n" +
                 "end";
 
-        KieBaseTestConfiguration streamConfig = TestParametersUtil.getStreamInstanceOf(kieBaseTestConfiguration);
+        KieBaseTestConfiguration streamConfig = TestParametersUtil2.getStreamInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", streamConfig, str);
         KieSession ksession = kbase.newKieSession();
 
@@ -2711,8 +2767,9 @@ public class Misc2Test {
         assertThat(foo.getX()).isEqualTo(2);
     }
 
-    @Test
-    public void testAutomaticallySwitchFromReteOOToPhreak() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAutomaticallySwitchFromReteOOToPhreak(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str = "rule R when then end\n";
 
         KieServices ks = KieServices.Factory.get();
@@ -2725,8 +2782,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testListnersOnStatlessKieSession() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testListnersOnStatlessKieSession(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-141
         // BZ-999491
         String str =
@@ -2787,8 +2845,9 @@ public class Misc2Test {
         assertThat(firings.size()).isEqualTo(2);
     }
 
-    @Test
-    public void testImportExceptional() throws java.lang.Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testImportExceptional(KieBaseTestConfiguration kieBaseTestConfiguration) throws java.lang.Exception {
         // DROOLS-253 imported Exception would have qualified as the default Exception thrown by the RHS
         String str =
                 "import org.acme.healthcare.Exception;\n" +
@@ -2812,8 +2871,9 @@ public class Misc2Test {
         assertThat(list).isEqualTo(List.of(1));
     }
 
-    @Test
-    public void testMapAccessorWithCustomOp() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMapAccessorWithCustomOp(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-216
         String str =
                 "import java.util.Map;\n" +
@@ -2839,8 +2899,9 @@ public class Misc2Test {
         assertThat(list).isEqualTo(List.of(1));
     }
 
-    @Test
-    public void testMapAccessorWithBoundVar() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMapAccessorWithBoundVar(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-217
         String str =
                 "import java.util.Map;\n" +
@@ -2866,8 +2927,10 @@ public class Misc2Test {
         assertThat(list).isEqualTo(List.of(1));
     }
 
-    @Test(timeout = 10000)
-    public void testAgendaGroupSalience() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testAgendaGroupSalience(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-999360
         String str =
                 "global java.util.List ruleList\n" +
@@ -2911,8 +2974,9 @@ public class Misc2Test {
         assertThat("third").isEqualTo(ruleList.get(2));
     }
 
-    @Test
-    public void test3IdenticalForall() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void test3IdenticalForall(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-999851
         String str =
                 "rule \"Rule with forall_1\"\n" +
@@ -2944,8 +3008,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testSegmentInitialization() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSegmentInitialization(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1011993
         String str =
                 "import " + Misc2Test.Resource.class.getCanonicalName() + "\n" +
@@ -3014,8 +3079,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testReportErrorOnWrongDateEffective() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testReportErrorOnWrongDateEffective(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1013545
         String drl =
                 // ensure no Locale can parse the Date
@@ -3029,8 +3095,9 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as("Should have an error").isFalse();
     }
 
-    @Test
-    public void testDeleteInFromNode() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeleteInFromNode(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "global java.util.Map context\n" +
                 "\n" +
@@ -3063,8 +3130,9 @@ public class Misc2Test {
         ks.fireAllRules();
     }
 
-    @Test
-    public void testSortWithNot() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSortWithNot(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-200
         String str =
                 "import java.util.*; \n" +
@@ -3112,8 +3180,9 @@ public class Misc2Test {
         assertThat(list).isEqualTo(Arrays.asList(50, 40, 30, 20, 10));
     }
 
-    @Test
-    public void testExistsOr() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExistsOr(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-254
         String drl = "package org.drools.test;\n" +
                      "\n" +
@@ -3173,8 +3242,9 @@ public class Misc2Test {
     }
 
 
-    @Test
-    public void testFactLeak() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFactLeak(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
         //DROOLS-131
         String drl = "package org.drools.test; \n" +
                      "global java.util.List list; \n" +
@@ -3206,8 +3276,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testFactStealing() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFactStealing(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String drl = "package org.drools.test; \n" +
                      "import org.drools.mvel.compiler.Person; \n " +
                      "global java.util.List list; \n" +
@@ -3273,8 +3344,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testEventWithSQLTimestamp() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEventWithSQLTimestamp(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
         // DROOLS-10
         String str =
                 "import org.drools.mvel.integrationtests.Misc2Test.SQLTimestamped;\n" +
@@ -3328,8 +3400,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testIsGetClash() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIsGetClash(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-18
         String str =
                 "import org.drools.mvel.integrationtests.Misc2Test.Foo3;\n" +
@@ -3351,8 +3424,9 @@ public class Misc2Test {
         assertThat(errors.size()).isEqualTo(2);
     }
 
-    @Test
-    public void testCollectAccumulate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-173
         String drl = "import java.util.ArrayList\n" +
                      "\n" +
@@ -3484,8 +3558,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testLockOnActive1() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLockOnActive1(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // the modify changes the hashcode of TradeHeader
         // this forces the 'from' to think it's new. This results in an insert and a delete propagation from the 'from'
         // With Property Reactivity enabled by default this also required adding a @watch(*) annotation
@@ -3557,8 +3632,9 @@ public class Misc2Test {
         assertThat(fired.get(0)).isEqualTo("Rule1");
     }
 
-    @Test
-    public void testLockOnActive2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLockOnActive2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // the modify changes the hashcode of TradeHeader
         // this forces the 'from' to think it's new. This results in an insert and a delete propagation from the 'from'
         // With Property Reactivity enabled by default this also required adding a @watch(*) annotation
@@ -3625,8 +3701,9 @@ public class Misc2Test {
         assertThat(fired.get(1)).isEqualTo("Rule2");
     }
 
-    @Test
-    public void testLockOnActiveWithModify() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLockOnActiveWithModify(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "" +
                      "package org.drools.test; \n" +
                      "import org.drools.mvel.compiler.Person; \n" +
@@ -3666,8 +3743,9 @@ public class Misc2Test {
         assertThat(p.getName()).isEqualTo("john");
     }
 
-    @Test
-    public void testLockOnActiveWithModifyNoEager() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLockOnActiveWithModifyNoEager(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-280
         String drl = "" +
                      "package org.drools.test; \n" +
@@ -3706,8 +3784,9 @@ public class Misc2Test {
         assertThat(p.getName()).isEqualTo("john");
     }
 
-    @Test
-    public void testPrimitiveGlobals() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPrimitiveGlobals(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.integrationtests\n" +
                      "\n" +
                      "global int foo;\n" +
@@ -3720,8 +3799,9 @@ public class Misc2Test {
 
     }
 
-    @Test
-    public void testClashingRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testClashingRules(KieBaseTestConfiguration kieBaseTestConfiguration) {
         //DROOLS-287
         String drl = "package org.drools.test; \n" +
                      "" +
@@ -3734,8 +3814,9 @@ public class Misc2Test {
         KieBase kb = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration, drl); 
     }
 
-    @Test
-    public void testDontFailOnDuplicatedRuleWithDeclaredTypeError() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDontFailOnDuplicatedRuleWithDeclaredTypeError(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String rule1 =
                 "rule \"Some Rule\"\n" +
                 "when\n" +
@@ -3761,8 +3842,9 @@ public class Misc2Test {
     }
 
 
-    @Test
-    public void testBindingComplexExpression() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBindingComplexExpression(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-43
         String drl = "package org.drools.test;\n" +
                      "\n" +
@@ -3805,8 +3887,9 @@ public class Misc2Test {
     }
 
 
-    @Test
-    public void testBindingComplexExpressionWithDRL5() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBindingComplexExpressionWithDRL5(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-43
         String drl = "package org.drools.test;\n" +
                      "\n" +
@@ -3847,8 +3930,9 @@ public class Misc2Test {
 
     }
 
-    @Test
-    public void testEvalConstraintWithMvelOperator() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEvalConstraintWithMvelOperator(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "rule \"yeah\" " + "\tdialect \"mvel\"\n when "
                      + "Foo( eval( field soundslike \"water\" ) )" + " then " + "end";
         DrlParser drlParser = new DrlParser();
@@ -3863,8 +3947,9 @@ public class Misc2Test {
         assertThat(pd.getConstraint().getDescrs().size()).isEqualTo(1);
     }
 
-    @Test
-    public void testManyAccumulatesWithSubnetworks() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testManyAccumulatesWithSubnetworks(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.compiler.tests; \n" +
                      "" +
                      "declare FunctionResult\n" +
@@ -3925,8 +4010,9 @@ public class Misc2Test {
     }
 
 
-    @Test
-    public void testLinkRiaNodesWithSubSubNetworks() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLinkRiaNodesWithSubSubNetworks(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.compiler.tests; \n" +
                      "" +
                      "import java.util.*; \n" +
@@ -3982,8 +4068,9 @@ public class Misc2Test {
 
     }
 
-    @Test
-    public void testDynamicSalienceUpdate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDynamicSalienceUpdate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.compiler.tests; \n" +
                      "" +
                      "import java.util.*; \n" +
@@ -4036,8 +4123,9 @@ public class Misc2Test {
         ksession.dispose();
     }
 
-    @Test
-    public void testInitialFactLeaking() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInitialFactLeaking(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-239
         String drl = "global java.util.List list;\n" +
                      "rule R when\n" +
@@ -4066,8 +4154,9 @@ public class Misc2Test {
         ksession.dispose();
     }
 
-    @Test
-    public void testNoLoopWithNamedConsequences() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNoLoopWithNamedConsequences(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-327
         String drl =
                 "import " + Message.class.getCanonicalName() + "\n" +
@@ -4091,8 +4180,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testInsertModifyInteractionsWithLockOnActive() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInsertModifyInteractionsWithLockOnActive(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "package org.drools.mvel.integrationtests;\n" +
                 "import org.drools.mvel.compiler.Message;\n" +
@@ -4131,8 +4221,10 @@ public class Misc2Test {
         assertThat(m2.getMessage3()).isEqualTo("Three");
     }
 
-    @Test(timeout = 10000)
-    public void testWumpus1() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testWumpus1(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "import org.drools.mvel.integrationtests.Misc2Test.Hero;\n" +
                      "import org.drools.mvel.integrationtests.Misc2Test.StepForwardCommand;\n" +
                      "global java.util.List list; \n " +
@@ -4169,8 +4261,10 @@ public class Misc2Test {
         assertThat(hero.getPos()).isEqualTo(2);
     }
 
-    @Test(timeout = 10000)
-    public void testWumpus2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testWumpus2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "import org.drools.mvel.integrationtests.Misc2Test.Hero;\n" +
                      "import org.drools.mvel.integrationtests.Misc2Test.StepForwardCommand;\n" +
                      "import org.drools.mvel.integrationtests.Misc2Test.ChangeDirectionCommand;\n" +
@@ -4208,8 +4302,10 @@ public class Misc2Test {
         assertThat(hero.getPos()).isEqualTo(2);
     }
 
-    @Test(timeout = 10000)
-    public void testWumpus3() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testWumpus3(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "import org.drools.mvel.integrationtests.Misc2Test.Hero;\n" +
                      "import org.drools.mvel.integrationtests.Misc2Test.StepForwardCommand;\n" +
                      "import org.drools.mvel.integrationtests.Misc2Test.ChangeDirectionCommand;\n" +
@@ -4264,8 +4360,10 @@ public class Misc2Test {
         assertThat(hero.getPos()).isEqualTo(1);
     }
 
-    @Test(timeout = 10000)
-    public void testWumpus4() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testWumpus4(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "import org.drools.mvel.integrationtests.Misc2Test.Hero;\n" +
                      "import org.drools.mvel.integrationtests.Misc2Test.StepForwardCommand;\n" +
                      "import org.drools.mvel.integrationtests.Misc2Test.ChangeDirectionCommand;\n" +
@@ -4354,8 +4452,9 @@ public class Misc2Test {
     public static class StepForwardCommand {
     }
 
-    @Test
-    public void testDynamicSalience() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDynamicSalience(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-334
         String drl = "import org.drools.mvel.integrationtests.Misc2Test.SimpleMessage\n" +
                      "\n" +
@@ -4422,8 +4521,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testCollectAndAccumulate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectAndAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-173
         String drl = "import java.util.List\n" +
                      "\n" +
@@ -4487,8 +4587,9 @@ public class Misc2Test {
         assertThat(list.get(3)).isEqualTo(3);
     }
 
-    @Test
-    public void testMatchingEventsInStreamMode() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMatchingEventsInStreamMode(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-338
         String drl =
                 "import org.drools.mvel.integrationtests.Misc2Test.SimpleEvent\n" +
@@ -4510,7 +4611,7 @@ public class Misc2Test {
                 "then\n" +
                 "end\n";
 
-        KieBaseTestConfiguration streamConfig = TestParametersUtil.getStreamInstanceOf(kieBaseTestConfiguration);
+        KieBaseTestConfiguration streamConfig = TestParametersUtil2.getStreamInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", streamConfig, drl);
         KieSession ksession = kbase.newKieSession();
 
@@ -4532,8 +4633,9 @@ public class Misc2Test {
         assertThat(i.get()).isEqualTo(1);
     }
 
-    @Test
-    public void testRuleDoesNotRefireOnNewSession() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testRuleDoesNotRefireOnNewSession(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-339
         String drl = "\n" +
                      "global java.util.List list\n" +
@@ -4581,8 +4683,9 @@ public class Misc2Test {
         ksession.dispose();
     }
 
-    @Test
-    public void testWildcardImportForTypeField() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testWildcardImportForTypeField(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-348
         String drl = "import java.util.*\n" +
                      "declare MyType\n" +
@@ -4595,8 +4698,9 @@ public class Misc2Test {
         KieSession ksession = ks.newKieContainer( ks.getRepository().getDefaultReleaseId() ).newKieSession();
     }
 
-    @Test
-    public void testWildcardImportForTypeFieldOldApi() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testWildcardImportForTypeFieldOldApi(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-348
         String drl = "import java.util.*\n" +
                      "declare MyType\n" +
@@ -4607,8 +4711,9 @@ public class Misc2Test {
         KieSession ksession = kbase.newKieSession();
     }
 
-    @Test
-    public void testTypeCheckInOr() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testTypeCheckInOr(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1029911
         String str = "import org.drools.mvel.compiler.*;\n" +
                      "import java.util.*;\n" +
@@ -4630,8 +4735,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testDynamicNegativeSalienceWithSpace() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDynamicNegativeSalienceWithSpace(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-302
         String str =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -4651,8 +4757,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testJoinNoLoop() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJoinNoLoop(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1034094
         String str =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -4677,8 +4784,9 @@ public class Misc2Test {
         assertThat(mario.getAge()).isEqualTo(40);
     }
 
-    @Test
-    public void testConstraintOnSerializable() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testConstraintOnSerializable(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-372
         String str =
                 "import org.drools.mvel.integrationtests.Misc2Test.SerializableValue\n" +
@@ -4707,8 +4815,10 @@ public class Misc2Test {
         }
     }
 
-    @Test(timeout = 10000)
-    public void testInfiniteLoopUpdatingWithRBTreeIndexing() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testInfiniteLoopUpdatingWithRBTreeIndexing(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1040032
         String drl =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -4785,9 +4895,10 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    @Ignore
-    public void testJitting() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Disabled
+    public void testJitting(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-185
         String str =
                 " import org.drools.mvel.integrationtests.Misc2Test.AA; " +
@@ -4817,8 +4928,9 @@ public class Misc2Test {
         assertThat(list.size()).isEqualTo(100);
     }
 
-    @Test
-    public void testQueryCorruption() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testQueryCorruption(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         String drl = "package drl;\n" +
 
@@ -4870,8 +4982,9 @@ public class Misc2Test {
     }
 
 
-    @Test
-    public void testPackagingJarWithTypeDeclarations() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPackagingJarWithTypeDeclarations(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // BZ-1054823
         String drl1 =
                 "package org.drools.compiler\n" +
@@ -4897,8 +5010,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testJittingConstraintWithArrayParams() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJittingConstraintWithArrayParams(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // BZ-1057000
         String str =
                 "import org.drools.mvel.integrationtests.Misc2Test.Strings\n" +
@@ -4978,8 +5092,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testJittingConstraintInvokingStaticMethod() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJittingConstraintInvokingStaticMethod(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-410
         String str =
                 "dialect \"mvel\"\n" +
@@ -5042,8 +5157,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testGlobalInConstraint() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGlobalInConstraint(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str =
                 "global " + Evaller.class.getCanonicalName() + " evaller;\n" +
                 "global java.util.List list;\n" +
@@ -5073,8 +5189,9 @@ public class Misc2Test {
         assertThat((int) list.get(0)).isEqualTo(42);
     }
 
-    @Test
-    public void testStaticInConstraint() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStaticInConstraint(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str =
                 "import " + Evaller.class.getCanonicalName() + ";\n" +
                 "global java.util.List list;\n" +
@@ -5103,8 +5220,9 @@ public class Misc2Test {
         assertThat((int) list.get(0)).isEqualTo(42);
     }
 
-    @Test
-    public void testFieldPrecedenceOverGlobal() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFieldPrecedenceOverGlobal(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str =
                 "import " + EvallerBean.class.getCanonicalName() + ";\n" +
                 "global " + Evaller.class.getCanonicalName() + " evaller;\n" +
@@ -5129,8 +5247,9 @@ public class Misc2Test {
         assertThat((int) list.get(0)).isEqualTo(42);
     }
 
-    @Test
-    public void testFieldPrecedenceOverDeclaration() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFieldPrecedenceOverDeclaration(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str =
                 "import " + Evaller.class.getCanonicalName() + ";\n" +
                 "import " + EvallerBean.class.getCanonicalName() + ";\n" +
@@ -5156,8 +5275,9 @@ public class Misc2Test {
         assertThat((int) list.get(0)).isEqualTo(42);
     }
 
-    @Test
-    public void testContainsOnString() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testContainsOnString(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-388
         String str =
                 "global java.util.List list;\n" +
@@ -5183,8 +5303,9 @@ public class Misc2Test {
     }
 
 
-    @Test
-    public void testFunctionJitting() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFunctionJitting(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-404
         String str =
                 "global java.util.List list;\n" +
@@ -5208,8 +5329,9 @@ public class Misc2Test {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testGlobalExtractor() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGlobalExtractor(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str = "package org.test; " +
                      "import java.util.*; " +
 
@@ -5241,8 +5363,9 @@ public class Misc2Test {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testSharedNotWithLeftUpdateAndRightInsert() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSharedNotWithLeftUpdateAndRightInsert(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // BZ-1070092
         String str =
                 "import " + Foo.class.getCanonicalName() + ";\n" +
@@ -5273,8 +5396,9 @@ public class Misc2Test {
         assertThat(f2.getX()).isEqualTo(3);
     }
 
-    @Test
-    public void testNestedNots1() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNestedNots1(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-444
         String str = "package org.test; " +
 
@@ -5324,8 +5448,9 @@ public class Misc2Test {
         assertThat(n).isEqualTo(7);
     }
 
-    @Test
-    public void testNestedNots2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNestedNots2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-444
         String str = "package org.test; " +
 
@@ -5382,8 +5507,9 @@ public class Misc2Test {
         assertThat(n).isEqualTo(8);
     }
 
-    @Test
-    public void testNestedNots3() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNestedNots3(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-444
         String str = "package org.test; " +
 
@@ -5403,8 +5529,9 @@ public class Misc2Test {
         assertThat(n).isEqualTo(1);
     }
 
-    @Test
-    public void testExtendingDate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendingDate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1072629
         String str = "import " + MyDate.class.getCanonicalName() + " \n"
                      + "rule 'sample rule' \n"
@@ -5428,8 +5555,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testEvalInSubnetwork() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEvalInSubnetwork(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-460
         String str = "global java.util.List list;\n" +
                      "\n" +
@@ -5464,16 +5592,18 @@ public class Misc2Test {
         assertThat((int) list.get(0)).isEqualTo(0);
     }
 
-    @Test
-    public void testRedeclaringRuleAttribute() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testRedeclaringRuleAttribute(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1092084
         String str = "rule R salience 10 salience 100 when then end\n";
 
         assertDrlHasCompilationError( str, 1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testMultilineStatement() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMultilineStatement(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1092502
         String str = "rule \"test\"\n" +
                      "dialect \"mvel\"\n" +
@@ -5489,8 +5619,9 @@ public class Misc2Test {
         assertThat(messages.isEmpty()).as(messages.toString()).isTrue();
     }
 
-    @Test
-    public void testExtendsWithStrictModeOff() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testExtendsWithStrictModeOff(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // not for exec-model test. Cannot change DialectConfiguration by kieModuleConfigurationProperties 
         // DROOLS-475
         String str =
@@ -5546,8 +5677,9 @@ public class Misc2Test {
         assertThat(kbuilder.hasErrors()).isFalse();
     }
 
-    @Test
-    public void testCompilationFailureWithDuplicatedAnnotation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCompilationFailureWithDuplicatedAnnotation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1099896
         String str = "declare EventA\n" +
                      " @role(fact)\n" +
@@ -5557,8 +5689,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( str, 1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testCrossNoLoopWithNodeSharing() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCrossNoLoopWithNodeSharing(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-501 Propgation context is not set correctly when nodes are shared
         // This test was looping in 6.1.0-Beta4
         String drl = "package org.drools.mvel.compiler.loop " +
@@ -5600,8 +5733,9 @@ public class Misc2Test {
         session.dispose();
     }
 
-    @Test
-    public void testNotNodesUnlinking() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotNodesUnlinking(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // BZ-1101471
         String drl = "import " + Trailer.class.getCanonicalName() + ";" +
                      "global java.util.List trailerList;" +
@@ -5688,8 +5822,9 @@ public class Misc2Test {
     public static class Host {
     }
 
-    @Test
-    public void testJITIncompatibleTypes() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJITIncompatibleTypes(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // BZ-1101295
         String drl =
                 "import " + Host.class.getCanonicalName() + ";\n" +
@@ -5757,8 +5892,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testAccumulateWithNodeSharing() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAccumulateWithNodeSharing(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-487
         String drl =
                 "import " + TypeA.class.getCanonicalName() + ";\n" +
@@ -5844,8 +5980,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testDeletedEvalLeftTuple() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeletedEvalLeftTuple(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // BZ-1106300
         String drl =
                 "import " + Reading.class.getCanonicalName() + ";\n" +
@@ -5961,8 +6098,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testDeleteFromLeftTuple() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeleteFromLeftTuple(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-518
         String drl =
                 "import " + C1.class.getCanonicalName() + ";\n" +
@@ -6010,8 +6148,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testMethodResolution() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMethodResolution(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-509
         String drl =
                 "import " + I1.class.getCanonicalName() + ";\n" +
@@ -6029,8 +6168,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testCorrectErrorMessageOnDeclaredTypeCompilation() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCorrectErrorMessageOnDeclaredTypeCompilation(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-543
         String str = "rule R\n" +
                      "salience 10\n" +
@@ -6052,8 +6192,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( str, 1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testFieldNameStartingWithUnderscore() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFieldNameStartingWithUnderscore(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-554
         String str = "import " + Underscore.class.getCanonicalName() + ";\n" +
                      "rule R when\n" +
@@ -6078,8 +6219,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testSharedQueryNode() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSharedQueryNode(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-561
         String drl =
                 "query find( Integer $i, String $s )\n" +
@@ -6107,8 +6249,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testLeftTupleGetIndex() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLeftTupleGetIndex(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-570
         String drl =
                 "rule R1 when\n" +
@@ -6131,8 +6274,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testStrOperatorInAccumulate() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrOperatorInAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-574
         String drl =
                 "declare Message\n" +
@@ -6187,8 +6331,9 @@ public class Misc2Test {
         assertThat(list.contains("group by hi count is 1")).isTrue();
     }
 
-    @Test
-    public void testKeywordAsAttribute() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testKeywordAsAttribute(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-577
         String drl =
                 "package foo.bar;\n" +
@@ -6244,8 +6389,9 @@ public class Misc2Test {
         assertThat(list.contains("F060d")).isTrue();
     }
 
-    @Test
-    public void testRuleExtendsWithNamedConsequence() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testRuleExtendsWithNamedConsequence(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-581
         String drl =
                 "package org.drools.test;\n" +
@@ -6278,8 +6424,9 @@ public class Misc2Test {
         assertThat((int) list.get(1)).isEqualTo(10);
     }
 
-    @Test
-    public void testRuleExtendsWithOverriddenNamedConsequence() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testRuleExtendsWithOverriddenNamedConsequence(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-581
         String drl =
                 "package org.drools.test;\n" +
@@ -6314,8 +6461,9 @@ public class Misc2Test {
         assertThat(list.get(1)).isEqualTo("10");
     }
 
-    @Test
-    public void testCustomDynamicSalience() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCustomDynamicSalience(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.test; " +
                      "import " + Person.class.getName() + "; " +
                      "global java.util.List list; " +
@@ -6376,8 +6524,9 @@ public class Misc2Test {
         assertThat(list).isEqualTo(Arrays.asList(6, 5, 4, 3, 2, 1));
     }
 
-    @Test
-    public void testNotWithSubNetwork() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotWithSubNetwork(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "rule R when\n" +
                 "    $s : String( )\n" +
@@ -6405,8 +6554,9 @@ public class Misc2Test {
         assertThat(ksession.getFactCount()).isEqualTo(0);
     }
 
-    @Test
-    public void testGenericsInRHSWithModify() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGenericsInRHSWithModify(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-493
         String drl =
                 "import java.util.Map;\n" +
@@ -6425,8 +6575,9 @@ public class Misc2Test {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testQueryWithAgendaGroup() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testQueryWithAgendaGroup(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-601
         String drl =
                 "package org.drools.test; " +
@@ -6480,8 +6631,9 @@ public class Misc2Test {
         assertThat(list).isEqualTo(Arrays.asList(42, 99));
     }
 
-    @Test
-    public void testQueryUsingQueryWithAgendaGroup() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testQueryUsingQueryWithAgendaGroup(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-601
         String drl =
                 "package org.drools.test; " +
@@ -6553,33 +6705,9 @@ public class Misc2Test {
         assertThat(list).isEqualTo(Arrays.asList(42, 99));
     }
 
-    @Test
-    public void testFactTemplates() {
-        // DROOLS-600
-        String drl = "package com.testfacttemplate;" +
-                     " rule \"test rule\" " +
-                     " dialect \"mvel\" " +
-                     " when " +
-                     " $test : TestFactTemplate( status == 1 ) " +
-                     " then " +
-                     " System.out.println( \"Hello World\" ); " +
-                     " end ";
-
-        InternalKnowledgePackage kPackage = CoreComponentFactory.get().createKnowledgePackage( "com.testfacttemplate" );
-        FieldTemplate fieldTemplate = new FieldTemplateImpl( "status", Integer.class );
-        FactTemplate factTemplate = new FactTemplateImpl(kPackage, "TestFactTemplate", fieldTemplate);
-
-        KnowledgeBuilderImpl kBuilder = new KnowledgeBuilderImpl(kPackage );
-        StringReader rule = new StringReader( drl );
-        try {
-            kBuilder.addPackageFromDrl(rule);
-        } catch (Exception e) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @Test
-    public void testBitwiseOperator() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBitwiseOperator(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-585
         String drl =
                 "global java.util.List list;\n" +
@@ -6605,8 +6733,9 @@ public class Misc2Test {
         assertThat(list.containsAll(asList(3, 6))).isTrue();
     }
 
-    @Test
-    public void testNotSubnetwork() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotSubnetwork(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-623
         String drl =
                 "import " + TypeCC.class.getCanonicalName() + ";\n" +
@@ -6616,17 +6745,17 @@ public class Misc2Test {
                 "when  \n" +
                 "   $dd : TypeDD( value < 1 )\n" +
                 "then  \n" +
-                "	System.out.println(\"Rule R1 Fired\");\n" +
-                "	modify($dd) { setValue(1); }\n" +
+                "    System.out.println(\"Rule R1 Fired\");\n" +
+                "    modify($dd) { setValue(1); }\n" +
                 "end  \n" +
                 "  \n" +
                 "rule R2 when  \n" +
                 "   String( )  \n" +
                 "   $cc : TypeCC( value < 1 )\n" +
                 "   not(  \n" +
-                "	   $cc_not : TypeCC( )  \n" +
-                "	   and  \n" +
-                "	   $dd_not : TypeDD( value==0 )  \n" +
+                "       $cc_not : TypeCC( )  \n" +
+                "       and  \n" +
+                "       $dd_not : TypeDD( value==0 )  \n" +
                 "   )  \n" +
                 "then  \n" +
                 "   System.out.println(\"Rule R2 Fired\");\n" +
@@ -6668,8 +6797,9 @@ public class Misc2Test {
     public static class TypeDD extends ValueContainer {
     }
 
-    @Test
-    public void testClassAccumulator() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testClassAccumulator(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-626
         String drl =
                 "global java.util.List list\n" +
@@ -6703,8 +6833,9 @@ public class Misc2Test {
         assertThat(list.containsAll(asList(String.class, Integer.class))).isTrue();
     }
 
-    @Test
-    public void testSubnetworkAccumulate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSubnetworkAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "import " + StringWrapper.class.getCanonicalName() + ";\n" +
                 "global StringBuilder sb;" +
@@ -6784,8 +6915,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testImportInner() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testImportInner(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-677
         String drl =
                 "package org.drools.test; " +
@@ -6801,9 +6933,10 @@ public class Misc2Test {
         assertThat(errors.isEmpty()).as(errors.toString()).isTrue();
     }
 
-    @Test
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
     //DROOLS-678
-    public void testAlphaIndexing() throws Exception {
+    public void testAlphaIndexing(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String drl =
                 "    package org.drools.test; " +
 
@@ -6843,8 +6976,9 @@ public class Misc2Test {
         assertThat(ks.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testMvelConstraintErrorMessageOnAlpha() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMvelConstraintErrorMessageOnAlpha(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-687
         String drl =
                 " import org.drools.mvel.compiler.Person; " +
@@ -6868,8 +7002,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testMvelConstraintErrorMessageOnBeta() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMvelConstraintErrorMessageOnBeta(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-687
         String drl =
                 " import org.drools.mvel.compiler.Person; " +
@@ -6895,8 +7030,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testPassiveExists() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPassiveExists(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-699
         String drl2 =
                 "import " + List.class.getCanonicalName() + ";\n"
@@ -6918,8 +7054,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(4);
     }
 
-    @Test
-    public void testFromAfterOr() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFromAfterOr(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-707
         String drl2 =
                 "rule \"Disaster Rule\"\n" +
@@ -6937,8 +7074,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testMalformedAccumulate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMalformedAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-725
         String str =
                 "rule R when\n" +
@@ -6953,8 +7091,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( str, 1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testDuplicateDeclarationInAccumulate1() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDuplicateDeclarationInAccumulate1(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-727
         String drl1 =
                 "import java.util.*\n" +
@@ -6969,8 +7108,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( drl1, 1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testDuplicateDeclarationInAccumulate2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDuplicateDeclarationInAccumulate2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-727
         String drl1 =
                 "import java.util.*\n" +
@@ -6985,8 +7125,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( drl1, 1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testCompilationFailureOnNonExistingVariable() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCompilationFailureOnNonExistingVariable(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-734
         String drl1 =
                 "import java.util.*\n" +
@@ -6999,8 +7140,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( drl1, 1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testJittedConstraintStringAndLong() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJittedConstraintStringAndLong(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-740
         String drl =
                 " import org.drools.mvel.compiler.Person; " +
@@ -7018,11 +7160,12 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testKieBuilderWithClassLoader() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testKieBuilderWithClassLoader(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-763
         String drl =
-                "import com.billasurf.Person\n" +
+                "import org.example.surf.Person\n" +
                 "\n" +
                 "global java.util.List list\n" +
                 "\n" +
@@ -7040,7 +7183,10 @@ public class Misc2Test {
                 "    list.add($p.getAge());\n" +
                 "end\n";
 
-        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{this.getClass().getResource( "/billasurf.jar" )} );
+        URL simplejar = this.getClass().getResource("/surf.jar");
+        assertThat(simplejar).as("Make sure to build drools-test-coverage-jars first")
+                .isNotNull();
+        URLClassLoader urlClassLoader = new URLClassLoader( new URL[]{simplejar} );
 
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromDrlWithClassLoaderForKieBuilder("test", urlClassLoader, kieBaseTestConfiguration, drl);
         KieSession ksession = kbase.newKieSession();
@@ -7055,8 +7201,9 @@ public class Misc2Test {
         assertThat((int) list.get(0)).isEqualTo(18);
     }
 
-    @Test
-    public void testInsertAndDelete() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInsertAndDelete(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "global java.util.List list\n" +
                 "\n" +
@@ -7083,8 +7230,9 @@ public class Misc2Test {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testClearActivationGroupCommand() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testClearActivationGroupCommand(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-828
         String drl =
                 "package org.kie.test\n" +
@@ -7117,8 +7265,9 @@ public class Misc2Test {
         assertThat(list.get(0)).isEqualTo("Rule without agenda group executed");
     }
 
-    @Test
-    public void testClearActivationGroupCommandNoImmediatePropagation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testClearActivationGroupCommandNoImmediatePropagation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-865
         String drl =
                 "package org.kie.test\n" +
@@ -7164,8 +7313,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testDoubleNestedClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDoubleNestedClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-815
         String drl =
                 "import " + $X.$Y.class.getCanonicalName() + ";\n" +
@@ -7189,8 +7339,9 @@ public class Misc2Test {
         assertThat(list.get(0)).isEqualTo(42);
     }
 
-    @Test
-    public void testWrongNodeSharing() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testWrongNodeSharing(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-588
         String drl1 =
                 "package test1\n" +
@@ -7229,8 +7380,9 @@ public class Misc2Test {
         return 0;
     }
 
-    @Test
-    public void testJittedConstraintComparisonWithIncompatibleObjects() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJittedConstraintComparisonWithIncompatibleObjects(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-858
         String drl =
                 "package org.drools.mvel.integrationtests\n"
@@ -7288,8 +7440,10 @@ public class Misc2Test {
         }
     }
 
-    @Test(timeout = 10000L)
-    public void testFireUntilHaltWithForceEagerActivation() throws InterruptedException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testFireUntilHaltWithForceEagerActivation(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException {
         String drl = "global java.util.List list\n" +
                      "rule \"String detector\"\n" +
                      "    when\n" +
@@ -7370,8 +7524,9 @@ public class Misc2Test {
         public int b3 = 3;
     }
 
-    @Test
-    public void testSkipHashingOfNestedProperties() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSkipHashingOfNestedProperties(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-870
         String drl =
                 "import " + A1.class.getCanonicalName() + "\n" +
@@ -7407,8 +7562,9 @@ public class Misc2Test {
         assertThat(list.containsAll(asList("1", "2", "3"))).isTrue();
     }
 
-    @Test
-    public void testErrorReportWithWrongAccumulateFunction() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testErrorReportWithWrongAccumulateFunction(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-872
         String drl =
                 "import " + Cheese.class.getCanonicalName() + "\n" +
@@ -7423,8 +7579,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( drl, -1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testVariableMatchesField() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testVariableMatchesField(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-882
         String drl =
                 "declare RegEx\n" +
@@ -7454,8 +7611,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testEndMethod() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testEndMethod(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-889
         String drl =
                 "import " + Pattern.class.getCanonicalName() + "\n" +
@@ -7502,8 +7660,9 @@ public class Misc2Test {
     public static class ChildB extends Parent {
     }
 
-    @Test
-    public void testDifferentClassesWithOR() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDifferentClassesWithOR(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-897
         String drl =
                 "import " + ChildA.class.getCanonicalName() + "\n" +
@@ -7531,8 +7690,9 @@ public class Misc2Test {
         assertThat(childB.getValue()).isEqualTo("Done!");
     }
 
-    @Test
-    public void testJittingCollectionCreation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJittingCollectionCreation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-900
         String drl =
                 "import " + Arrays.class.getCanonicalName() + "\n" +
@@ -7557,8 +7717,9 @@ public class Misc2Test {
         assertThat(list.get(0)).isEqualTo("a");
     }
 
-    @Test
-    public void testJittingCollectionCreationInParenthesis() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJittingCollectionCreationInParenthesis(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-900
         String drl =
                 "import " + Arrays.class.getCanonicalName() + "\n" +
@@ -7583,9 +7744,10 @@ public class Misc2Test {
         assertThat(list.get(0)).isEqualTo("a");
     }
 
-    @Test
-    @Ignore
-    public void testBetaMemoryLeakOnSegmentUnlinking() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Disabled
+    public void testBetaMemoryLeakOnSegmentUnlinking(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-915
         String drl =
                 "rule R1 when\n" +
@@ -7624,15 +7786,16 @@ public class Misc2Test {
             if ( memory != null && memory.getSegmentMemory() != null ) {
                 SegmentMemory segmentMemory = memory.getSegmentMemory();
                 System.out.println( memory );
-                LeftTuple deleteFirst = memory.getSegmentMemory().getStagedLeftTuples().getDeleteFirst();
+                TupleImpl deleteFirst = memory.getSegmentMemory().getStagedLeftTuples().getDeleteFirst();
                 System.out.println( deleteFirst );
                 assertThat(deleteFirst).isNull();
             }
         }
     }
 
-    @Test
-    public void testFunctionInvokingFunction() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFunctionInvokingFunction(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-926
         final String drl =
                 "function boolean isOdd(int i) {\n" +
@@ -7687,8 +7850,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testCompilationFailureWithNonExistingField() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCompilationFailureWithNonExistingField(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1271534
         String drl =
                 "rule R when\n" +
@@ -7699,8 +7863,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( drl, 1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testPatternMatchingWithFakeImplicitCast() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPatternMatchingWithFakeImplicitCast(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-966
         String drl =
                 "rule R1 when\n" +
@@ -7715,8 +7880,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testPatternMatchingWithFakeNullSafe() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPatternMatchingWithFakeNullSafe(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-966
         String drl =
                 "rule R1 when\n" +
@@ -7731,18 +7897,20 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testLambdaInRHS() {
-        checkJava8InRhs("i -> list.add(i)");
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testLambdaInRHS(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        checkJava8InRhs(kieBaseTestConfiguration, "i -> list.add(i)");
     }
 
-    @Test
-    public void testMethodReferenceInRHS() {
-        checkJava8InRhs("list::add");
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMethodReferenceInRHS(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        checkJava8InRhs(kieBaseTestConfiguration, "list::add");
     }
 
-    private void checkJava8InRhs(String expr) {
-        assumeTrue(System.getProperty("java.version").startsWith( "1.8" ));
+    private void checkJava8InRhs(KieBaseTestConfiguration kieBaseTestConfiguration, String expr) {
+        assumeThat(System.getProperty("java.version").startsWith( "1.8" ));
 
         // BZ-1199965
         String drl =
@@ -7764,8 +7932,9 @@ public class Misc2Test {
         assertThat(list.containsAll(Arrays.asList(1, 2, 3, 4))).isTrue();
     }
 
-    @Test
-    public void testCompareToOnInterface() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCompareToOnInterface(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1013
         String drl =
                 "import " + StringWrapper.class.getCanonicalName() + "\n" +
@@ -7791,8 +7960,9 @@ public class Misc2Test {
         assertThat(list.get(0)).isEqualTo("bbb");
     }
 
-    @Test
-    public void testFromEPDontRequireLeftInput() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFromEPDontRequireLeftInput(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1014
         String drl =
                 "rule R when\n" +
@@ -7816,8 +7986,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testIn() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIn(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1037
         String drl =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -7841,8 +8012,9 @@ public class Misc2Test {
         assertThat(list.get(0)).isEqualTo("Bob");
     }
 
-    @Test
-    public void testNonSerializableInEvaluatorWrapper() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNonSerializableInEvaluatorWrapper(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // BZ-1315143
         String str = "package org.drools.mvel.compiler\n" +
                      "rule B\n" +
@@ -7894,8 +8066,9 @@ public class Misc2Test {
         ksession2.dispose();
     }
 
-    @Test
-    public void testWrongNodeSharingWithSameHashCode() throws IllegalAccessException, InstantiationException {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testWrongNodeSharingWithSameHashCode(KieBaseTestConfiguration kieBaseTestConfiguration) throws IllegalAccessException, InstantiationException {
 
         String drl =
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -7924,8 +8097,9 @@ public class Misc2Test {
         assertThat(b5L.isHappy()).isTrue();
     }
 
-    @Test
-    public void testWrongVariableNameWithSameDeclarationName() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testWrongVariableNameWithSameDeclarationName(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1064
         String str =
                 "declare Parameter end\n" +
@@ -7937,8 +8111,9 @@ public class Misc2Test {
         assertDrlHasCompilationError( str, -1, kieBaseTestConfiguration );
     }
 
-    @Test
-    public void testComplexEvals() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testComplexEvals(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1139
         String drl =
                 "rule R1 when\n" +
@@ -7956,8 +8131,9 @@ public class Misc2Test {
         assertThat(kieSession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testComplexEvals2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testComplexEvals2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1139
         String drl =
                 "rule R1 when\n" +
@@ -7980,8 +8156,9 @@ public class Misc2Test {
         assertThat(kieSession.fireAllRules()).isEqualTo(4);
     }
 
-    @Test
-    public void testDeletedRightTupleInChangedBucket() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDeletedRightTupleInChangedBucket(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // PLANNER-488
         String drl =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -8023,8 +8200,9 @@ public class Misc2Test {
         kieSession.fireAllRules();
     }
 
-    @Test
-    public void testJittingFunctionReturningAnInnerClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJittingFunctionReturningAnInnerClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1166
         String drl =
                 "import " + java.util.function.Function.class.getCanonicalName() + "\n" +
@@ -8048,8 +8226,9 @@ public class Misc2Test {
         assertThat(kieSession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testQueryWithEnum() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testQueryWithEnum(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1181
         String drl =
                 "import " + AnswerGiver.class.getCanonicalName() + "\n" +
@@ -8074,8 +8253,9 @@ public class Misc2Test {
         assertThat(kieSession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testOrQueryWithEnum() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testOrQueryWithEnum(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1181
         String drl =
                 "import " + AnswerGiver.class.getCanonicalName() + "\n" +
@@ -8104,8 +8284,9 @@ public class Misc2Test {
         assertThat(kieSession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testModifyWithOr() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testModifyWithOr(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1185
         String drl =
                 "import " + List.class.getCanonicalName() + "\n" +
@@ -8129,8 +8310,9 @@ public class Misc2Test {
         assertThat(kieSession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testNormalizeRuleName() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNormalizeRuleName(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1192
         String drl =
                 "rule \"rule（hello）\" when\n" +
@@ -8145,8 +8327,9 @@ public class Misc2Test {
         assertThat(kieSession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testWiringClassOnPackageMerge() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testWiringClassOnPackageMerge(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String drl_init =
                 "package init;\n" +
                 "import org.kie.test.TestObject\n" +
@@ -8218,8 +8401,9 @@ public class Misc2Test {
         assertThat(list.contains("R2")).isTrue();
     }
 
-    @Test
-    public void testReorderRightMemoryOnIndexedField() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testReorderRightMemoryOnIndexedField(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1174
         String rule = "import " + Misc2Test.Seat.class.getCanonicalName() + ";\n"
                 + "\n"
@@ -8295,8 +8479,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testChildLeftTuplesIterationOnLeftUpdate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testChildLeftTuplesIterationOnLeftUpdate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1186
         String drl =
                 "import " + Shift.class.getCanonicalName() + "\n" +
@@ -8387,8 +8572,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void test1187() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void test1187(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1187
         String drl = "import " + Misc2Test.Shift1187.class.getCanonicalName() + "\n"
                 + "rule insertEmployeeConsecutiveWeekendAssignmentStart when\n"
@@ -8485,8 +8671,9 @@ public class Misc2Test {
         }
     }
 
-    @Test
-    public void testReportFailingConstraintOnError() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testReportFailingConstraintOnError(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1071
         String drl =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -8525,8 +8712,9 @@ public class Misc2Test {
 
     }
 
-    @Test
-    public void testNpeInLessThanComparison() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNpeInLessThanComparison(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // RHBRMS-2462
         String drl = "package com.sample\n"
                      + "import " + TestObject.class.getCanonicalName() + ";\n"
@@ -8581,8 +8769,9 @@ public class Misc2Test {
         assertThat(list.contains("GreaterThanCompare:null")).isFalse();
     }
     
-    @Test
-    public void testUnderscoreDoubleMultiplicationCastedToInt() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testUnderscoreDoubleMultiplicationCastedToInt(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1420
         String str =
                 "import " + Cheese.class.getCanonicalName() + "\n" +
@@ -8612,11 +8801,13 @@ public class Misc2Test {
      * Helpful to test thread dump when a timeout occur on the JUnit listener.
      * @throws Exception
      */
-    @Ignore("This test deliberately creates a deadlock, failing the test with a timeout.\n" + 
+    @Disabled("This test deliberately creates a deadlock, failing the test with a timeout.\n" + 
             "Helpful to test thread dump when a timeout occur on the JUnit listener.\n" + 
             "See org.kie.test.util.TestStatusListener#testFailure()")
-    @Test(timeout=5_000L)
-    public void testDeadlock() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDeadlock(KieBaseTestConfiguration kieBaseTestConfiguration) {
         Object lock1 = 1L;
         Object lock2 = 2L;
         Runnable task1 = () -> {
@@ -8652,8 +8843,9 @@ public class Misc2Test {
         public void nothing() {}
     }
     
-    @Test
-    public void test01841522() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void test01841522(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str = "package com.sample\n" +
                      "import " + ElementOperation.class.getCanonicalName() + ";\n" +
                      "import " + AbstractElement.class.getCanonicalName() + ";\n" +
@@ -8678,9 +8870,10 @@ public class Misc2Test {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    @Ignore("This test is supposed to cause a StackOverflow inside mvel but this not always happens")
-    public void testStackOverflowInMvel() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Disabled("This test is supposed to cause a StackOverflow inside mvel but this not always happens")
+    public void testStackOverflowInMvel(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1542
         String str1 = "import " + Person.class.getName() + ";\n" +
                      "rule R1 when\n" +
@@ -8700,8 +8893,9 @@ public class Misc2Test {
         assertThat(kbuilder.getErrors().toString().contains("StackOverflowError")).isTrue();
     }
 
-    @Test
-    public void testMergeMVELDialect() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMergeMVELDialect(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1751
         String drl1 = "package com.sample\n" +
                 "import org.drools.mvel.compiler.*;\n" +
@@ -8751,8 +8945,9 @@ public class Misc2Test {
         assertThat(fired).isEqualTo(2);
     }
 
-    @Test
-    public void testCollectWithEagerActivation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectWithEagerActivation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-4468
         String drl =
                 "import java.util.ArrayList\n" +
@@ -8805,8 +9000,9 @@ public class Misc2Test {
         assertThat(list.contains("R1")).isTrue();
     }
 
-    @Test
-    public void testModifyAddToList() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testModifyAddToList(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-4447
         String str =
                 "import " + Address.class.getCanonicalName() + "\n" +
@@ -8832,8 +9028,9 @@ public class Misc2Test {
         assertThat(martin.getAddresses().size()).isEqualTo(1);
     }
 
-    @Test
-    public void testKieHelperReleaseId() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testKieHelperReleaseId(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // test for KieHelper. not for exec-model
         String drl =
                 "rule R when\n" +
@@ -8853,8 +9050,9 @@ public class Misc2Test {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testKieHelperKieModuleModel() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testKieHelperKieModuleModel(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
 
         // Test to check whether verify method writes KieModuleModel to KieFileSystem
         final String drl =

@@ -1,31 +1,33 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import org.drools.compiler.kie.builder.impl.DrlProject;
 import org.drools.compiler.kie.builder.impl.InternalKieModule;
 import org.drools.core.util.FileManager;
 import org.drools.model.codegen.ExecutableModelProject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -38,21 +40,15 @@ import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class KieBaseIncludeTest {
-    private final Class<? extends KieBuilder.ProjectType> projectType;
 
-    public KieBaseIncludeTest(boolean useModel) {
-        this.projectType = useModel ? ExecutableModelProject.class : DrlProject.class;
+	public static Stream<Class<? extends KieBuilder.ProjectType>> parameters() {
+        return Stream.of(ExecutableModelProject.class, DrlProject.class);
     }
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Object[] params() {
-        return new Object[] {false, true};
-    }
-
-    @Test
-    public void testKJarIncludedDependency() throws Exception {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testKJarIncludedDependency(Class<? extends KieBuilder.ProjectType> projectType) throws Exception {
         String rule = "package org.test rule R when String() then end";
 
         KieServices ks = KieServices.Factory.get();
@@ -62,7 +58,7 @@ public class KieBaseIncludeTest {
         FileManager fileManager = new FileManager();
         fileManager.setUp();
 
-        InternalKieModule kJar1 = createKieJar( ks, includedReleaseId, rule );
+        InternalKieModule kJar1 = createKieJar(projectType, ks, includedReleaseId, rule );
 
         fileManager.tearDown();
         fileManager = new FileManager();
@@ -88,7 +84,7 @@ public class KieBaseIncludeTest {
         fileManager.tearDown();
     }
 
-    private InternalKieModule createKieJar(KieServices ks, ReleaseId releaseId, String... rules) throws IOException {
+    private InternalKieModule createKieJar(Class<? extends KieBuilder.ProjectType> projectType, KieServices ks, ReleaseId releaseId, String... rules) throws IOException {
         KieModuleModel kproj = ks.newKieModuleModel();
         KieBaseModel kieBaseModel1 = kproj.newKieBaseModel("KBase1");
         KieSessionModel ksession1 = kieBaseModel1.newKieSessionModel("KSession1");

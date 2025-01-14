@@ -1,17 +1,20 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.kie.pmml.models.drools.ast.factories;
 
@@ -38,7 +41,7 @@ public class KiePMMLDerivedFieldASTFactory {
     }
 
     /**
-     * @param fieldTypeMap the <code>Map&lt;String, KiePMMLOriginalTypeGeneratedType&gt;</code> to be populated with mapping between original field' name and <b>original type/generated type</b> tupla
+     * @param fieldTypeMap the <code>Map&lt;String, KiePMMLOriginalTypeGeneratedType&gt;</code> to be populated with mapping between original field' name and <b>original type/generated type</b> tuple
      * @return
      */
     public static KiePMMLDerivedFieldASTFactory factory(final Map<String, KiePMMLOriginalTypeGeneratedType> fieldTypeMap) {
@@ -47,7 +50,7 @@ public class KiePMMLDerivedFieldASTFactory {
 
     /**
      * Create a <code>List&lt;KiePMMLDroolsType&gt;</code> out of original <code>List&lt;DerivedField&gt;</code>s,
-     * and <b>populate</b> the <b>fieldNameTypeNameMap</b> with mapping between original field' name and <b>original type/generated type</b> tupla
+     * and <b>populate</b> the <b>fieldNameTypeNameMap</b> with mapping between original field' name and <b>original type/generated type</b> tuple
      * @param derivedFields
      */
     public List<KiePMMLDroolsType> declareTypes(final List<DerivedField> derivedFields) {
@@ -56,12 +59,12 @@ public class KiePMMLDerivedFieldASTFactory {
 
     /**
      * Create a <code>KiePMMLDroolsType</code> out of original <code>DerivedField</code>,
-     * and <b>populate</b> the <b>fieldNameTypeNameMap</b> with mapping between original field' name and <b>original type/generated type</b> tupla
+     * and <b>populate</b> the <b>fieldNameTypeNameMap</b> with mapping between original field' name and <b>original type/generated type</b> tuple
      * @param derivedField
      */
     public KiePMMLDroolsType declareType(DerivedField derivedField) {
-        String generatedType = getSanitizedClassName(derivedField.getName().getValue().toUpperCase());
-        String fieldName = derivedField.getName().getValue();
+        String generatedType = getSanitizedClassName(derivedField.getName().toUpperCase());
+        String fieldName =derivedField.getName();
         String fieldType = derivedField.getDataType().value();
         fieldTypeMap.put(fieldName, new KiePMMLOriginalTypeGeneratedType(fieldType, generatedType));
         return new KiePMMLDroolsType(generatedType, DATA_TYPE.byName(fieldType).getMappedClass().getSimpleName());

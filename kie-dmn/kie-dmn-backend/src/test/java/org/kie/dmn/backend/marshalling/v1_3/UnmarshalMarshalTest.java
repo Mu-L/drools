@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.backend.marshalling.v1_3;
 
 import java.io.File;
@@ -31,7 +33,7 @@ import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.marshalling.DMNMarshaller;
 import org.kie.dmn.backend.marshalling.v1_3.extensions.TrisoExtensionRegister;
 import org.kie.dmn.backend.marshalling.v1x.DMNMarshallerFactory;
@@ -60,48 +62,48 @@ public class UnmarshalMarshalTest {
     protected static final Logger LOG = LoggerFactory.getLogger(UnmarshalMarshalTest.class);
 
     @Test
-    public void testV13_simple() throws Exception {
+    void v13Simple() throws Exception {
         testRoundTripV13("org/kie/dmn/backend/marshalling/v1_3/", "simple.dmn");
     }
 
     @Test
-    public void testV13_ch11example_asFromOMG() throws Exception {
+    void v13Ch11exampleAsFromOMG() throws Exception {
         DMNMarshaller marshaller = DMNMarshallerFactory.newMarshallerWithExtensions(List.of(new TrisoExtensionRegister())); // as the example from OMG contains example of extension element, preserving.
         testRoundTrip("org/kie/dmn/backend/marshalling/v1_3/", "Chapter 11 Example.dmn", marshaller, DMN13_SCHEMA_SOURCE);
     }
 
     @Test
-    public void testV13_financial() throws Exception {
+    void v13Financial() throws Exception {
         testRoundTripV13("org/kie/dmn/backend/marshalling/v1_3/", "Financial.dmn");
     }
 
     @Test
-    public void testV13_loan_info() throws Exception {
+    void v13LoanInfo() throws Exception {
         testRoundTripV13("org/kie/dmn/backend/marshalling/v1_3/", "Loan info.dmn");
     }
 
     @Test
-    public void testV13_recommended_loan_product() throws Exception {
+    void v13RecommendedLoanProduct() throws Exception {
         testRoundTripV13("org/kie/dmn/backend/marshalling/v1_3/", "Recommended Loan Products.dmn");
     }
 
     @Test
-    public void testV13_group() throws Exception {
+    void v13Group() throws Exception {
         testRoundTripV13("org/kie/dmn/backend/marshalling/v1_3/", "group.dmn");
     }
 
     @Test
-    public void testV13_dmnedge() throws Exception {
+    void v13Dmnedge() throws Exception {
         testRoundTripV13("org/kie/dmn/backend/marshalling/v1_3/", "dmnedge.dmn");
     }
 
     @Test
-    public void testV13_functionItem() throws Exception {
+    void v13FunctionItem() throws Exception {
         testRoundTripV13("org/kie/dmn/backend/marshalling/v1_3/", "functionItem.dmn");
     }
 
     @Test
-    public void testV13_decision_list() throws Exception {
+    void v13DecisionList() throws Exception {
         testRoundTripV13("org/kie/dmn/backend/marshalling/v1_3/", "decision-list.dmn");
     }
 
@@ -237,6 +239,7 @@ DMNDIv1.2:
                                                        return outcome;
                                                    })))
                 .ignoreWhitespace()
+                .ignoreComments()
                 .checkForSimilar()
                 .build();
         checkSimilar.getDifferences().forEach(m -> LOG.error("{}", m));

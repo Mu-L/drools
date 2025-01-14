@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.legacy.tests.core.v1_1;
 
 import java.math.BigDecimal;
@@ -22,7 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.dmn.api.core.DMNContext;
 import org.kie.dmn.api.core.DMNDecisionResult;
 import org.kie.dmn.api.core.DMNMessage;
@@ -40,12 +43,10 @@ import static org.kie.dmn.core.util.DynamicTypeUtils.prototype;
 
 public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
 
-    public DMNInputRuntimeTest(VariantTestConf testConfig) {
-        super(testConfig);
-    }
-
-    @Test
-    public void testInputStringEvaluateAll() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputStringEvaluateAll(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "0001-input-data-string.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel( "https://github.com/kiegroup/drools/kie-dmn", "_0001-input-data-string" );
         assertThat(dmnModel).isNotNull();
@@ -63,8 +64,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(result.get("Greeting Message")).isEqualTo("Hello John Doe");
     }
 
-    @Test
-    public void testInputStringEvaluateDecisionByName() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputStringEvaluateDecisionByName(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "0001-input-data-string.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel( "https://github.com/kiegroup/drools/kie-dmn", "_0001-input-data-string" );
         assertThat(dmnModel).isNotNull();
@@ -94,8 +97,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(dmnResult.getDecisionResultByName( "Greeting Message" ).getEvaluationStatus()).isEqualTo(DMNDecisionResult.DecisionEvaluationStatus.NOT_EVALUATED);
     }
 
-    @Test
-    public void testInputStringEvaluateDecisionById() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputStringEvaluateDecisionById(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "0001-input-data-string.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel( "https://github.com/kiegroup/drools/kie-dmn", "_0001-input-data-string" );
         assertThat(dmnModel).isNotNull();
@@ -125,8 +130,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(dmnResult.getDecisionResultByName( "Greeting Message" ).getEvaluationStatus()).isEqualTo(DMNDecisionResult.DecisionEvaluationStatus.NOT_EVALUATED);
     }
 
-    @Test
-    public void testInputStringAllowedValuesEvaluateAll() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputStringAllowedValuesEvaluateAll(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "0003-input-data-string-allowed-values.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel( "https://github.com/kiegroup/kie-dmn", "0003-input-data-string-allowed-values" );
         assertThat(dmnModel).isNotNull();
@@ -141,13 +148,17 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(result.get( "Employment Status Statement" )).isEqualTo("You are SELF-EMPLOYED");
     }
 
-    @Test
-    public void testInputStringNotInTypeScopeEvaluateAll() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputStringNotInTypeScopeEvaluateAll(VariantTestConf conf) {
+        testConfig = conf;
         testInputStringNotAllowedValuesEvaluateAll("NOT-ALLOWED-VALUE");
     }
 
-    @Test
-    public void testInputStringWrongTypeEvaluateAll() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputStringWrongTypeEvaluateAll(VariantTestConf conf) {
+        testConfig = conf;
         testInputStringNotAllowedValuesEvaluateAll(new Object());
     }
 
@@ -169,8 +180,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(dmnResult.getDecisionResults().get(0).getMessages().get(0).getSeverity()).isEqualTo(DMNMessage.Severity.ERROR);
     }
 
-    @Test
-    public void testInputNumberEvaluateAll() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputNumberEvaluateAll(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "0002-input-data-number.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel( "https://github.com/kiegroup/kie-dmn", "0002-input-data-number" );
         assertThat(dmnModel).isNotNull();
@@ -185,8 +198,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(result.get( "Yearly Salary" )).isEqualTo( new BigDecimal(12000));
     }
 
-    @Test
-    public void testGetRequiredInputsByName() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void getRequiredInputsByName(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "0001-input-data-string.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel( "https://github.com/kiegroup/drools/kie-dmn", "_0001-input-data-string" );
         assertThat(dmnModel).isNotNull();
@@ -200,8 +215,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(inputs).hasSize(0);
     }
 
-    @Test
-    public void testGetRequiredInputsById() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void getRequiredInputsById(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "0001-input-data-string.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel( "https://github.com/kiegroup/drools/kie-dmn", "_0001-input-data-string" );
         assertThat(dmnModel).isNotNull();
@@ -215,8 +232,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(inputs).hasSize(0);
     }
 
-    @Test
-    public void testNonexistantInputNodeName() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void nonexistantInputNodeName(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "0001-input-data-string.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel( "https://github.com/kiegroup/drools/kie-dmn", "_0001-input-data-string" );
         assertThat(dmnModel).isNotNull();
@@ -234,8 +253,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(dmnResult.getDecisionResults().get(0).getMessages().get(0).getSeverity()).isEqualTo(DMNMessage.Severity.ERROR);
     }
 
-    @Test
-    public void testAllowedValuesChecks() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void allowedValuesChecks(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime( "AllowedValuesChecks.dmn", this.getClass() );
         final DMNModel dmnModel = runtime.getModel(
                 "http://www.trisotech.com/definitions/_238bd96d-47cd-4746-831b-504f3e77b442",
@@ -268,8 +289,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(dmnResult4.getMessages().stream().anyMatch(m -> m.getMessageType().equals(DMNMessageType.ERROR_EVAL_NODE))).isTrue();
     }
 
-    @Test
-    public void testDMNInputDataNodeTypeTest() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void dmnInputDataNodeTypeTest(VariantTestConf conf) {
+        testConfig = conf;
         // DROOLS-1569
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime("DMNInputDataNodeTypeTest.dmn", this.getClass());
         final String MODEL_NAMESPACE = "http://www.trisotech.com/definitions/_17396034-163a-48aa-9a7f-c6eb17f9cc6c";
@@ -309,8 +332,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(idnCarDamageResponsibility.getType().isComposite()).isTrue();
     }
 
-    @Test
-    public void testInputClauseTypeRefWithAllowedValues() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputClauseTypeRefWithAllowedValues(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime("actualInputMatchInputValues-forTypeRef.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("https://www.drools.org/kie-dmn/definitions", "definitions");
         assertThat(dmnModel).isNotNull();
@@ -326,8 +351,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(result.get("MyDecision")).isEqualTo("Decision taken");
     }
 
-    @Test
-    public void testInputDataTypeRefWithAllowedValues() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void inputDataTypeRefWithAllowedValues(VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntime("actualInputMatchInputValues-forTypeRef.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("https://www.drools.org/kie-dmn/definitions", "definitions");
         assertThat(dmnModel).isNotNull();
@@ -342,8 +369,10 @@ public class DMNInputRuntimeTest extends BaseDMN1_1VariantTest {
         assertThat(dmnResult.getMessages().get(0).getSourceId()).isEqualTo("_3d560678-a126-4654-a686-bc6d941fe40b");
     }
 
-    @Test
-    public void testMissingInputData() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    void missingInputData(VariantTestConf conf) {
+        testConfig = conf;
         final List<DMNMessage> messages = DMNRuntimeUtil.createExpectingDMNMessages("missing_input_data.dmn", getClass());
         assertThat(messages.get(0).getMessageType()).isEqualTo(DMNMessageType.ERR_COMPILING_FEEL);
     }

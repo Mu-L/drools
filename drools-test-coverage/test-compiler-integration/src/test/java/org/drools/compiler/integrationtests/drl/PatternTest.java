@@ -1,25 +1,27 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests.drl;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.common.InternalFactHandle;
@@ -40,10 +42,9 @@ import org.drools.testcoverage.common.model.Sensor;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.KieServices;
@@ -57,22 +58,15 @@ import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class PatternTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public PatternTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testDeclaringAndUsingBindsInSamePattern() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDeclaringAndUsingBindsInSamePattern(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Sensor.class.getCanonicalName() + ";\n" +
@@ -129,8 +123,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testEmptyPattern() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testEmptyPattern(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 " \n" +
@@ -161,8 +156,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testPatternMatchingOnThis() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testPatternMatchingOnThis(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "rule R1 when\n" +
                 "    $i1: Integer()\n" +
@@ -184,8 +180,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testPatternOffset() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testPatternOffset(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // JBRULES-3427
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "declare A\n" +
@@ -230,8 +227,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testPatternOnClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testPatternOnClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "import " + InitialFactImpl.class.getCanonicalName() + "\n" +
                 "import " + FactB.class.getCanonicalName() + "\n" +
                 "rule \"Clear\" when\n" +
@@ -262,8 +260,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testPredicateAsFirstPattern() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testPredicateAsFirstPattern(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package oreg.drools.compiler.integrationtests.drl;\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -292,8 +291,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testConstantLeft() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testConstantLeft(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3627
         final String drl = "import " + Person.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -313,8 +313,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testUppercaseField() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUppercaseField(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
             "global java.util.List list\n" +
             "declare Address\n" +
@@ -346,8 +347,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testUppercaseField2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUppercaseField2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "declare SomeFact\n" +
                 "    Field : String\n" +
@@ -375,8 +377,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testHelloWorld() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testHelloWorld(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 " \n" +
@@ -428,8 +431,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testBigDecimal() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testBigDecimal(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "\n" +
@@ -471,8 +475,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testSelfReference() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSelfReference(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Order.class.getCanonicalName() + ";\n" +
@@ -514,8 +519,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testSelfReference2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSelfReference2(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -543,8 +549,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testImplicitDeclarations() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testImplicitDeclarations(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -579,8 +586,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testMethodCalls() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMethodCalls(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
                 "rule \"method calls\"\n" +
@@ -604,8 +612,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testSelfJoinWithIndex() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSelfJoinWithIndex(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
             "package org.drools.compiler.integrationtests.drl;\n" +
             "import " + Person.class.getCanonicalName() + ";\n" +
@@ -640,8 +649,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testSelfJoinAndNotWithIndex() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSelfJoinAndNotWithIndex(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
             "package org.drools.compiler.integrationtests.drl;\n" +
             "import " + Person.class.getCanonicalName() + ";\n" +
@@ -712,8 +722,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testQualifiedFieldReference() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testQualifiedFieldReference(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -750,8 +761,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testAutovivificationOfVariableRestrictions() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAutovivificationOfVariableRestrictions(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Cheese.class.getCanonicalName() + ";\n" +
@@ -782,8 +794,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testParentheses() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testParentheses(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -823,8 +836,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testCovariance() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testCovariance(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3392
         final String drl =
                         "import " + ClassA.class.getCanonicalName() + ";\n" +
@@ -851,8 +865,9 @@ public class PatternTest {
         }
     }
 
-    @Test
-    public void testCheckDuplicateVariables() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testCheckDuplicateVariables(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3035
         String drl = "package org.drools.compiler.integrationtests.drl;\n" +
                 "import " + Person.class.getCanonicalName() + ";\n" +
@@ -886,8 +901,9 @@ public class PatternTest {
         assertThat(kieBuilder.getResults().getMessages()).extracting(org.kie.api.builder.Message::getText).doesNotContain("");
     }
 
-    @Test
-    public void testCompilationFailureOnTernaryComparison() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testCompilationFailureOnTernaryComparison(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3642
         final String drl =
                 "declare Cont\n" +

@@ -1,22 +1,38 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.model.codegen.execmodel;
 
 import java.time.Instant;
 import java.util.Date;
 
 import org.drools.model.codegen.execmodel.domain.Result;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class MaterializedLambdaTest extends BaseModelTest {
 
-    public MaterializedLambdaTest(RUN_TYPE testRunType) {
-        super(testRunType);
-    }
-
-    @Test
-    public void testMaterializeLambda() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMaterializeLambda(RUN_TYPE runType) {
         String str =
 
                 "import " + DataType.class.getCanonicalName() + ";\n" +
@@ -39,7 +55,7 @@ public class MaterializedLambdaTest extends BaseModelTest {
                 "    result.setValue(0);\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         DataType st = new DataType("FF", "BBB");
         DataType st2 = new DataType("FF", "CCC");
@@ -63,8 +79,9 @@ public class MaterializedLambdaTest extends BaseModelTest {
     }
 
     // DROOLS-4858
-    @Test
-    public void testMaterializeLambdaWithNested() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testMaterializeLambdaWithNested(RUN_TYPE runType) {
         String str =
                 "import " + Executor.class.getCanonicalName() + ";\n" +
                 "import " + Result.class.getCanonicalName() + ";\n" +
@@ -79,7 +96,7 @@ public class MaterializedLambdaTest extends BaseModelTest {
                 "    });" +
                 "end";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert(42);
 

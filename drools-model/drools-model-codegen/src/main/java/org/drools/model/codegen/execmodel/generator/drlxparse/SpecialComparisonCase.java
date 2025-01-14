@@ -1,20 +1,21 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator.drlxparse;
 
 import java.lang.reflect.Type;
@@ -52,9 +53,7 @@ abstract class SpecialComparisonCase {
 
     static SpecialComparisonCase specialComparisonFactory(TypedExpression left, TypedExpression right) {
         if (isNumber(left) && !isObject(right.getRawClass()) || isNumber(right) && !isObject(left.getRawClass())) { // Don't coerce Object yet. EvaluationUtil will handle it dynamically later
-            Optional<Class<?>> leftCast = typeNeedsCast(left.getType());
-            Optional<Class<?>> rightCast = typeNeedsCast(right.getType());
-            if (leftCast.isPresent() || rightCast.isPresent()) {
+            if (typeNeedsCast(left.getType()) || typeNeedsCast(right.getType())) {
                 return new ComparisonWithCast(true, left, right, of(Number.class), of(Number.class));
             } else {
                 return new NumberComparisonWithoutCast(left, right);
@@ -66,13 +65,8 @@ abstract class SpecialComparisonCase {
         return new PlainEvaluation(left, right);
     }
 
-    private static Optional<Class<?>> typeNeedsCast(Type t) {
-        boolean needCast = isObject((Class<?>)t) || isMap((Class<?>) t) || isList((Class<?>) t);
-        if (needCast) {
-            return of((Class<?>) t);
-        } else {
-            return Optional.empty();
-        }
+    private static boolean typeNeedsCast(Type t) {
+        return t instanceof Class && ( isObject((Class<?>)t) || isMap((Class<?>) t) || isList((Class<?>) t) );
     }
 
     private static boolean isList(Class<?> t) {

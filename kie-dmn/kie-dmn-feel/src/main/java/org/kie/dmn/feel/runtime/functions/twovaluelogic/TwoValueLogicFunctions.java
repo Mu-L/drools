@@ -1,11 +1,26 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.kie.dmn.feel.runtime.functions.twovaluelogic;
 
 import java.util.List;
 import java.util.function.Function;
 
-import org.kie.dmn.model.api.GwtIncompatible;
-
-@GwtIncompatible
 public class TwoValueLogicFunctions {
     private static NNAllFunction allFunction = NNAllFunction.INSTANCE;
     private static NNAnyFunction anyFunction = NNAnyFunction.INSTANCE;
@@ -17,7 +32,6 @@ public class TwoValueLogicFunctions {
     private static NNMedianFunction medianFunction = NNMedianFunction.INSTANCE;
     private static NNModeFunction modeFunction = NNModeFunction.INSTANCE;
 
-    @GwtIncompatible
     private static NNStddevFunction stddevFunction = NNStddevFunction.INSTANCE;
 
     public static Boolean all(List<Boolean> list) {
@@ -56,7 +70,6 @@ public class TwoValueLogicFunctions {
         return modeFunction.invoke(list).cata(e -> null, Function.identity());
     }
 
-    @GwtIncompatible
     public static Number stddev(List<Number> list) {
         return stddevFunction.invoke(list).cata(e -> null, Function.identity());
     }

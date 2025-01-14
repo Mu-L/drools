@@ -1,42 +1,36 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.base.common;
-
-import org.kie.api.concurrent.KieExecutors;
-
-import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A class to identify RuleBase partitions
  */
-public final class RuleBasePartitionId implements Serializable {
+public final class RuleBasePartitionId {
 
-    private static final long serialVersionUID = 510l;
+    public static final RuleBasePartitionId MAIN_PARTITION = new RuleBasePartitionId(null, 0);
 
-    public static final int PARALLEL_PARTITIONS_NUMBER = KieExecutors.Pool.SIZE;
-
-    public static final RuleBasePartitionId MAIN_PARTITION = new RuleBasePartitionId( 0 );
-
-    private static final AtomicInteger PARTITION_COUNTER = new AtomicInteger( 1 );
+    private final PartitionsManager partitionsManager;
 
     private final int id;
 
-    private RuleBasePartitionId( int id ) {
+    public RuleBasePartitionId(PartitionsManager partitionsManager, int id ) {
+        this.partitionsManager = partitionsManager;
         this.id = id;
     }
 
@@ -45,7 +39,7 @@ public final class RuleBasePartitionId implements Serializable {
     }
 
     public int getParallelEvaluationSlot() {
-        return id % PARALLEL_PARTITIONS_NUMBER;
+        return id % partitionsManager.getParallelEvaluationSlotsCount();
     }
 
     @Override
@@ -55,14 +49,11 @@ public final class RuleBasePartitionId implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        return this == obj || (obj instanceof RuleBasePartitionId && id == ((RuleBasePartitionId)obj).id);
+        return this == obj || (obj instanceof RuleBasePartitionId o && id == o.id);
     }
 
+    @Override
     public String toString() {
         return "Partition(" + (id == 0 ? "MAIN" : id) + ")";
-    }
-
-    public static RuleBasePartitionId createPartition() {
-        return new RuleBasePartitionId( PARTITION_COUNTER.getAndIncrement() );
     }
 }

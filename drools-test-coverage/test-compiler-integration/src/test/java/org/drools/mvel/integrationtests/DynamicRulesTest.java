@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests;
 
 import java.net.URL;
@@ -21,6 +23,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.common.InternalAgenda;
@@ -42,11 +45,11 @@ import org.drools.mvel.compiler.StockTick;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.builder.KieModule;
@@ -63,6 +66,7 @@ import org.kie.api.runtime.rule.FactHandle;
 import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -70,23 +74,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@RunWith(Parameterized.class)
 public class DynamicRulesTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public DynamicRulesTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        // TODO: EM failed with some tests. File JIRAs
+        return TestParametersUtil2.getKieBaseCloudConfigurations(false).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-     // TODO: EM failed with some tests. File JIRAs
-        return TestParametersUtil.getKieBaseCloudConfigurations(false);
-    }
-
-    @Test(timeout=10000)
-    public void testDynamicRuleAdditions() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRuleAdditions(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromClasspathResources("test", getClass(), kieBaseTestConfiguration, "test_Dynamic1.drl");
         KieSession workingMemory = kbase.newKieSession();
         workingMemory.setGlobal("total",
@@ -156,8 +154,10 @@ public class DynamicRulesTest {
 
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRuleRemovals() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRuleRemovals(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromClasspathResources("test", getClass(), kieBaseTestConfiguration, "test_Dynamic1.drl", "test_Dynamic3.drl", "test_Dynamic4.drl");
 
         Collection<KiePackage> kpkgs = KieBaseUtil.getKieBaseFromClasspathResources("tmp", getClass(), kieBaseTestConfiguration, "test_Dynamic2.drl").getKiePackages();
@@ -229,8 +229,10 @@ public class DynamicRulesTest {
         list.clear();
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRuleRemovalsUnusedWorkingMemory() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRuleRemovalsUnusedWorkingMemory(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase) KieBaseUtil.getKieBaseFromClasspathResources("test", getClass(), kieBaseTestConfiguration, "test_Dynamic1.drl",
                                                                                                            "test_Dynamic2.drl",
                                                                                                            "test_Dynamic3.drl",
@@ -262,9 +264,11 @@ public class DynamicRulesTest {
         assertThat(kbase.getKiePackages().size()).isEqualTo(1);
     }
 
-    @Ignore("Fails with standard-drl after changing to new API. See DROOLS-6060")
-    @Test(timeout=10000)
-    public void testDynamicFunction() throws Exception {
+    @Disabled("Fails with standard-drl after changing to new API. See DROOLS-6060")
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicFunction(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         //JBRULES-1258 serialising a package breaks function removal -- left the serialisation commented out for now
 
         Collection<KiePackage> kpkgs = KieBaseUtil.getKieBaseFromClasspathResources("tmp", getClass(), kieBaseTestConfiguration, "test_DynamicFunction1.drl").getKiePackages();
@@ -297,11 +301,7 @@ public class DynamicRulesTest {
                                            5 );
         workingMemory.insert( cheddar );
 
-        try {
-            workingMemory.fireAllRules();
-            fail( "Function should have been removed and NoClassDefFoundError thrown from the Consequence" );
-        } catch ( final Throwable e ) {
-        }
+        assertThatThrownBy(() -> workingMemory.fireAllRules()).isInstanceOf(Throwable.class);
 
         // Check a new function can be added to replace an old function
         Collection<KiePackage> kpkgs2 = KieBaseUtil.getKieBaseFromClasspathResources("tmp", getClass(), kieBaseTestConfiguration, "test_DynamicFunction2.drl").getKiePackages();
@@ -328,8 +328,10 @@ public class DynamicRulesTest {
         assertThat(list.get(2)).isEqualTo(new Integer( 5 ));
     }
 
-    @Test (timeout=10000)
-    public void testRemovePackage() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testRemovePackage(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         Collection<KiePackage> kpkgs = KieBaseUtil.getKieBaseFromClasspathResources("tmp", getClass(), kieBaseTestConfiguration, "test_RemovePackage.drl").getKiePackages();
         final String packageName = kpkgs.iterator().next().getName();
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromClasspathResources("test", getClass(), kieBaseTestConfiguration);
@@ -360,8 +362,10 @@ public class DynamicRulesTest {
         ruleBaseWM.addPackages(SerializationHelper.serializeObject(kpkgs));
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRules() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRules(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromClasspathResources("test", getClass(), kieBaseTestConfiguration);
         KieSession session = kbase.newKieSession();
 
@@ -384,8 +388,10 @@ public class DynamicRulesTest {
         session.fireAllRules();
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRules2() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRules2(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromClasspathResources("test", getClass(), kieBaseTestConfiguration);
         KieSession session = kbase.newKieSession();
 
@@ -408,8 +414,10 @@ public class DynamicRulesTest {
         session.fireAllRules();
     }
 
-    @Test(timeout=10000)
-    public void testRuleBaseAddRemove() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testRuleBaseAddRemove(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromClasspathResources("test", getClass(), kieBaseTestConfiguration);
 
         //add and remove
@@ -425,8 +433,10 @@ public class DynamicRulesTest {
         kbase.removeKiePackage( pkgName );
     }
 
-    @Test(timeout=10000)
-    public void testClassLoaderSwitchsUsingConf() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testClassLoaderSwitchsUsingConf(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         try {
             // Creates first class loader and use it to load fact classes
             ClassLoader loader1 = new SubvertedClassLoader( new URL[]{getClass().getResource( "/" )},
@@ -455,8 +465,10 @@ public class DynamicRulesTest {
 
     }
 
-    @Test(timeout=10000)
-    public void testClassLoaderSwitchsUsingContext() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testClassLoaderSwitchsUsingContext(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         try {
             // Creates first class loader and use it to load fact classes
             ClassLoader original = Thread.currentThread().getContextClassLoader();
@@ -490,17 +502,21 @@ public class DynamicRulesTest {
         }
     }
 
-    @Test(timeout=10000)
-    public void testCollectDynamicRules() throws Exception {
-        checkCollectWithDynamicRules( "test_CollectDynamicRules1.drl" );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testCollectDynamicRules(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        checkCollectWithDynamicRules( kieBaseTestConfiguration, "test_CollectDynamicRules1.drl" );
     }
 
-    @Test(timeout=10000)
-    public void testCollectDynamicRulesWithExistingOTN() throws Exception {
-        checkCollectWithDynamicRules( "test_CollectDynamicRules1a.drl" );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testCollectDynamicRulesWithExistingOTN(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        checkCollectWithDynamicRules( kieBaseTestConfiguration, "test_CollectDynamicRules1a.drl" );
     }
 
-    private void checkCollectWithDynamicRules(String originalDrl) throws java.io.IOException, ClassNotFoundException {
+    private void checkCollectWithDynamicRules(KieBaseTestConfiguration kieBaseTestConfiguration, String originalDrl) throws java.io.IOException, ClassNotFoundException {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, originalDrl);
         KieSession session = kbase.newKieSession();
 
@@ -527,8 +543,10 @@ public class DynamicRulesTest {
         assertThat(((List<?>) list.get(0)).size()).isEqualTo(2);
     }
 
-    @Test(timeout=10000)
-    public void testDynamicNotNode() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicNotNode(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase)KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_CollectDynamicRules1.drl");
         Environment env = EnvironmentFactory.newEnvironment();
         env.set( EnvironmentName.OBJECT_MARSHALLING_STRATEGIES, new ObjectMarshallingStrategy[]{
@@ -577,8 +595,10 @@ public class DynamicRulesTest {
         assertThat(results.size()).isEqualTo(1);
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRulesAddRemove() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRulesAddRemove(KieBaseTestConfiguration kieBaseTestConfiguration) {
         try {
             InternalKnowledgeBase kbase = (InternalKnowledgeBase) KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_DynamicRulesTom.drl");
             KieSession session = kbase.newKieSession();
@@ -649,8 +669,10 @@ public class DynamicRulesTest {
         }
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRuleRemovalsSubNetwork() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRuleRemovalsSubNetwork(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         Collection<KiePackage> kpkgs = KieBaseUtil.getKieBaseFromClasspathResources("tmp", getClass(), kieBaseTestConfiguration, "test_DynamicRulesWithSubnetwork1.drl",
                                                                                     "test_DynamicRulesWithSubnetwork.drl").getKiePackages();
         
@@ -746,8 +768,10 @@ public class DynamicRulesTest {
         assertThat(list.size()).isEqualTo(0);
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRuleRemovalsUnusedWorkingMemorySubNetwork() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRuleRemovalsUnusedWorkingMemorySubNetwork(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase) KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration,
                                                                                                            "test_DynamicRulesWithSubnetwork1.drl",
                                                                                                            "test_DynamicRulesWithSubnetwork2.drl",
@@ -766,8 +790,10 @@ public class DynamicRulesTest {
         assertThat(kbase.getKiePackages().size()).isEqualTo(1);
     }
 
-    @Test(timeout=10000)
-    public void testRemovePackageSubNetwork() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testRemovePackageSubNetwork(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_DynamicRulesWithSubnetwork.drl");
         String packageName = kbase.getKiePackages().iterator().next().getName();
 
@@ -844,8 +870,10 @@ public class DynamicRulesTest {
         results.clear();
     }
 
-    @Test(timeout=10000)
-    public void testRuleBaseAddRemoveSubNetworks() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testRuleBaseAddRemoveSubNetworks(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         try {
             //add and remove
             InternalKnowledgeBase kbase = (InternalKnowledgeBase) KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration);
@@ -866,8 +894,10 @@ public class DynamicRulesTest {
         }
     }
 
-    @Test (timeout=10000)
-    public void testDynamicRuleAdditionsWithEntryPoints() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRuleAdditionsWithEntryPoints(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase) KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration);
         Collection<KiePackage> kpkgs = KieBaseUtil.getKieBaseFromClasspathResources("tmp", getClass(), kieBaseTestConfiguration, "test_DynamicWithEntryPoint.drl").getKiePackages();
 
@@ -899,8 +929,10 @@ public class DynamicRulesTest {
 
     }
 
-    @Test(timeout=10000)
-    public void testIsolatedClassLoaderWithEnumsPkgBuilder() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testIsolatedClassLoaderWithEnumsPkgBuilder(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         try {
             // Creates first class loader and use it to load fact classes
             ClassLoader loader1 = new SubvertedClassLoader( new URL[]{getClass().getResource( "/testEnum.jar" )},
@@ -948,8 +980,10 @@ public class DynamicRulesTest {
         }
     }
 
-    @Test(timeout=10000)
-    public void testIsolatedClassLoaderWithEnumsContextClassloader() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testIsolatedClassLoaderWithEnumsContextClassloader(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         try {
             // Creates first class loader and use it to load fact classes
             ClassLoader loader1 = new SubvertedClassLoader( new URL[]{getClass().getResource( "/testEnum.jar" )},
@@ -1011,8 +1045,10 @@ public class DynamicRulesTest {
         }
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRuleRemovalsSubNetworkAndNot() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRuleRemovalsSubNetworkAndNot(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         InternalKnowledgeBase kbase = (InternalKnowledgeBase) KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_DynamicRulesWithNotSubnetwork.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -1053,8 +1089,10 @@ public class DynamicRulesTest {
 
     }
 
-    @Test(timeout=10000)
-    public void testSharedLIANodeRemoval() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testSharedLIANodeRemoval(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // it's not a true share, but the liaNode will have two sinks, due to subnetwork.
         String str = "global java.util.List list;\n";
         str += "rule \"test\"\n";
@@ -1090,8 +1128,10 @@ public class DynamicRulesTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test(timeout=10000)
-    public void testDynamicRulesWithTypeDeclarations() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testDynamicRulesWithTypeDeclarations(KieBaseTestConfiguration kieBaseTestConfiguration) {
         
         // Note: This test originally use "kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder( kbase );" which is not possible with KieBuilder
         // Probably this new test is not valid for exec-model and we can remove this test
@@ -1146,8 +1186,10 @@ public class DynamicRulesTest {
         
     }
 
-    @Test(timeout=10000)
-    public void testJBRULES_2206() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Timeout(10000)
+    public void testJBRULES_2206(KieBaseTestConfiguration kieBaseTestConfiguration) {
         KieBaseConfiguration config = RuleBaseFactory.newKnowledgeBaseConfiguration();
         config.as(RuleBaseConfiguration.KEY).setRuleBaseUpdateHandler( null );
 
@@ -1212,8 +1254,9 @@ public class DynamicRulesTest {
         }
     }
 
-    @Test
-    public void testSegmentMerging() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSegmentMerging(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl1 = "global java.util.List list\n" +
                       "rule R1 when\n" +
                       "  $s : String()\n" +

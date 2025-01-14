@@ -1,22 +1,23 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
-import org.junit.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.ReleaseId;
 import org.kie.api.builder.model.KieModuleModel;
@@ -25,14 +26,14 @@ import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
 public class MultiKieBaseTest extends BaseModelTest {
 
-    public MultiKieBaseTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test
-    public void testHelloWorldWithPackagesAnd2KieBases() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testHelloWorldWithPackagesAnd2KieBases(RUN_TYPE runType) throws Exception {
         String drl1a = "package org.pkg1\n" +
                 "rule R1 when\n" +
                 "   $m : String( this == \"Hello World\" )\n" +
@@ -67,7 +68,7 @@ public class MultiKieBaseTest extends BaseModelTest {
 
         // Create an in-memory jar for version 1.0.0
         ReleaseId releaseId1 = ks.newReleaseId( "org.kie", "test-upgrade", "1.0.0" );
-        createAndDeployJar( ks, createKieProjectWithPackagesAnd2KieBases(), releaseId1,
+        createAndDeployJar(runType, ks, createKieProjectWithPackagesAnd2KieBases(), releaseId1,
                 new KieFile( "src/main/resources/org/pkg1/r1.drl", drl1a ),
                 new KieFile( "src/main/resources/org/pkg2/r2.drl", drl2a ) );
 
@@ -95,7 +96,7 @@ public class MultiKieBaseTest extends BaseModelTest {
         assertThat(ksession2.fireAllRules()).isEqualTo(1);
 
         ReleaseId releaseId2 = ks.newReleaseId( "org.kie", "test-upgrade", "1.1.0" );
-        createAndDeployJar( ks, createKieProjectWithPackagesAnd2KieBases(), releaseId2,
+        createAndDeployJar(runType, ks, createKieProjectWithPackagesAnd2KieBases(), releaseId2,
                 new KieFile( "src/main/resources/org/pkg1/r1.drl", drl1a ),
                 new KieFile( "src/main/resources/org/pkg2/r2.drl", drl2b ) );
 
@@ -120,8 +121,9 @@ public class MultiKieBaseTest extends BaseModelTest {
         return kproj;
     }
 
-    @Test
-    public void testFoldersVsPackages() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFoldersVsPackages(RUN_TYPE runType) throws Exception {
         String drl1 =
                 "//package org.commented1\n" +
                 "package org.pkg1\n" +
@@ -164,7 +166,7 @@ public class MultiKieBaseTest extends BaseModelTest {
                 .newKieSessionModel("KSession4");
 
         ReleaseId releaseId1 = ks.newReleaseId( "org.kie", "test-pkgs", "1.0.0" );
-        createAndDeployJar( ks, kproj, releaseId1,
+        createAndDeployJar(runType, ks, kproj, releaseId1,
                 new KieFile( "src/main/resources/org/pkg1/r1.drl", drl1 ),
                 new KieFile( "src/main/resources/rules/r2.drl", drl2 ) );
 
@@ -188,8 +190,9 @@ public class MultiKieBaseTest extends BaseModelTest {
         assertThat(ks4.fireAllRules()).isEqualTo(0); // there is no "rules" package and folder is not relevant
     }
 
-    @Test
-    public void testDotInKieBaseName() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testDotInKieBaseName(RUN_TYPE runType) throws Exception {
         // DROOLS-5845
         String drl1 =
                 "package org.pkg1\n" +
@@ -207,7 +210,7 @@ public class MultiKieBaseTest extends BaseModelTest {
                 .newKieSessionModel("Kie.Session");
 
         ReleaseId releaseId1 = ks.newReleaseId( "org.kie", "test-dor", "1.0.0" );
-        createAndDeployJar( ks, kproj, releaseId1,
+        createAndDeployJar(runType, ks, kproj, releaseId1,
                 new KieFile( "src/main/resources/org/pkg1/r1.drl", drl1 ) );
 
         // Create a session and fire rules
@@ -218,8 +221,9 @@ public class MultiKieBaseTest extends BaseModelTest {
         assertThat(ks2.fireAllRules()).isEqualTo(1); // only rule in org.pkg1 should fire
     }
 
-    @Test
-    public void testHelloMultiKieBasesWithSharedDeclaredType() throws Exception {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testHelloMultiKieBasesWithSharedDeclaredType(RUN_TYPE runType) throws Exception {
         // DROOLS-6331
         String drlType =
                 "package org.pkg.type\n" +
@@ -268,7 +272,7 @@ public class MultiKieBaseTest extends BaseModelTest {
 
         // Create an in-memory jar for version 1.0.0
         ReleaseId releaseId1 = ks.newReleaseId( "org.kie", "test-types", "1.0.0" );
-        createAndDeployJar( ks, kproj, releaseId1,
+        createAndDeployJar(runType, ks, kproj, releaseId1,
                 new KieFile( "src/main/resources/org/pkg/type/r0.drl", drlType ),
                 new KieFile( "src/main/resources/org/pkg1/r1.drl", drl1 ),
                 new KieFile( "src/main/resources/org/pkg2/r2.drl", drl2 ),

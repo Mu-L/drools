@@ -1,26 +1,28 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.v1_4;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 
-import org.junit.Test;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.dmn.api.core.DMNContext;
 import org.kie.dmn.api.core.DMNModel;
 import org.kie.dmn.api.core.DMNResult;
@@ -47,17 +49,14 @@ public class DMN14specificTest extends BaseVariantTest {
 
     public static final Logger LOG = LoggerFactory.getLogger(DMN14specificTest.class);
 
-    public DMN14specificTest(final BaseVariantTest.VariantTestConf conf) {
-        super(conf);
-    }
-
-    @Parameterized.Parameters(name = "{0}")
     public static Object[] params() {
         return new Object[]{KIE_API_TYPECHECK, BUILDER_DEFAULT_NOCL_TYPECHECK}; // only variants needed until DMNv1.4 is actually published
     }
 
-    @Test
-    public void testDMNv1_4_put() {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void dMNv14Put(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntime("exampleContextPut.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("ns1", "examplePut");
         assertThat(dmnModel).isNotNull();
@@ -73,8 +72,10 @@ public class DMN14specificTest extends BaseVariantTest {
         assertThat(dmnResult.getDecisionResultByName("Processed Request").getResult()).hasFieldOrPropertyWithValue("priority", "Medium");
     }
 
-    @Test
-    public void testDMNv1_4_putAll() {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void dMNv14PutAll(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntime("exampleContextMerge.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("https://kiegroup.org/dmn/_864E9A62-12E5-41DC-A7A6-7F028822A067", "examplePutAll");
         assertThat(dmnModel).isNotNull();
@@ -89,9 +90,11 @@ public class DMN14specificTest extends BaseVariantTest {
         assertThat(dmnResult.getDecisionResultByName("Complete Person").getResult()).hasFieldOrPropertyWithValue("last name", "Doe")
                                                                                     .hasFieldOrPropertyWithValue("age", new BigDecimal(47));
     }
-    
-    @Test
-    public void test_simple() {
+
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void simple(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntime("simple.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_d9232146-7aaa-49a9-8668-261a01844ace", "Drawing 1");
         assertThat(dmnModel).isNotNull();
@@ -107,9 +110,11 @@ public class DMN14specificTest extends BaseVariantTest {
         final DMNContext result = dmnResult.getContext();
         assertThat(result.get("greet")).isEqualTo("Hello, John");
     }
-    
-    @Test
-    public void testDMNv1_4_ch11() {
+
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void dMNv14Ch11(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntimeWithAdditionalResources("Chapter 11 Example.dmn", this.getClass(), "Financial.dmn");
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_9d01a0c4-f529-4ad8-ad8e-ec5fb5d96ad4", "Chapter 11 Example");
         assertThat(dmnModel).isNotNull();
@@ -138,9 +143,11 @@ public class DMN14specificTest extends BaseVariantTest {
         assertThat(result.get("Strategy")).isEqualTo("THROUGH");
         assertThat(result.get("Routing")).isEqualTo("ACCEPT");
     }
-    
-    @Test
-    public void testDMNv1_4_ch11_Example2() {
+
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void dMNv14Ch11Example2(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntimeWithAdditionalResources("Recommended Loan Products.dmn", this.getClass(), "Loan info.dmn");
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_736fa164-03d8-429f-8318-4913a548c3a6", "Recommended Loan Products");
         assertThat(dmnModel).isNotNull();
@@ -251,8 +258,10 @@ public class DMN14specificTest extends BaseVariantTest {
                                                                                    entry("Recommendation", "Best")));
     }
 
-    @Test
-    public void test_sampleFor() {
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void sample_for(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntime("sampleFor.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_5d7731f1-525d-4e75-a24a-39066f52ccdf", "Drawing 1");
         assertThat(dmnModel).isNotNull();
@@ -266,9 +275,11 @@ public class DMN14specificTest extends BaseVariantTest {
         final DMNContext result = dmnResult.getContext();
         assertThat(result.get("sampleFor")).asList().containsExactly(new BigDecimal(2), new BigDecimal(3), new BigDecimal(4));
     }
-    
-    @Test
-    public void test_sampleQuantified() {
+
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void sample_quantified(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntime("sampleQuantified.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_480411d5-e8b4-422f-9a76-1e8929930ead", "Drawing 1");
         assertThat(dmnModel).isNotNull();
@@ -283,9 +294,11 @@ public class DMN14specificTest extends BaseVariantTest {
         assertThat(result.get("sampleEvery")).isEqualTo(Boolean.TRUE);
         assertThat(result.get("sampleSome")).isEqualTo(Boolean.TRUE);
     }
-    
-    @Test
-    public void test_sampleConditional() {
+
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void sample_conditional(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntime("sampleConditional.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_da2ac43a-133b-483d-9c08-958d10024584", "Drawing 1");
         assertThat(dmnModel).isNotNull();
@@ -299,9 +312,11 @@ public class DMN14specificTest extends BaseVariantTest {
         final DMNContext result = dmnResult.getContext();
         assertThat(result.get("sampleConditional")).isEqualTo("Hello World");
     }
-    
-    @Test
-    public void test_sampleFilter() {
+
+    @MethodSource("params")
+    @ParameterizedTest(name = "{0}")
+    public void sample_filter(final BaseVariantTest.VariantTestConf conf) {
+        testConfig = conf;
         final DMNRuntime runtime = createRuntime("sampleFilter.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_e1291f4e-e828-4a47-86e8-474899d50185", "Drawing 1");
         assertThat(dmnModel).isNotNull();

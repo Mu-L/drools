@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.common;
 
 import java.util.Collection;
@@ -35,6 +37,7 @@ import org.drools.core.reteoo.Sink;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.reteoo.builder.BuildContext;
 import org.kie.api.definition.rule.Rule;
+import org.drools.base.reteoo.NodeTypeEnums;
 
 /**
  * The base class for all Rete nodes.
@@ -48,7 +51,6 @@ public abstract class BaseNode
     protected int                        memoryId = -1;
 
     protected RuleBasePartitionId partitionId;
-    protected boolean                    partitionsEnabled;
     protected Set<Rule>                  associations;
 
     private Map<Integer, TerminalNode> associatedTerminals;
@@ -68,12 +70,10 @@ public abstract class BaseNode
      *      The unique id
      */
     public BaseNode(final int id,
-                    final RuleBasePartitionId partitionId,
-                    final boolean partitionsEnabled) {
+                    final RuleBasePartitionId partitionId) {
         super();
         this.id = id;
         this.partitionId = partitionId;
-        this.partitionsEnabled = partitionsEnabled;
         this.associations = new HashSet<>();
         this.associatedTerminals = new HashMap<>();
     }
@@ -134,7 +134,7 @@ public abstract class BaseNode
     public boolean remove(RuleRemovalContext context,
                           ReteooBuilder builder) {
         boolean removed = doRemove( context, builder );
-        if ( !this.isInUse() && !(this instanceof EntryPointNode) ) {
+        if ( !this.isInUse() && !(NodeTypeEnums.EntryPointNode == getType()) ) {
             builder.releaseId(this);
         }
         return removed;
@@ -169,10 +169,6 @@ public abstract class BaseNode
      */
     public void setPartitionId(BuildContext context, RuleBasePartitionId partitionId) {
         this.partitionId = partitionId;
-    }
-
-    public void setPartitionsEnabled( boolean partitionsEnabled ) {
-        this.partitionsEnabled = partitionsEnabled;
     }
 
     /**
@@ -231,17 +227,19 @@ public abstract class BaseNode
 
     public NetworkNode[] getSinks() {
         Sink[] sinks = null;
-        if (this instanceof EntryPointNode ) {
+        if (NodeTypeEnums.EntryPointNode == getType() ) {
             EntryPointNode source = (EntryPointNode) this;
             Collection<ObjectTypeNode> otns = source.getObjectTypeNodes().values();
             sinks = otns.toArray(new Sink[otns.size()]);
-        } else if (this instanceof ObjectSource ) {
+        } else if (NodeTypeEnums.isObjectSource(this)) {
             ObjectSource source = (ObjectSource) this;
             sinks = source.getObjectSinkPropagator().getSinks();
-        } else if (this instanceof LeftTupleSource ) {
+        } else if (NodeTypeEnums.isLeftTupleSource(this)) {
             LeftTupleSource source = (LeftTupleSource) this;
             sinks = source.getSinkPropagator().getSinks();
         }
         return sinks;
     }
+
+
 }

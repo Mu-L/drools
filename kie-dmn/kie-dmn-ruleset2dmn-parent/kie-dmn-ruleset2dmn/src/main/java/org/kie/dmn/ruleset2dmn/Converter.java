@@ -1,19 +1,21 @@
-/*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.ruleset2dmn;
 
 import java.io.InputStream;
@@ -36,7 +38,6 @@ import javax.xml.namespace.QName;
 import org.dmg.pmml.DataDictionary;
 import org.dmg.pmml.DataField;
 import org.dmg.pmml.DataType;
-import org.dmg.pmml.FieldName;
 import org.dmg.pmml.Model;
 import org.dmg.pmml.PMML;
 import org.dmg.pmml.SimplePredicate;
@@ -50,7 +51,7 @@ import org.dmg.pmml.rule_set.SimpleRule;
 import org.kie.dmn.api.marshalling.DMNMarshaller;
 import org.kie.dmn.backend.marshalling.v1x.DMNMarshallerFactory;
 import org.kie.dmn.feel.codegen.feel11.CodegenStringUtil;
-import org.kie.dmn.feel.util.EvalHelper;
+import org.kie.dmn.feel.util.NumberEvalHelper;
 import org.kie.dmn.model.api.DMNElementReference;
 import org.kie.dmn.model.api.Decision;
 import org.kie.dmn.model.api.DecisionRule;
@@ -143,7 +144,7 @@ public class Converter {
             for (String input : usedPredictors) {
                 List<SimplePredicate> predicatesForInput = r.map.get(input);
                 if (predicatesForInput != null && !predicatesForInput.isEmpty())  {
-                    FieldName fnLookup = FieldName.create(input);
+                     String fnLookup =input;
                     Optional<DataField> df = pmml.getDataDictionary().getDataFields().stream().filter(x-> x.getName().equals(fnLookup)).findFirst();
                     UnaryTests ut = processSimplePredicateUnaryOrBinary(predicatesForInput, df);
                     if (ut.getText().startsWith("\"") && ut.getText().endsWith("\"")) {
@@ -195,9 +196,9 @@ public class Converter {
         }
 
         for (DataField df : pmml.getDataDictionary().getDataFields()) {
-            if (df.getDataType() == DataType.STRING && predictorsLoVs.containsKey(df.getName().getValue())) {
+            if (df.getDataType() == DataType.STRING && predictorsLoVs.containsKey(df.getName())) {
                 for (Value value : df.getValues()) {
-                    predictorsLoVs.get(df.getName().getValue()).add("\""+value.getValue().toString()+"\"");
+                    predictorsLoVs.get(df.getName()).add("\""+value.getValue().toString()+"\"");
                 }
             }
         }
@@ -399,7 +400,7 @@ public class Converter {
                 case DOUBLE:
                 case FLOAT:
                 case INTEGER:
-                    BigDecimal bdOrNull = EvalHelper.getBigDecimalOrNull(input);
+                    BigDecimal bdOrNull = NumberEvalHelper.getBigDecimalOrNull(input);
                     if (bdOrNull != null) {
                         return bdOrNull.toPlainString();
                     } else {
@@ -412,7 +413,7 @@ public class Converter {
             }
         }
         LOG.debug("feelLiteralValue for {} and DD not available", input);
-        BigDecimal bdOrNull = EvalHelper.getBigDecimalOrNull(input);
+        BigDecimal bdOrNull = NumberEvalHelper.getBigDecimalOrNull(input);
         if (bdOrNull != null) {
             return bdOrNull.toPlainString();
         } else {
@@ -476,7 +477,7 @@ public class Converter {
     }
 
     private static String feelTypeFromDD(DataDictionary dd, String id) {
-        FieldName lookup = FieldName.create(id);
+         String lookup =id;
         Optional<DataField> opt = dd.getDataFields().stream().filter(df -> df.getName().equals(lookup)).findFirst();
         if (opt.isEmpty()) {
             return "Any";

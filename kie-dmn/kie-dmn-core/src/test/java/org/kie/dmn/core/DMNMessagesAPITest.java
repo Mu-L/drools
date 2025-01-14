@@ -1,26 +1,28 @@
-/*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -36,13 +38,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 public class DMNMessagesAPITest {
 
     public static final Logger LOG = LoggerFactory.getLogger(DMNMessagesAPITest.class);
 
     @Test
-    public void testAPIUsage() {
+    void apiUsage() {
         // DROOLS-3335 Broken DMN resource should inhibit KJAR and report KieBuilder message
         final KieServices ks = KieServices.Factory.get();
         final KieContainer kieContainer = DMNRuntimeUtil.getKieContainerIgnoringErrors(ks.newReleaseId("org.kie", "dmn-test-" + UUID.randomUUID(), "1.0"),
@@ -67,21 +70,23 @@ public class DMNMessagesAPITest {
         assertThat(dmnMessage.getPath()).isEqualTo("incomplete_expression.dmn");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testAPIUsageSnippetForDocumentation() {
-        KieServices ks = KieServices.Factory.get();
-        
-        ReleaseId releaseId = ks.newReleaseId("org.kie", "dmn-test-" + UUID.randomUUID(), "1.0");
-        Resource dmnResource = ks.getResources().newClassPathResource("incomplete_expression.dmn", this.getClass());
-        
-        KieFileSystem kfs = ks.newKieFileSystem()
-                              .generateAndWritePomXML(releaseId)
-                              .write(dmnResource);
-        KieBuilder kieBuilder = ks.newKieBuilder(kfs)
-                                  .buildAll();
-        Results results = kieBuilder.getResults();
-        if (results.hasMessages(Message.Level.ERROR)) {
-            throw new IllegalStateException(results.getMessages(Message.Level.ERROR).toString());
-        }
+    @Test
+    void apiUsageSnippetForDocumentation() {
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
+            KieServices ks = KieServices.Factory.get();
+
+            ReleaseId releaseId = ks.newReleaseId("org.kie", "dmn-test-" + UUID.randomUUID(), "1.0");
+            Resource dmnResource = ks.getResources().newClassPathResource("incomplete_expression.dmn", this.getClass());
+
+            KieFileSystem kfs = ks.newKieFileSystem()
+                    .generateAndWritePomXML(releaseId)
+                    .write(dmnResource);
+            KieBuilder kieBuilder = ks.newKieBuilder(kfs)
+                    .buildAll();
+            Results results = kieBuilder.getResults();
+            if (results.hasMessages(Message.Level.ERROR)) {
+                throw new IllegalStateException(results.getMessages(Message.Level.ERROR).toString());
+            }
+        });
     }
 }

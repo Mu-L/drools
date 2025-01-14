@@ -1,19 +1,21 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.drlx;
 
 import java.io.IOException;
@@ -37,9 +39,9 @@ import org.drools.model.codegen.execmodel.generator.ModelGenerator;
 import org.drools.mvel.DrlDumper;
 import org.drools.mvel.parser.MvelParser;
 import org.drools.mvel.parser.ParseStart;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.drools.io.InputStreamResource;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -79,7 +81,7 @@ public class DrlxCompilerTest {
     }
 
     @Test
-    @Ignore("Rule Unit compiler is not available in Drools 8 yet")
+    @Disabled("Rule Unit compiler is not available in Drools 8 yet")
     public void testCompileUnit() throws IOException {
         InputStream p = getClass().getClassLoader().getResourceAsStream("drlx1/Example.drlx");
         InputStreamResource r = new InputStreamResource(p);
@@ -112,7 +114,7 @@ public class DrlxCompilerTest {
     }
 
     @Test
-    @Ignore("Rule Unit Executor is not available in Drools 8 yet")
+    @Disabled("Rule Unit Executor is not available in Drools 8 yet")
     public void testCompileUnitFull() throws IOException {
         String path = "drlx1/Example.drlx";
         InputStream p = getClass().getClassLoader().getResourceAsStream(path);

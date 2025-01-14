@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo.builder;
 
 import java.util.ArrayList;
@@ -21,27 +23,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.drools.core.common.BaseNode;
-import org.drools.core.common.BetaConstraints;
-import org.drools.core.common.EmptyBetaConstraints;
+import org.drools.base.base.ObjectType;
 import org.drools.base.common.RuleBasePartitionId;
 import org.drools.base.definitions.rule.impl.RuleImpl;
-import org.drools.core.reteoo.AlphaNode;
-import org.drools.core.reteoo.BetaNode;
-import org.drools.core.reteoo.EntryPointNode;
 import org.drools.base.reteoo.NodeTypeEnums;
-import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.IntervalProviderConstraint;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.RuleConditionElement;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
-import org.drools.base.base.ObjectType;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.base.time.Interval;
-import org.drools.core.time.TemporalDependencyMatrix;
 import org.drools.base.time.TimeUtils;
+import org.drools.core.common.BaseNode;
+import org.drools.core.common.BetaConstraints;
+import org.drools.core.common.EmptyBetaConstraints;
+import org.drools.core.reteoo.AlphaNode;
+import org.drools.core.reteoo.BetaNode;
+import org.drools.core.reteoo.EntryPointNode;
+import org.drools.core.reteoo.ObjectTypeNode;
+import org.drools.core.time.TemporalDependencyMatrix;
 import org.kie.api.definition.rule.Rule;
 
 /**
@@ -159,9 +161,9 @@ public class BuildUtils {
             alphaConstraint.addPackageNames(((AlphaNode) duplicate).getConstraint().getPackageNames());
             alphaConstraint.mergeEvaluationContext(((AlphaNode) duplicate).getConstraint());
         } else if (node instanceof BetaNode) {
-            BetaNodeFieldConstraint[] betaConstraints = ((BetaNode) node).getConstraints();
-            int i = 0;
-            for (BetaNodeFieldConstraint betaConstraint : betaConstraints) {
+            BetaConstraint[] betaConstraints = ((BetaNode) node).getConstraints();
+            int              i               = 0;
+            for (BetaConstraint betaConstraint : betaConstraints) {
                 betaConstraint.addPackageNames(((BetaNode) duplicate).getConstraints()[i].getPackageNames());
                 betaConstraint.mergeEvaluationContext(((BetaNode) duplicate).getConstraints()[i]);
                 i++;
@@ -201,9 +203,14 @@ public class BuildUtils {
      * @param list the list of constraints
      */
     public BetaConstraints createBetaNodeConstraint(final BuildContext context,
-                                                    final List<BetaNodeFieldConstraint> list,
+                                                    final List<BetaConstraint> list,
                                                     final boolean disableIndexing) {
         BetaConstraints constraints;
+        if ( list.size() == 1 && list.get(0) instanceof BetaConstraints) {
+            // If the constraint also implements BetaConstraints us it directly, do not wrap.
+            return (BetaConstraints) list.get(0);
+        }
+
         switch ( list.size() ) {
             case 0 :
                 constraints = EmptyBetaConstraints.getInstance();
@@ -214,22 +221,22 @@ public class BuildUtils {
                                                          disableIndexing );
                 break;
             case 2 :
-                constraints = BetaNodeConstraintFactory.Factory.get().createDoubleBetaConstraints( list.toArray( new BetaNodeFieldConstraint[list.size()] ),
+                constraints = BetaNodeConstraintFactory.Factory.get().createDoubleBetaConstraints( list.toArray( new BetaConstraint[list.size()]),
                                                          context.getRuleBase().getRuleBaseConfiguration(),
                                                          disableIndexing );
                 break;
             case 3 :
-                constraints = BetaNodeConstraintFactory.Factory.get().createTripleBetaConstraints( list.toArray( new BetaNodeFieldConstraint[list.size()] ),
+                constraints = BetaNodeConstraintFactory.Factory.get().createTripleBetaConstraints( list.toArray( new BetaConstraint[list.size()]),
                                                          context.getRuleBase().getRuleBaseConfiguration(),
                                                          disableIndexing );
                 break;
             case 4 :
-                constraints = BetaNodeConstraintFactory.Factory.get().createQuadroupleBetaConstraints( list.toArray( new BetaNodeFieldConstraint[list.size()] ),
+                constraints = BetaNodeConstraintFactory.Factory.get().createQuadroupleBetaConstraints( list.toArray( new BetaConstraint[list.size()]),
                                                              context.getRuleBase().getRuleBaseConfiguration(),
                                                              disableIndexing );
                 break;
             default :
-                constraints = BetaNodeConstraintFactory.Factory.get().createDefaultBetaConstraints( list.toArray( new BetaNodeFieldConstraint[list.size()] ),
+                constraints = BetaNodeConstraintFactory.Factory.get().createDefaultBetaConstraints( list.toArray( new BetaConstraint[list.size()]),
                                                           context.getRuleBase().getRuleBaseConfiguration(),
                                                           disableIndexing );
         }

@@ -1,29 +1,30 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.pmml;
 
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
 import org.drools.compiler.kie.builder.impl.DrlProject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -64,7 +65,7 @@ public abstract class DMNRuntimePMMLTest {
     private static final double COMPARISON_DELTA = 0.000001;
 
     @Test
-    public void testBasic() {
+    public void basic() {
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntimeWithAdditionalResources("KiePMMLScoreCard.dmn",
                                                                                        DMNRuntimePMMLTest.class,
                                                                                        "test_scorecard.pmml");
@@ -72,7 +73,7 @@ public abstract class DMNRuntimePMMLTest {
     }
 
     @Test
-    public void testWithInputTypes() {
+    public void withInputTypes() {
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntimeWithAdditionalResources("KiePMMLScoreCard_wInputType.dmn",
                                                                                        DMNRuntimePMMLTest.class,
                                                                                        "test_scorecard.pmml");
@@ -80,7 +81,7 @@ public abstract class DMNRuntimePMMLTest {
     }
 
     @Test
-    public void testBasicNoKieAssembler() {
+    public void basicNoKieAssembler() {
         DMNRuntime dmnRuntime = DMNRuntimeBuilder.fromDefaults()
                                                  .setRelativeImportResolver((ns, n, uri) -> new InputStreamReader(DMNRuntimePMMLTest.class.getResourceAsStream(uri)))
                                                  .buildConfiguration()
@@ -125,7 +126,7 @@ public abstract class DMNRuntimePMMLTest {
      * test to use same building steps of BC/WB
      */
     @Test
-    public void testSteppedCompilation() {
+    public void steppedCompilation() {
         KieServices ks = KieServices.Factory.get();
 
         KieFileSystem kfs = ks.newKieFileSystem();
@@ -148,7 +149,7 @@ public abstract class DMNRuntimePMMLTest {
     }
 
     @Test
-    public void testMultiOutputs() {
+    public void multiOutputs() {
         final DMNRuntime runtime = DMNRuntimeUtil.createRuntimeWithAdditionalResources("KiePMMLRegressionClax.dmn",
                                                                                        DMNRuntimePMMLTest.class,
                                                                                        "test_regression_clax.pmml");

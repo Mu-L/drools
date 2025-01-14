@@ -1,39 +1,42 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.drools.base.base.ObjectType;
+import org.drools.base.common.NetworkNode;
+import org.drools.base.common.RuleBasePartitionId;
 import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.Pattern;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
+import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.base.common.RuleBasePartitionId;
 import org.drools.core.common.UpdateContext;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.base.rule.EntryPointId;
-import org.drools.base.base.ObjectType;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.BitMask;
 
 /**
  * The Rete-OO network.
@@ -53,13 +56,9 @@ import org.drools.core.util.bitmask.BitMask;
  */
 public class Rete extends ObjectSource implements ObjectSink {
 
+    private final Map<EntryPointId, EntryPointNode> entryPoints = new HashMap<>();
 
-
-    private static final long               serialVersionUID = 510l;
-
-    private Map<EntryPointId, EntryPointNode> entryPoints;
-
-    private transient InternalRuleBase kBase;
+    private final InternalRuleBase kBase;
 
     public Rete() {
         this( null );
@@ -70,14 +69,12 @@ public class Rete extends ObjectSource implements ObjectSink {
     // ------------------------------------------------------------
 
     public Rete(InternalRuleBase kBase) {
-        super( 0, RuleBasePartitionId.MAIN_PARTITION, kBase != null && kBase.getRuleBaseConfiguration().isMultithreadEvaluation() );
-        this.entryPoints = Collections.synchronizedMap( new HashMap<EntryPointId, EntryPointNode>() );
+        super( 0, RuleBasePartitionId.MAIN_PARTITION );
         this.kBase = kBase;
-
         hashcode = calculateHashCode();
     }
 
-    public short getType() {
+    public int getType() {
         return NodeTypeEnums.ReteNode;
     }  
 
@@ -195,7 +192,7 @@ public class Rete extends ObjectSource implements ObjectSink {
             return true;
         }
 
-        if (!(object instanceof Rete) || this.hashCode() != object.hashCode()) {
+        if (((NetworkNode)object).getType() != NodeTypeEnums.ReteNode || this.hashCode() != object.hashCode()) {
             return false;
         }
         return this.entryPoints.equals( ((Rete)object).entryPoints );
@@ -219,7 +216,7 @@ public class Rete extends ObjectSource implements ObjectSink {
     }   
     
     @Override
-    public BitMask calculateDeclaredMask(ObjectType modifiedType, List<String> settableProperties) {
+    public BitMask calculateDeclaredMask(Pattern pattern, ObjectType modifiedType, List<String> settableProperties) {
         throw new UnsupportedOperationException();
     }    
 }

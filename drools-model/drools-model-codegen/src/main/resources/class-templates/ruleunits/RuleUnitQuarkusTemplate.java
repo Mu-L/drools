@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 import org.drools.core.SessionConfiguration;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.impl.InternalRuleBase;
@@ -10,7 +28,7 @@ import org.drools.ruleunits.impl.factory.AbstractRuleUnits;
 import org.drools.ruleunits.impl.ReteEvaluatorBasedRuleUnitInstance;
 import org.drools.ruleunits.impl.sessions.RuleUnitExecutorImpl;
 
-@javax.enterprise.context.ApplicationScoped
+@jakarta.enterprise.context.ApplicationScoped
 public class CLASS_NAME extends AbstractRuleUnit<RULE_UNIT_CLASS> {
 
     private static final InternalRuleBase ruleBase = KieBaseBuilder.createKieBaseFromModel(new RULE_UNIT_MODEL(), $KieBaseOptions$);
@@ -25,8 +43,8 @@ public class CLASS_NAME extends AbstractRuleUnit<RULE_UNIT_CLASS> {
         this((RuleUnits) null);
     }
 
-    @javax.inject.Inject
-    public CLASS_NAME(javax.enterprise.inject.Instance<RuleUnits> ruleUnits) {
+    @jakarta.inject.Inject
+    public CLASS_NA(jakarta.enterprise.inject.Instance<RuleUnits> ruleUnits) {
         this(ruleUnits == null || ruleUnits.isUnsatisfied() ? AbstractRuleUnits.DummyRuleUnits.INSTANCE : ruleUnits.get());
     }
 

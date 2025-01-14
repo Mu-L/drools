@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler;
 
 import java.io.IOException;
@@ -57,11 +59,10 @@ import org.drools.modelcompiler.domain.Toy;
 import org.drools.modelcompiler.domain.Woman;
 import org.drools.modelcompiler.dsl.pattern.D;
 import org.drools.modelcompiler.util.EvaluationUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.conf.EventProcessingOption;
-import org.kie.api.runtime.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.api.runtime.conf.ClockTypeOption;
@@ -374,9 +375,8 @@ public class PatternDSLTest {
 
         ksession.fireAllRules();
 
-        Collection<Result> results = (Collection<Result>) ksession.getObjects( new ClassObjectFilter( Result.class ) );
-        assertThat(results.size()).isEqualTo(1);
-        assertThat(results.iterator().next().getValue()).isEqualTo("Mario");
+        Result result = ksession.getSingleInstanceOf( Result.class );
+        assertThat(result.getValue()).isEqualTo("Mario");
     }
 
     @Test
@@ -1130,6 +1130,6 @@ public class PatternDSLTest {
     }
 
     public static <T> List<T> getObjectsIntoList(KieSession ksession, Class<T> clazz) {
-        return (List<T>) ksession.getObjects(new ClassObjectFilter(clazz)).stream().collect(Collectors.toList());
+        return ksession.getInstancesOf(clazz).stream().collect(Collectors.toList());
     }
 }

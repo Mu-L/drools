@@ -1,19 +1,21 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvelcompiler;
 
 import java.lang.reflect.Method;
@@ -33,6 +35,7 @@ import com.github.javaparser.ast.expr.EnclosedExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
@@ -52,6 +55,7 @@ import org.drools.mvelcompiler.ast.UnalteredTypedExpression;
 import org.drools.mvelcompiler.ast.VariableDeclaratorTExpr;
 import org.drools.mvelcompiler.context.Declaration;
 import org.drools.mvelcompiler.context.MvelCompilerContext;
+import org.drools.mvelcompiler.util.TypeUtils;
 import org.drools.util.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,7 +134,9 @@ public class LHSPhase implements DrlGenericVisitor<TypedExpression, Void> {
             // a part of a larger FieldAccessExpr. e.g. [$p.address] of [$p.address.city]
             return tryParseItAsGetter(n, fieldAccessScope)
                     .orElse(new UnalteredTypedExpression(n));
-        } else if(parentIsArrayAccessExpr(n)) {
+        } else if (fieldAccessScope.getType().map(TypeUtils::isMapAccessField).orElse(false) && parentIsAssignExpr(n)) {
+            return new MapPutExprT(fieldAccessScope, new StringLiteralExpr(n.getName().toString()), rhsOrNull(), fieldAccessScope.getType());
+        } else if (parentIsArrayAccessExpr(n)) {
             return tryParseItAsMap(n, fieldAccessScope)
                     .map(Optional::of)
                     .orElseGet(() -> tryParseItAsSetter(n, fieldAccessScope, getRHSType()))
@@ -376,6 +382,10 @@ public class LHSPhase implements DrlGenericVisitor<TypedExpression, Void> {
         return n.getParentNode().filter(p -> p instanceof ArrayAccessExpr).isPresent();
     }
 
+    private boolean parentIsAssignExpr(Node n) {
+        return n.getParentNode().filter(p -> p instanceof AssignExpr).isPresent();
+    }
+
     private Class<?> getRHSType() {
         return rhs
                 .flatMap(TypedExpression::getType)
@@ -385,7 +395,7 @@ public class LHSPhase implements DrlGenericVisitor<TypedExpression, Void> {
 
     private Class<?> getRHSorLHSType(VariableDeclarator n) {
         return mvelCompilerContext.resolveType(n.getType() instanceof ClassOrInterfaceType ?
-                n.getType().asClassOrInterfaceType().getNameAsString() :
+                n.getType().asClassOrInterfaceType().getNameWithScope() :
                 n.getType().asString());
     }
 

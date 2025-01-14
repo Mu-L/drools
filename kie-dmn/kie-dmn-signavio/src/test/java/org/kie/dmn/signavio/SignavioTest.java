@@ -1,19 +1,21 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.signavio;
 
 import java.math.BigDecimal;
@@ -23,7 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -35,6 +38,7 @@ import org.kie.dmn.api.core.DMNContext;
 import org.kie.dmn.api.core.DMNModel;
 import org.kie.dmn.api.core.DMNResult;
 import org.kie.dmn.api.core.DMNRuntime;
+import org.kie.dmn.api.core.ast.DMNNode;
 import org.kie.dmn.model.api.DRGElement;
 import org.kie.dmn.model.api.Definitions;
 import org.slf4j.Logger;
@@ -44,26 +48,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class SignavioTest {
     public static final Logger LOG = LoggerFactory.getLogger(SignavioTest.class);
-    
+
     @Test
-    public void test() {
+    void test() {
         DMNRuntime runtime = createRuntime("Test_Signavio_multiple.dmn");
-        
+
         List<DMNModel> models = runtime.getModels();
-        
+
         DMNContext context = runtime.newContext();
         context.set("persons", Arrays.asList("p1", "p2"));
-        
+
         DMNModel model0 = models.get(0);
         LOG.info("EVALUATE ALL:");
         DMNResult evaluateAll = runtime.evaluateAll(model0, context);
         LOG.info("{}", evaluateAll);
-        
+
         assertThat((List<String>) evaluateAll.getContext().get("Greeting for each Person in Persons")).contains("Hello p1", "Hello p2");
     }
-    
+
     @Test
-    public void testUnmarshall() {
+    void unmarshall() {
         DMNRuntime runtime = createRuntime("Test_Signavio_multiple.dmn");
         DMNModel model0 = runtime.getModels().get(0);
         Definitions definitions = model0.getDefinitions();
@@ -79,7 +83,7 @@ public class SignavioTest {
     }
 
     @Test
-    public void testUsingSignavioFunctions() {
+    void usingSignavioFunctions() {
         DMNRuntime runtime = createRuntime("Using_Signavio_functions.dmn");
 
         List<DMNModel> models = runtime.getModels();
@@ -100,7 +104,7 @@ public class SignavioTest {
      * Check the custom Signavio functions work in the LiteralExpression too
      */
     @Test
-    public void testUsingSignavioFunctionsInLiteralExpression() {
+    void usingSignavioFunctionsInLiteralExpression() {
         DMNRuntime runtime = createRuntime("Starts_with_an_A.dmn");
 
         assertStartsWithAnA(runtime, "Abc", true);
@@ -121,7 +125,7 @@ public class SignavioTest {
     }
 
     @Test
-    public void testSurveyMIDSUM() {
+    void surveyMIDSUM() {
         DMNRuntime runtime = createRuntime("survey MID SUM.dmn");
         checkSurveryMID(runtime, Arrays.asList(1, 2, 3), new BigDecimal(6));
     }
@@ -140,14 +144,14 @@ public class SignavioTest {
         assertThat(evaluateAll.getDecisionResultByName("iterating").getResult()).isEqualTo(iterating);
     }
 
-    private DMNRuntime createRuntime(String modelFileName) {
-        final KieServices ks = KieServices.Factory.get();
+    private DMNRuntime createRuntime(String... modelFileNames) {
+        final KieServices ks = KieServices.get();
         final KieFileSystem kfs = ks.newKieFileSystem();
 
         KieModuleModel kmm = ks.newKieModuleModel();
         kmm.setConfigurationProperty("org.kie.dmn.profiles.signavio", "org.kie.dmn.signavio.KieDMNSignavioProfile");
         kfs.writeKModuleXML(kmm.toXML());
-        kfs.write(ks.getResources().newClassPathResource(modelFileName, this.getClass()));
+        Arrays.stream(modelFileNames).forEachOrdered(f -> kfs.write(ks.getResources().newClassPathResource(f, getClass())));
 
         KieBuilder kieBuilder = ks.newKieBuilder(kfs).buildAll();
         Results results = kieBuilder.getResults();
@@ -161,85 +165,85 @@ public class SignavioTest {
     }
 
     @Test
-    public void testSurveyMIDMIN() {
+    void surveyMIDMIN() {
         DMNRuntime runtime = createRuntime("survey MID MIN.dmn");
         checkSurveryMID(runtime, Arrays.asList(1, 2, 3), new BigDecimal(1));
     }
 
     @Test
-    public void testSurveyMIDMAX() {
+    void surveyMIDMAX() {
         DMNRuntime runtime = createRuntime("survey MID MAX.dmn");
         checkSurveryMID(runtime, Arrays.asList(1, 2, 3), new BigDecimal(3));
     }
 
     @Test
-    public void testSurveyMIDCOUNT() {
+    void surveyMIDCOUNT() {
         DMNRuntime runtime = createRuntime("survey MID COUNT.dmn");
         checkSurveryMID(runtime, Arrays.asList(1, 1, 1), new BigDecimal(3));// the COUNT in MID is list size, checked on Simulator.
     }
 
     @Test
-    public void testSurveyMIDALLTRUE() {
+    void surveyMIDALLTRUE() {
         DMNRuntime runtime = createRuntime("survey MID ALLTRUE.dmn");
         checkSurveryMID(runtime, Arrays.asList(1, 2), true);
         checkSurveryMID(runtime, Arrays.asList(-1, 2), false);
     }
 
     @Test
-    public void testSurveyMIDANYTRUE() {
+    void surveyMIDANYTRUE() {
         DMNRuntime runtime = createRuntime("survey MID ANYTRUE.dmn");
         checkSurveryMID(runtime, Arrays.asList(1, -2), true);
         checkSurveryMID(runtime, Arrays.asList(-1, -2), false);
     }
 
     @Test
-    public void testSurveyMIDALLFALSE() {
+    void surveyMIDALLFALSE() {
         DMNRuntime runtime = createRuntime("survey MID ALLFALSE.dmn");
         checkSurveryMID(runtime, Arrays.asList(1, 2), false);
         checkSurveryMID(runtime, Arrays.asList(-1, 2), false);
         checkSurveryMID(runtime, Arrays.asList(1, -2), false);
         checkSurveryMID(runtime, Arrays.asList(-1, -2), true);
     }
-    
+
     @Test
-    public void testZipFunctions() {
+    void zipFunctions() {
         DMNRuntime runtime = createRuntime("Test_SignavioZipFunctions.dmn");
         checkBothFunctionsAreWorking(runtime);
     }
-    
-    
+
+
     @Test
     @SuppressWarnings("unchecked")
-    public void testMidTakesCareOfRequirements() {
+    void midTakesCareOfRequirements() {
         DMNRuntime runtime = createRuntime("Test_SignavioMID.dmn");
-    
+
         List<DMNModel> models = runtime.getModels();
-    
+
         DMNContext context = runtime.newContext();
         context.set("numbers1", Arrays.asList(1,2));
         context.set("numbers2", Arrays.asList(2,3));
-    
+
         DMNModel model0 = models.get(0);
         LOG.info("EVALUATE ALL:");
         DMNResult evaluateAll = runtime.evaluateAll(model0, context);
         LOG.info("{}", evaluateAll);
-    
+
         List<Object> result = (List<Object>) evaluateAll.getDecisionResultByName("calculate").getResult();
         assertThat(result).hasSize(6);
-        
+
         assertThat(result).doesNotContainNull();
     }
-    
-    
+
+
     @Test
-    public void testSignavioConcatFunction() {
+    void signavioConcatFunction() {
         DMNRuntime runtime = createRuntime("Signavio_Concat.dmn");
-        
+
         List<DMNModel> models = runtime.getModels();
-        
+
         DMNContext context = runtime.newContext();
         context.set("listOfNames", Arrays.asList("John", "Jane", "Doe"));
-        
+
         DMNModel model0 = models.get(0);
         LOG.info("EVALUATE ALL:");
         DMNResult evaluateAll = runtime.evaluateAll(model0, context);
@@ -247,28 +251,28 @@ public class SignavioTest {
 
         assertThat(evaluateAll.getDecisionResultByName("concatNames").getResult()).isEqualTo("JohnJaneDoe");
     }
-    
-    
+
+
     private void checkBothFunctionsAreWorking(DMNRuntime runtime) {
         List<DMNModel> models = runtime.getModels();
-        
+
         DMNContext context = runtime.newContext();
         context.set("names", Arrays.asList("John Doe", "Jane Doe"));
         context.set("ages", Arrays.asList(37, 35));
-        
+
         DMNModel model0 = models.get(0);
         LOG.info("EVALUATE ALL:");
         DMNResult evaluateAll = runtime.evaluateAll(model0, context);
         LOG.info("{}", evaluateAll);
-        
+
         assertThat((List<?>) evaluateAll.getDecisionResultByName("zipvararg").getResult()).hasSize(2);
         assertThat((List<?>) evaluateAll.getDecisionResultByName("zipsinglelist").getResult()).hasSize(2);
     }
-    
+
     @Test
-    public void testSignavioIterateMultiinstanceWithComplexInputs() {
+    void signavioIterateMultiinstanceWithComplexInputs() {
         DMNRuntime runtime = createRuntime("Iterate Complex List.dmn");
-        
+
         DMNContext context = runtime.newContext();
         Map<String, Object> johnDoe = new HashMap<>();
         johnDoe.put("iD", "id-john");
@@ -277,7 +281,7 @@ public class SignavioTest {
         alice.put("iD", "id-alice");
         alice.put("name", "Alice");
         context.set("customer", Collections.singletonMap("persons", Arrays.asList(johnDoe, alice)));
-        
+
         DMNModel model0 = runtime.getModels().get(0);
         LOG.info("EVALUATE ALL:");
         DMNResult evaluateAll = runtime.evaluateAll(model0, context);
@@ -285,35 +289,45 @@ public class SignavioTest {
 
         assertThat(evaluateAll.getDecisionResultByName("extractNames").getResult()).isEqualTo(Arrays.asList("John Doe", "Alice"));
     }
-    
+
     @Test
-    public void testSignavioIterateMultiinstanceMultipleDecisions() {
+    void signavioIterateMultiinstanceMultipleDecisions() {
         DMNRuntime runtime = createRuntime("MID with multiple inside decisions.dmn");
-        
+
         DMNContext context = runtime.newContext();
         context.set("names", Arrays.asList("John", "Alice"));
-        
+
         DMNModel model0 = runtime.getModels().get(0);
         LOG.info("EVALUATE ALL:");
         DMNResult evaluateAll = runtime.evaluateAll(model0, context);
         LOG.info("{}", evaluateAll);
-    
+
         assertThat(evaluateAll.getDecisionResultByName("overallage").getResult()).isEqualTo(new BigDecimal("18"));
     }
-    
+
     @Test
-    public void testSignavioIterateMultiinstanceMultipleDecisionsOutside() {
+    void signavioIterateMultiinstanceMultipleDecisionsOutside() {
         DMNRuntime runtime = createRuntime("MID with outside requirement.dmn");
-        
+
         DMNContext context = runtime.newContext();
         context.set("numbers", Arrays.asList(1,2,3));
         context.set("operand", "PLUS");
-        
+
         DMNModel model0 = runtime.getModels().get(0);
         LOG.info("EVALUATE ALL:");
         DMNResult evaluateAll = runtime.evaluateAll(model0, context);
         LOG.info("{}", evaluateAll);
-    
+
         assertThat(evaluateAll.getDecisionResultByName("sumUp").getResult()).isEqualTo(new BigDecimal("6"));
+    }
+
+    @Test
+    void signavioMultiInstanceDecisionTableWithinMultipleFiles() {
+        DMNRuntime dmnRuntime = createRuntime("MID with outside requirement.dmn", "survey MID SUM.dmn", "Signavio_Concat.dmn");
+
+        assertThat(dmnRuntime.getModels())
+                .flatExtracting(DMNModel::getDecisions)
+                .extracting(DMNNode::getName)
+                .containsOnly("sumUp", "iterating", "determineModifier", "concatNames");
     }
 }

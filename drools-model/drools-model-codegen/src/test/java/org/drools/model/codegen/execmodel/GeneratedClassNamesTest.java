@@ -1,23 +1,26 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.drools.compiler.compiler.io.memory.MemoryFileSystem;
 import org.drools.compiler.kie.builder.impl.InternalKieModule;
@@ -28,10 +31,10 @@ import org.drools.model.codegen.execmodel.domain.Person;
 import org.drools.modelcompiler.CanonicalKieModule;
 import org.drools.wiring.api.classloader.ProjectClassLoader;
 import org.drools.wiring.api.classloader.ProjectClassLoaderTestUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
@@ -52,28 +55,24 @@ public class GeneratedClassNamesTest extends BaseModelTest {
 
     private boolean enableStoreFirstOrig;
 
-    public GeneratedClassNamesTest(RUN_TYPE testRunType) {
-        super(testRunType);
+    public static Stream<RUN_TYPE> parameters() {
+        return Stream.of(RUN_TYPE.PATTERN_DSL);
     }
 
-    @Parameters(name = "{0}")
-    public static Object[] params() {
-        return new Object[]{RUN_TYPE.PATTERN_DSL};
-    }
-
-    @Before
-    public void init() {
+    @BeforeEach
+    public void setUp() {
         enableStoreFirstOrig = ProjectClassLoader.isEnableStoreFirst();
         ProjectClassLoaderTestUtil.setEnableStoreFirst(true);
     }
 
-    @After
-    public void clear() {
+    @AfterEach
+    public void tearDown() {
         ProjectClassLoaderTestUtil.setEnableStoreFirst(enableStoreFirstOrig);
     }
 
-    @Test
-    public void testGeneratedClassNames() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testGeneratedClassNames(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
                      "rule R when\n" +
@@ -85,7 +84,7 @@ public class GeneratedClassNamesTest extends BaseModelTest {
         KieServices ks = KieServices.get();
         ReleaseId releaseId = ks.newReleaseId("org.kie", "kjar-test-" + UUID.randomUUID(), "1.0");
 
-        createKieBuilder(ks, getDefaultKieModuleModel( ks ), releaseId, toKieFiles(new String[]{str}));
+        createKieBuilder(runType, ks, getDefaultKieModuleModel( ks ), releaseId, toKieFiles(new String[]{str}));
         KieContainer kcontainer = ks.newKieContainer(releaseId);
 
         KieModule kieModule = ((KieContainerImpl) kcontainer).getKieModuleForKBase("kbase");
@@ -121,12 +120,14 @@ public class GeneratedClassNamesTest extends BaseModelTest {
         }
     }
 
-    @Test
+    @ParameterizedTest
+	@MethodSource("parameters")
     public void testModuleWithDepWithoutClassLoader() throws Exception {
         testModuleWithDep(null);
     }
 
-    @Test
+    @ParameterizedTest
+	@MethodSource("parameters")
     public void testModuleWithDepWithClassLoader() throws Exception {
         ProjectClassLoader projectClassLoader = ProjectClassLoader.createProjectClassLoader(Thread.currentThread().getContextClassLoader());
         testModuleWithDep(projectClassLoader);
@@ -264,8 +265,9 @@ public class GeneratedClassNamesTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testKjarWithoutGeneratedClassNames() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testKjarWithoutGeneratedClassNames(RUN_TYPE runType) {
         // Build a kjar without generated-class-names file (= simulating a build by old drools version)
 
         ProjectClassLoaderTestUtil.setEnableStoreFirst(false);
@@ -281,7 +283,7 @@ public class GeneratedClassNamesTest extends BaseModelTest {
         KieServices ks = KieServices.get();
         ReleaseId releaseId = ks.newReleaseId("org.kie", "kjar-test-" + UUID.randomUUID(), "1.0");
 
-        KieBuilder kieBuilder = createKieBuilder(ks, getDefaultKieModuleModel( ks ), releaseId, toKieFiles(new String[]{str}));
+        KieBuilder kieBuilder = createKieBuilder(runType, ks, getDefaultKieModuleModel( ks ), releaseId, toKieFiles(new String[]{str}));
 
         final InternalKieModule kieModule = (InternalKieModule) kieBuilder.getKieModule();
         byte[] kjar = kieModule.getBytes();

@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
 import java.util.Arrays;
@@ -22,19 +24,17 @@ import java.util.List;
 
 import org.drools.model.codegen.execmodel.domain.Person;
 import org.drools.model.codegen.execmodel.domain.Result;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FunctionsTest extends BaseModelTest {
 
-    public FunctionsTest( RUN_TYPE testRunType ) {
-        super( testRunType );
-    }
-
-    @Test
-    public void testFunctionWithEquals() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFunctionWithEquals(RUN_TYPE runType) {
         // DROOLS-3653
         String str = "package com.sample\n" +
                 "import " + Person.class.getName() + ";\n" +
@@ -56,15 +56,16 @@ public class FunctionsTest extends BaseModelTest {
                 "    then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert(new Person("John", 10));
         int rulesFired = ksession.fireAllRules();
         assertThat(rulesFired).isEqualTo(1); // only R1 should fire
     }
 
-    @Test
-    public void testConstraintCallingStaticFunctionInsideEnum() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testConstraintCallingStaticFunctionInsideEnum(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getName() + ";\n" +
                 "import " + FunctionEnum.class.getCanonicalName() + ";\n" +
@@ -74,7 +75,7 @@ public class FunctionsTest extends BaseModelTest {
                 "    then\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
 
         Person john = new Person("John", 10);
@@ -86,8 +87,9 @@ public class FunctionsTest extends BaseModelTest {
         assertThat(rulesFired).isEqualTo(1);
     }
 
-    @Test
-    public void testConstraintCallingImportedStaticFunction() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testConstraintCallingImportedStaticFunction(RUN_TYPE runType) {
         String str =
                 "import " + Person.class.getName() + ";\n" +
                 "import " + FunctionEnum.class.getCanonicalName() + ";\n" +
@@ -98,7 +100,7 @@ public class FunctionsTest extends BaseModelTest {
                 "    then\n" +
                 "end\n";
 
-        KieSession ksession = getKieSession(str);
+        KieSession ksession = getKieSession(runType, str);
 
 
         Person john = new Person("John", 10);
@@ -119,8 +121,9 @@ public class FunctionsTest extends BaseModelTest {
     }
 
 
-    @Test
-    public void testStaticMethodCall1() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testStaticMethodCall1(RUN_TYPE runType) {
         // DROOLS-5214
         String str =
                 "package com.sample\n" +
@@ -132,15 +135,16 @@ public class FunctionsTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new Pojo( Arrays.asList(1,3) ) );
         int rulesFired = ksession.fireAllRules();
         assertThat(rulesFired).isEqualTo(1);
     }
 
-    @Test
-    public void testStaticMethodCall2() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testStaticMethodCall2(RUN_TYPE runType) {
         // DROOLS-5214
         String str =
                 "package com.sample\n" +
@@ -152,15 +156,16 @@ public class FunctionsTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new Pojo( Arrays.asList(1,2,3) ) );
         int rulesFired = ksession.fireAllRules();
         assertThat(rulesFired).isEqualTo(1);
     }
 
-    @Test
-    public void testFQNStaticMethodCall1() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFQNStaticMethodCall1(RUN_TYPE runType) {
         // DROOLS-5214
         String str =
                 "package com.sample\n" +
@@ -171,15 +176,16 @@ public class FunctionsTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new Pojo( Arrays.asList(1,3) ) );
         int rulesFired = ksession.fireAllRules();
         assertThat(rulesFired).isEqualTo(1);
     }
 
-    @Test
-    public void testFQNStaticMethodCall2() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testFQNStaticMethodCall2(RUN_TYPE runType) {
         // DROOLS-5214
         String str =
                 "package com.sample\n" +
@@ -190,7 +196,7 @@ public class FunctionsTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new Pojo( Arrays.asList(1,2,3) ) );
         int rulesFired = ksession.fireAllRules();
@@ -209,8 +215,9 @@ public class FunctionsTest extends BaseModelTest {
         }
     }
 
-    @Test
-    public void testInvokeFunctionWithDroolsKeyword() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testInvokeFunctionWithDroolsKeyword(RUN_TYPE runType) {
         // DROOLS-5215
         String str =
                 "package com.sample\n" +
@@ -224,14 +231,15 @@ public class FunctionsTest extends BaseModelTest {
                 "        printRuleName(drools.getRule().getName());\n" +
                 "    end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         int rulesFired = ksession.fireAllRules();
         assertThat(rulesFired).isEqualTo(1);
     }
 
-    @Test
-    public void testBindingFieldsIndexedWithSquareBrackets() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testBindingFieldsIndexedWithSquareBrackets(RUN_TYPE runType) {
         // DROOLS-5216
         String str =
                 "package com.sample\n" +
@@ -243,7 +251,7 @@ public class FunctionsTest extends BaseModelTest {
                 "then\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert( new Pojo( Arrays.asList(1,3) ) );
         int rulesFired = ksession.fireAllRules();
@@ -254,8 +262,9 @@ public class FunctionsTest extends BaseModelTest {
         return "whatever";
     }
 
-    @Test
-    public void testExternalFunctionJoin() {
+    @ParameterizedTest
+	@MethodSource("parameters")
+    public void testExternalFunctionJoin(RUN_TYPE runType) {
         // DROOLS-5288
         String str =
                 "import " + Person.class.getCanonicalName() + ";" +
@@ -271,7 +280,7 @@ public class FunctionsTest extends BaseModelTest {
                 "  insert(new Result($p2.getName()));\n" +
                 "end";
 
-        KieSession ksession = getKieSession( str );
+        KieSession ksession = getKieSession(runType, str);
 
         ksession.insert(new Person("Luca"));
         ksession.insert(new Person("whatever"));

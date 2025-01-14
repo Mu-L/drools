@@ -1,27 +1,29 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests.session;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.drools.commands.runtime.BatchExecutionCommandImpl;
 import org.drools.mvel.compiler.Cheese;
@@ -29,10 +31,9 @@ import org.drools.mvel.compiler.Cheesery;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.KieModule;
 import org.kie.api.command.Command;
@@ -48,25 +49,19 @@ import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class StatelessSessionTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public StatelessSessionTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
     final List list = new ArrayList();
     final Cheesery cheesery = new Cheesery();
 
-    @Test
-    public void testSingleObjectAssert() throws Exception {
-        final StatelessKieSession session = getSession2( "statelessSessionTest.drl" );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSingleObjectAssert(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        final StatelessKieSession session = getSession2(kieBaseTestConfiguration, "statelessSessionTest.drl" );
 
         final Cheese stilton = new Cheese( "stilton",
                                            5 );
@@ -76,9 +71,10 @@ public class StatelessSessionTest {
         assertThat(list.get(0)).isEqualTo("stilton");
     }
 
-    @Test
-    public void testArrayObjectAssert() throws Exception {
-        final StatelessKieSession session = getSession2( "statelessSessionTest.drl" );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testArrayObjectAssert(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        final StatelessKieSession session = getSession2(kieBaseTestConfiguration, "statelessSessionTest.drl" );
 
         final Cheese stilton = new Cheese( "stilton",
                                            5 );
@@ -88,9 +84,10 @@ public class StatelessSessionTest {
         assertThat(list.get(0)).isEqualTo("stilton");
     }
 
-    @Test
-    public void testCollectionObjectAssert() throws Exception {
-        final StatelessKieSession session = getSession2( "statelessSessionTest.drl" );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testCollectionObjectAssert(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        final StatelessKieSession session = getSession2(kieBaseTestConfiguration, "statelessSessionTest.drl" );
 
         final Cheese stilton = new Cheese( "stilton",
                                            5 );
@@ -102,8 +99,9 @@ public class StatelessSessionTest {
         assertThat(list.get(0)).isEqualTo("stilton");
     }
     
-    @Test
-    public void testInsertObject() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testInsertObject(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import org.drools.mvel.compiler.Cheese \n";
@@ -117,7 +115,7 @@ public class StatelessSessionTest {
         
         Cheese stilton = new Cheese( "stilton", 5 );
         
-        final StatelessKieSession ksession = getSession2( ResourceFactory.newByteArrayResource( str.getBytes() ) );
+        final StatelessKieSession ksession = getSession2( kieBaseTestConfiguration, ResourceFactory.newByteArrayResource( str.getBytes() ) );
         final ExecutableCommand cmd = (ExecutableCommand) CommandFactory.newInsert( stilton, "outStilton" );
         final BatchExecutionCommandImpl batch = new BatchExecutionCommandImpl(  Arrays.asList(cmd) );
         
@@ -126,8 +124,9 @@ public class StatelessSessionTest {
         assertThat(stilton.getPrice()).isEqualTo(30);
     }
     
-    @Test
-    public void testSetGlobal() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSetGlobal(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import org.drools.mvel.compiler.Cheese \n";
@@ -150,7 +149,7 @@ public class StatelessSessionTest {
         List list2 = new ArrayList();
         List list3 = new ArrayList();
         
-        final StatelessKieSession ksession = getSession2( ResourceFactory.newByteArrayResource( str.getBytes() ) );
+        final StatelessKieSession ksession = getSession2(kieBaseTestConfiguration, ResourceFactory.newByteArrayResource( str.getBytes() ) );
         final Command setGlobal1 = CommandFactory.newSetGlobal( "list1", list1 );
         final Command setGlobal2 = CommandFactory.newSetGlobal( "list2", list2, true );
         final Command setGlobal3 = CommandFactory.newSetGlobal( "list3", list3, "outList3" );
@@ -179,8 +178,9 @@ public class StatelessSessionTest {
         assertThat(list3.get(0)).isSameAs(stilton);
     }
     
-    @Test
-    public void testQuery() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testQuery(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie.test  \n";
         str += "import org.drools.mvel.compiler.Cheese \n";
@@ -240,8 +240,9 @@ public class StatelessSessionTest {
         assertThat(newSet).isEqualTo(set);
     }
 
-    @Test
-    public void testNotInStatelessSession() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testNotInStatelessSession(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final KieModule kieModule = KieUtil.getKieModuleFromClasspathResources("test", getClass(), kieBaseTestConfiguration, "test_NotInStatelessSession.drl");
         final KieBase kbase = KieBaseUtil.newKieBaseFromKieModuleWithAdditionalOptions(kieModule, kieBaseTestConfiguration, SequentialOption.YES);
         final StatelessKieSession session = kbase.newStatelessKieSession();
@@ -252,8 +253,9 @@ public class StatelessSessionTest {
         assertThat(list.get(0)).isEqualTo("not integer");
     }
 
-    @Test
-    public void testChannels() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testChannels(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         String str = "";
         str += "package org.kie \n";
         str += "import org.drools.mvel.compiler.Cheese \n";
@@ -268,7 +270,7 @@ public class StatelessSessionTest {
         final Cheese stilton = new Cheese("stilton", 5);
         final Channel channel = Mockito.mock(Channel.class);
 
-        final StatelessKieSession ksession = getSession2(ResourceFactory.newByteArrayResource(str.getBytes()));
+        final StatelessKieSession ksession = getSession2(kieBaseTestConfiguration, ResourceFactory.newByteArrayResource(str.getBytes()));
         ksession.registerChannel("x", channel);
 
         assertThat(ksession.getChannels().size()).isEqualTo(1);
@@ -284,11 +286,11 @@ public class StatelessSessionTest {
         assertThat(ksession.getChannels().get("x")).isNull();
     }
 
-    private StatelessKieSession getSession2(final String fileName) throws Exception {
-        return getSession2( ResourceFactory.newClassPathResource( fileName, getClass() ) );
+    private StatelessKieSession getSession2(KieBaseTestConfiguration kieBaseTestConfiguration, final String fileName) throws Exception {
+        return getSession2(kieBaseTestConfiguration, ResourceFactory.newClassPathResource( fileName, getClass() ) );
     }
         
-    private StatelessKieSession getSession2(final Resource resource) throws Exception {
+    private StatelessKieSession getSession2(KieBaseTestConfiguration kieBaseTestConfiguration, final Resource resource) throws Exception {
         resource.setTargetPath("r1.drl");
         KieBase kbase = KieBaseUtil.getKieBaseFromResources(kieBaseTestConfiguration, resource);
         final StatelessKieSession session = kbase.newStatelessKieSession();

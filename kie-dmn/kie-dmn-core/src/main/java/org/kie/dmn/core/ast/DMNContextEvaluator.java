@@ -1,23 +1,24 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.ast;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,8 +31,8 @@ import org.kie.dmn.api.core.DMNResult;
 import org.kie.dmn.api.core.DMNType;
 import org.kie.dmn.api.core.event.DMNRuntimeEventManager;
 import org.kie.dmn.core.api.DMNExpressionEvaluator;
-import org.kie.dmn.core.api.EvaluatorResult;
-import org.kie.dmn.core.api.EvaluatorResult.ResultType;
+import org.kie.dmn.api.core.EvaluatorResult;
+import org.kie.dmn.api.core.EvaluatorResult.ResultType;
 import org.kie.dmn.core.impl.DMNResultImpl;
 import org.kie.dmn.core.impl.DMNRuntimeEventManagerUtils;
 import org.kie.dmn.core.impl.DMNRuntimeImpl;
@@ -42,6 +43,8 @@ import org.kie.dmn.model.api.ContextEntry;
 import org.kie.dmn.model.api.FunctionDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.kie.dmn.core.util.CoerceUtil.coerceValue;
 
 public class DMNContextEvaluator
         implements DMNExpressionEvaluator {
@@ -96,14 +99,7 @@ public class DMNContextEvaluator
                     }
                     EvaluatorResult er = ed.getEvaluator().evaluate( eventManager, result );
                     if ( er.getResultType() == ResultType.SUCCESS ) {
-                        Object value = er.getResult();
-                        if( ! ed.getType().isCollection() && value instanceof Collection &&
-                            ((Collection)value).size()==1 ) {
-                            // spec defines that "a=[a]", i.e., singleton collections should be treated as the single element
-                            // and vice-versa
-                            value = ((Collection)value).toArray()[0];
-                        }
-                        
+                        Object value = coerceValue(ed.getType(), er.getResult());
                         if (((DMNRuntimeImpl) eventManager.getRuntime()).performRuntimeTypeCheck(result.getModel())) {
                             if (!(ed.getContextEntry().getExpression() instanceof FunctionDefinition)) {
                                 // checking directly the result type...

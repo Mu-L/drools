@@ -1,25 +1,25 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,9 +48,9 @@ import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.type.Type;
+import org.drools.base.factmodel.ClassDefinition;
 import org.drools.compiler.compiler.MissingDependencyError;
 import org.drools.core.common.TruthMaintenanceSystemFactory;
-import org.drools.base.factmodel.ClassDefinition;
 import org.drools.model.BitMask;
 import org.drools.model.bitmask.AllSetButLastBitMask;
 import org.drools.model.codegen.execmodel.PackageModel;
@@ -60,12 +60,11 @@ import org.drools.model.codegen.execmodel.errors.InvalidExpressionErrorResult;
 import org.drools.model.codegen.execmodel.errors.MvelCompilationError;
 import org.drools.modelcompiler.consequence.DroolsImpl;
 import org.drools.mvelcompiler.CompiledBlockResult;
-import org.drools.mvelcompiler.PreprocessCompiler;
 import org.drools.mvelcompiler.MvelCompilerException;
+import org.drools.mvelcompiler.PreprocessCompiler;
 import org.drools.util.StringUtils;
 
 import static com.github.javaparser.StaticJavaParser.parseExpression;
-import static com.github.javaparser.ast.NodeList.nodeList;
 import static java.util.stream.Collectors.toSet;
 import static org.drools.model.codegen.execmodel.PackageModel.DOMAIN_CLASSESS_METADATA_FILE_NAME;
 import static org.drools.model.codegen.execmodel.PackageModel.DOMAIN_CLASS_METADATA_INSTANCE;
@@ -165,7 +164,7 @@ public class Consequence {
         switch (context.getRuleDialect()) {
             case JAVA:
                 rewriteReassignedDeclarations(ruleConsequence, usedDeclarationInRHS);
-                executeCall = executeCall(ruleVariablesBlock, ruleConsequence, usedDeclarationInRHS, onCall, Collections.emptySet());
+                executeCall = executeCall(ruleVariablesBlock, ruleConsequence, usedDeclarationInRHS, onCall);
                 break;
             case MVEL:
                 executeCall = createExecuteCallMvel(consequenceString, ruleVariablesBlock, usedDeclarationInRHS, onCall);
@@ -221,9 +220,9 @@ public class Consequence {
         return executeCall(ruleVariablesBlock,
                                   compile.statementResults(),
                                   usedDeclarationInRHS,
-                                  onCall,
-                                  compile.getUsedBindings());
+                                  onCall);
     }
+
     private BlockStmt rewriteConsequence(String consequence) {
         try {
             String ruleConsequenceAsBlock = preprocessConsequence(consequence.trim());
@@ -261,7 +260,7 @@ public class Consequence {
 
         if (context.getRuleDialect() == RuleContext.RuleDialect.MVEL) {
             return existingDecls.stream().filter(d -> containsWord(d, consequenceString)).collect(toSet());
-        } else if (context.getRuleDialect() == RuleContext.RuleDialect.JAVA) {
+        } else if (ruleConsequence != null) {
             Set<String> declUsedInRHS = ruleConsequence.findAll(NameExpr.class).stream().map(NameExpr::getNameAsString).collect(toSet());
             return existingDecls.stream().filter(declUsedInRHS::contains).collect(toSet());
         }
@@ -279,15 +278,7 @@ public class Consequence {
         return p.matcher(bodyWithDollarReplaced).find();
     }
 
-    private MethodCallExpr executeCall(BlockStmt ruleVariablesBlock, BlockStmt ruleConsequence, Collection<String> verifiedDeclUsedInRHS, MethodCallExpr onCall, Set<String> modifyProperties) {
-
-        for (String modifiedProperty : modifyProperties) {
-            NodeList<Expression> arguments = nodeList(new NameExpr(modifiedProperty));
-            MethodCallExpr update = new MethodCallExpr(new NameExpr("drools"), "update", arguments);
-            ruleConsequence.getStatements().add(new ExpressionStmt(update));
-        }
-
-
+    private MethodCallExpr executeCall(BlockStmt ruleVariablesBlock, BlockStmt ruleConsequence, Collection<String> verifiedDeclUsedInRHS, MethodCallExpr onCall) {
         boolean requireDrools = rewriteRHS(ruleVariablesBlock, ruleConsequence);
         MethodCallExpr executeCall = new MethodCallExpr(onCall != null ? onCall : new NameExpr("D"), EXECUTE_CALL);
         LambdaExpr executeLambda = new LambdaExpr();
@@ -297,7 +288,9 @@ public class Consequence {
             executeLambda.addParameter(new Parameter(toClassOrInterfaceType(org.drools.model.Drools.class), "drools"));
         }
 
-        NodeList<Parameter> parameters = new BoxedParameters(context).getBoxedParametersWithUnboxedAssignment(verifiedDeclUsedInRHS, ruleConsequence);
+        NodeList<Parameter> parameters = context.arePrototypesAllowed() ?
+                new BoxedParameters(context).getParametersForPrototype(verifiedDeclUsedInRHS, ruleConsequence) :
+                new BoxedParameters(context).getBoxedParametersWithUnboxedAssignment(verifiedDeclUsedInRHS, ruleConsequence);
         parameters.forEach(executeLambda::addParameter);
 
         executeLambda.setBody(ruleConsequence);
@@ -317,13 +310,14 @@ public class Consequence {
     private String preprocessConsequence(String consequence) {
         int modifyPos = StringUtils.indexOfOutOfQuotes(consequence, "modify");
         int textBlockPos = StringUtils.indexOfOutOfQuotes(consequence, "\"\"\"");
+        Set<String> prototypes = context.getPrototypeDeclarations();
 
-        if (modifyPos < 0 && textBlockPos < 0) {
+        if (modifyPos < 0 && textBlockPos < 0 && prototypes.isEmpty()) {
             return consequence;
         }
 
         PreprocessCompiler preprocessCompiler = new PreprocessCompiler();
-        CompiledBlockResult compile = preprocessCompiler.compile(addCurlyBracesToBlock(consequence));
+        CompiledBlockResult compile = preprocessCompiler.compile(addCurlyBracesToBlock(consequence), prototypes);
 
         return printNode(compile.statementResults());
     }
@@ -401,7 +395,7 @@ public class Consequence {
                 if (context.isPropertyReactive(updatedClass)) {
 
                     if ( !initializedBitmaskFields.contains( updatedVar ) ) {
-                        Set<String> modifiedProps = findModifiedProperties(methodCallExprs, updateExpr, updatedVar, updatedClass );
+                        Set<String> modifiedProps = findModifiedProperties(methodCallExprs, updatedVar, updatedClass );
                         modifiedProps.addAll(findModifiedPropertiesFromAssignment(assignExprs, updatedVar));
                         MethodCallExpr bitMaskCreation = createBitMaskInitialization( updatedClass, modifiedProps );
                         AssignExpr bitMaskAssign = createBitMaskField(updatedVar, bitMaskCreation);
@@ -430,8 +424,8 @@ public class Consequence {
                 throw new ConsequenceRewriteException();
             }
         } else {
-            return context.getDeclarationById(updatedVar)
-                    .map(DeclarationSpec::getDeclarationClass)
+            return context.getTypedDeclarationById(updatedVar)
+                    .map(TypedDeclarationSpec::getDeclarationClass)
                     .orElseThrow(ConsequenceRewriteException::new);
         }
     }
@@ -454,9 +448,9 @@ public class Consequence {
         return new AssignExpr(bitMaskVar, bitMaskCreation, AssignExpr.Operator.ASSIGN);
     }
 
-    private Set<String> findModifiedProperties( List<MethodCallExpr> methodCallExprs, MethodCallExpr updateExpr, String updatedVar, Class<?> updatedClass ) {
+    private Set<String> findModifiedProperties( List<MethodCallExpr> methodCallExprs, String updatedVar, Class<?> updatedClass ) {
         Set<String> modifiedProps = new HashSet<>();
-        for (MethodCallExpr methodCall : methodCallExprs.subList(0, methodCallExprs.indexOf(updateExpr))) {
+        for (MethodCallExpr methodCall : methodCallExprs) {
             if (!isDirectExpression(methodCall)) {
                 continue; // don't evaluate a method which is a part of other expression
             }
@@ -536,8 +530,8 @@ public class Consequence {
     }
 
     private boolean isDataStoreScope(Expression scope) {
-        return scope.isNameExpr() && context.getDeclarationById(scope.asNameExpr().getNameAsString())
-                .map(DeclarationSpec::getDeclarationClass)
+        return scope.isNameExpr() && context.getTypedDeclarationById(scope.asNameExpr().getNameAsString())
+                .map(TypedDeclarationSpec::getDeclarationClass)
                 .map(dataStoreClass::isAssignableFrom).orElse(false);
     }
 

@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
 import java.io.Externalizable;
@@ -23,18 +25,19 @@ import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.drools.base.common.NetworkNode;
 import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.EvalCondition;
+import org.drools.base.rule.RuleComponent;
 import org.drools.core.RuleBaseConfiguration;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.Memory;
 import org.drools.core.common.MemoryFactory;
+import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.UpdateContext;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.base.rule.EvalCondition;
-import org.drools.core.common.PropagationContext;
-import org.drools.base.rule.RuleComponent;
-import org.drools.core.util.AbstractBaseLinkedListNode;
+import org.drools.core.util.AbstractLinkedListNode;
 import org.kie.api.definition.rule.Rule;
 
 public class EvalConditionNode extends LeftTupleSource
@@ -125,7 +128,7 @@ public class EvalConditionNode extends LeftTupleSource
             return true;
         }
 
-        if (!(object instanceof EvalConditionNode) || this.hashCode() != object.hashCode()) {
+        if (((NetworkNode)object).getType() != NodeTypeEnums.EvalConditionNode || this.hashCode() != object.hashCode()) {
             return false;
         }
 
@@ -135,14 +138,6 @@ public class EvalConditionNode extends LeftTupleSource
 
     public EvalMemory createMemory(final RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
         return new EvalMemory( this.condition.createContext() );
-    }
-
-    @Override
-    public LeftTuple createPeer(LeftTuple original) {
-        EvalNodeLeftTuple peer = new EvalNodeLeftTuple();
-        peer.initPeer((AbstractLeftTuple) original, this);
-        original.setPeer( peer );
-        return peer;
     }
 
     public boolean isLeftTupleMemoryEnabled() {
@@ -185,45 +180,11 @@ public class EvalConditionNode extends LeftTupleSource
         this.previousTupleSinkNode = previous;
     }
 
-    public short getType() {
+    public int getType() {
         return NodeTypeEnums.EvalConditionNode;
     }
 
-
-
-    public LeftTuple createLeftTuple(InternalFactHandle factHandle,
-                                     boolean leftTupleMemoryEnabled) {
-        return new EvalNodeLeftTuple(factHandle, this, leftTupleMemoryEnabled );
-    }
-
-    public LeftTuple createLeftTuple(final InternalFactHandle factHandle,
-                                     final LeftTuple leftTuple,
-                                     final Sink sink) {
-        return new EvalNodeLeftTuple(factHandle,leftTuple, sink );
-    }
-
-    public LeftTuple createLeftTuple(LeftTuple leftTuple,
-                                     Sink sink,
-                                     PropagationContext pctx, boolean leftTupleMemoryEnabled) {
-        return new EvalNodeLeftTuple(leftTuple,sink, pctx, leftTupleMemoryEnabled );
-    }
-
-    public LeftTuple createLeftTuple(LeftTuple leftTuple,
-                                     RightTuple rightTuple,
-                                     Sink sink) {
-        return new EvalNodeLeftTuple(leftTuple, rightTuple, sink );
-    }   
-    
-    public LeftTuple createLeftTuple(LeftTuple leftTuple,
-                                     RightTuple rightTuple,
-                                     LeftTuple currentLeftChild,
-                                     LeftTuple currentRightChild,
-                                     Sink sink,
-                                     boolean leftTupleMemoryEnabled) {
-        return new EvalNodeLeftTuple(leftTuple, rightTuple, currentLeftChild, currentRightChild, sink, leftTupleMemoryEnabled );        
-    }        
-    
-    public static class EvalMemory extends AbstractBaseLinkedListNode<Memory>
+    public static class EvalMemory extends AbstractLinkedListNode<Memory>
         implements
         Externalizable,
         Memory {
@@ -251,7 +212,7 @@ public class EvalConditionNode extends LeftTupleSource
             out.writeObject( context );
         }
 
-        public short getNodeType() {
+        public int getNodeType() {
             return NodeTypeEnums.EvalConditionNode;
         }
 

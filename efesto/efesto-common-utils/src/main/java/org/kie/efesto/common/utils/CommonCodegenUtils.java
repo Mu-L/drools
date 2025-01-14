@@ -1,17 +1,20 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.kie.efesto.common.utils;
 
@@ -864,25 +867,25 @@ public class CommonCodegenUtils {
      * Replace <code>Node</code>s in the given <code>Statement</code>
      *
      * @param container
-     * @param replacementTuplas
+     * @param replacementTuples
      */
     public static void replaceNodesInStatement(final Statement container,
-                                               final List<ReplacementTupla> replacementTuplas) {
-        replacementTuplas.forEach(replacementTupla -> replaceNodeInStatement(container, replacementTupla));
+                                               final List<ReplacementTuple> replacementTuples) {
+        replacementTuples.forEach(replacementTuple -> replaceNodeInStatement(container, replacementTuple));
     }
 
     /**
      * Replace <code>Node</code> in the given <code>Statement</code>
      *
      * @param container
-     * @param replacementTupla
+     * @param replacementTuple
      */
     public static void replaceNodeInStatement(final Statement container,
-                                              final ReplacementTupla replacementTupla) {
+                                              final ReplacementTuple replacementTuple) {
         container.walk(node -> {
-            if (node.equals(replacementTupla.toReplace)) {
+            if (node.equals(replacementTuple.toReplace)) {
                 node.getParentNode()
-                        .ifPresent(parentNode -> parentNode.replace(replacementTupla.toReplace, replacementTupla.replacement));
+                        .ifPresent(parentNode -> parentNode.replace(replacementTuple.toReplace, replacementTuple.replacement));
             }
         });
     }
@@ -955,8 +958,8 @@ public class CommonCodegenUtils {
                                                           final List<NameExpr> toReplace) {
         for (NameExpr nameExpr : toReplace) {
             NullLiteralExpr toAdd = new NullLiteralExpr();
-            ReplacementTupla replacementTupla = new ReplacementTupla(nameExpr, toAdd);
-            replaceNodeInStatement(container, replacementTupla);
+            ReplacementTuple replacementTuple = new ReplacementTuple(nameExpr, toAdd);
+            replaceNodeInStatement(container, replacementTuple);
         }
     }
 
@@ -972,12 +975,12 @@ public class CommonCodegenUtils {
         return NodeList.nodeList(getArraysAsListInvocationMethodCall(arguments));
     }
 
-    public static class ReplacementTupla {
+    public static class ReplacementTuple {
 
         final Node toReplace;
         final Node replacement;
 
-        public ReplacementTupla(Node toReplace, Node replacement) {
+        public ReplacementTuple(Node toReplace, Node replacement) {
             this.toReplace = toReplace;
             this.replacement = replacement;
         }

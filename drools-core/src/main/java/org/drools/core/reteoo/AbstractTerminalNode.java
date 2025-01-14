@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.reteoo;
 
 import java.util.Arrays;
@@ -20,21 +23,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.drools.core.RuleBaseConfiguration;
 import org.drools.base.base.ObjectType;
-import org.drools.core.common.BaseNode;
-import org.drools.core.common.ReteEvaluator;
+import org.drools.base.common.NetworkNode;
 import org.drools.base.common.RuleBasePartitionId;
-import org.drools.core.common.UpdateContext;
 import org.drools.base.definitions.rule.impl.RuleImpl;
-import org.drools.core.reteoo.SegmentMemory.SegmentPrototype;
-import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.Pattern;
-import org.drools.core.util.bitmask.AllSetBitMask;
-import org.drools.core.util.bitmask.BitMask;
-import org.drools.core.util.bitmask.EmptyBitMask;
+import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.common.BaseNode;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.common.UpdateContext;
+import org.drools.core.reteoo.SegmentMemory.SegmentPrototype;
+import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.util.bitmask.AllSetBitMask;
+import org.drools.util.bitmask.BitMask;
+import org.drools.util.bitmask.EmptyBitMask;
 
 import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
 
@@ -77,10 +82,10 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
 
     public AbstractTerminalNode() { }
 
-    public AbstractTerminalNode(int id, RuleBasePartitionId partitionId, boolean partitionsEnabled, LeftTupleSource source,
+    public AbstractTerminalNode(int id, RuleBasePartitionId partitionId, LeftTupleSource source,
                                 BuildContext context,
                                 RuleImpl rule, GroupElement subrule, int subruleIndex) {
-        super(id, partitionId, partitionsEnabled);
+        super(id, partitionId);
         this.tupleSource = source;
         this.rule = rule;
         this.subrule = subrule;
@@ -205,7 +210,7 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
     }
 
     protected void initDeclaredMask(BuildContext context) {
-        if ( !(unwrapTupleSource() instanceof LeftInputAdapterNode)) {
+        if ( !(NodeTypeEnums.isLeftInputAdapterNode(unwrapTupleSource()))) {
             // RTN's not after LIANode are not relevant for property specific, so don't block anything.
             setDeclaredMask( AllSetBitMask.get() );
             return;
@@ -226,7 +231,8 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
 
     public void initInferredMask() {
         LeftTupleSource leftTupleSource = unwrapTupleSource();
-        if ( leftTupleSource instanceof LeftInputAdapterNode && ((LeftInputAdapterNode)leftTupleSource).getParentObjectSource() instanceof AlphaNode ) {
+        if ( NodeTypeEnums.isLeftInputAdapterNode(leftTupleSource) &&
+             ((LeftInputAdapterNode)leftTupleSource).getParentObjectSource().getType() == NodeTypeEnums.AlphaNode ) {
             AlphaNode alphaNode = (AlphaNode) ((LeftInputAdapterNode)leftTupleSource).getParentObjectSource();
             setInferredMask( alphaNode.updateMask( getDeclaredMask() ) );
         } else {
@@ -240,7 +246,7 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
     }
 
     public LeftTupleSource unwrapTupleSource() {
-        return tupleSource instanceof FromNode ? tupleSource.getLeftTupleSource() : tupleSource;
+        return tupleSource.getType() == NodeTypeEnums.FromNode ? tupleSource.getLeftTupleSource() : tupleSource;
     }
 
     public PathMemory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
@@ -252,13 +258,6 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
         pmem.setAllLinkedMaskTest(pathMemSpec.allLinkedTestMask );
         pmem.setSegmentMemories( new SegmentMemory[pathEndNode.getPathMemSpec().smemCount()] );
         return pmem;
-    }
-
-    public LeftTuple createPeer(LeftTuple original) {
-        RuleTerminalNodeLeftTuple peer = (RuleTerminalNodeLeftTuple) AgendaComponentFactory.get().createTerminalTuple();
-        peer.initPeer((AbstractLeftTuple) original, this);
-        original.setPeer( peer );
-        return peer;
     }
 
     protected boolean doRemove(final RuleRemovalContext context,
@@ -409,7 +408,7 @@ public abstract class AbstractTerminalNode extends BaseNode implements TerminalN
             return true;
         }
 
-        if (!(object instanceof RuleTerminalNode) || this.hashCode() != object.hashCode()) {
+        if (!NodeTypeEnums.isTerminalNode((NetworkNode) object)|| this.hashCode() != object.hashCode()) {
             return false;
         }
         final TerminalNode other = (TerminalNode) object;

@@ -1,27 +1,30 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.beliefs.bayes;
 
 import org.drools.beliefs.graph.Graph;
 import org.drools.beliefs.graph.GraphNode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.beliefs.bayes.GraphTest.addNode;
 import static org.drools.beliefs.bayes.GraphTest.bitSet;
-import static org.drools.beliefs.bayes.JunctionTreeTest.assertArray;
 import static org.drools.beliefs.bayes.JunctionTreeTest.scaleDouble;
 
 public class BayesProjectionTest {
@@ -63,7 +66,7 @@ public class BayesProjectionTest {
         BayesProjection p = new BayesProjection(vars, node1.getPotentials(), sepVarPos, sepVarMultipliers, projectedSepPotentials);
         p.project();
 
-        assertArray(new double[]{0.1, 0.2, 0.3, 0.4}, scaleDouble(3, projectedSepPotentials));
+        assertThat(scaleDouble(3, projectedSepPotentials)).containsExactly(0.1, 0.2, 0.3, 0.4);
     }
 
     @Test
@@ -107,7 +110,7 @@ public class BayesProjectionTest {
         p.project();
 
         // remember it's been normalized, from 0.3, 0.7, 1.1, 1.5
-        assertArray(new double[]{0.083, 0.194, 0.306, 0.417}, scaleDouble(3, projectedSepPotentials));
+        assertThat(scaleDouble(3, projectedSepPotentials)).containsExactly(0.083, 0.194, 0.306, 0.417);
     }
 
     @Test
@@ -153,7 +156,7 @@ public class BayesProjectionTest {
         p.project();
 
         // remember it's been normalized, from 0.4, 0.6, 1.2, 1.4
-        assertArray(new double[]{0.111, 0.167, 0.333, 0.389}, scaleDouble(3, projectedSepPotentials));
+        assertThat(scaleDouble(3, projectedSepPotentials)).containsExactly(0.111, 0.167, 0.333, 0.389);
     }
 
     @Test
@@ -199,7 +202,7 @@ public class BayesProjectionTest {
         p.project();
 
         // remember it's been normalized, from 0.6 0.8 1.0 1.2
-        assertArray(new double[]{0.167, 0.222, 0.278, 0.333}, scaleDouble(3, projectedSepPotentials));
+        assertThat(scaleDouble(3, projectedSepPotentials)).containsExactly(0.167, 0.222, 0.278, 0.333);
     }
 
 }

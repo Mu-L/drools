@@ -1,27 +1,21 @@
-/*
- * Copyright (C) 2007-2010 Júlio Vilmar Gesser.
- * Copyright (C) 2011, 2013-2016 The JavaParser Team.
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * This file is part of JavaParser.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * JavaParser can be used either under the terms of
- * a) the GNU Lesser General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- * b) the terms of the Apache License
- *
- * You should have received a copy of both licenses in LICENCE.LGPL and
- * LICENCE.APACHE. Please refer to those files for details.
- *
- * JavaParser is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * Modified by Red Hat, Inc.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.parser;
 
 import java.util.Arrays;
@@ -53,11 +47,12 @@ import org.drools.mvel.parser.ast.expr.PointFreeExpr;
 import org.drools.mvel.parser.ast.expr.TemporalLiteralChunkExpr;
 import org.drools.mvel.parser.ast.expr.TemporalLiteralExpr;
 import org.drools.mvel.parser.printer.PrintUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.drools.mvel.parser.DrlxParser.parseExpression;
 import static org.drools.mvel.parser.printer.PrintUtil.printNode;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 public class DroolsMvelParserTest {
 
@@ -189,6 +184,22 @@ public class DroolsMvelParserTest {
     }
 
     @Test
+    public void testConstantUnaryExpression() {
+        String expr = "-49";
+        Expression expression = parseExpression( parser, expr ).getExpr();
+        assertThat(printNode(expression)).isEqualTo(expr);
+        assertThat(expression.isUnaryExpr()).isTrue();
+    }
+
+    @Test
+    public void testVariableUnaryExpression() {
+        String expr = "-$a";
+        Expression expression = parseExpression( parser, expr ).getExpr();
+        assertThat(printNode(expression)).isEqualTo(expr);
+        assertThat(expression.isUnaryExpr()).isTrue();
+    }
+
+    @Test
     public void testDotFreeEnclosedWithNameExpr() {
         String expr = "(something after $a)";
         Expression expression = parseExpression( parser, expr ).getExpr();
@@ -283,10 +294,10 @@ public class DroolsMvelParserTest {
         assertThat(printNode(expression)).isEqualTo(expr);
     }
 
-    @Test(expected = ParseProblemException.class)
+    @Test
     public void testInvalidTemporalArgs() {
         String expr = "this after[5ms,8f] $a";
-        Expression expression = parseExpression( parser, expr ).getExpr();
+        assertThatExceptionOfType(ParseProblemException.class).isThrownBy(() -> parseExpression( parser, expr ).getExpr());
     }
 
     @Test
@@ -408,10 +419,12 @@ public class DroolsMvelParserTest {
         BinaryExpr first = (BinaryExpr) comboExpr.getLeft();
         assertThat(toString(first.getLeft())).isEqualTo("value");
         assertThat(toString(first.getRight())).isEqualTo("-2");
+        assertThat(first.getRight().isUnaryExpr()).isTrue();
         assertThat(first.getOperator()).isEqualTo(Operator.GREATER);
 
         HalfBinaryExpr second = (HalfBinaryExpr) comboExpr.getRight();
         assertThat(toString(second.getRight())).isEqualTo("-1");
+        assertThat(second.getRight().isUnaryExpr()).isTrue();
         assertThat(second.getOperator()).isEqualTo(HalfBinaryExpr.Operator.LESS);
     }
 
@@ -785,10 +798,10 @@ public class DroolsMvelParserTest {
                 "}");
     }
 
-    @Test(expected = ParseProblemException.class)
+    @Test
     public void testModifyFailing() {
         String expr = "{ modify  { name = \"Luca\", age = \"35\" }; }";
-        MvelParser.parseBlock(expr);
+        assertThatExceptionOfType(ParseProblemException.class).isThrownBy(() -> MvelParser.parseBlock(expr));
     }
 
     @Test
@@ -863,10 +876,10 @@ public class DroolsMvelParserTest {
                 "}");
     }
 
-    @Test(expected = ParseProblemException.class)
+    @Test
     public void testWithFailing() {
         String expr = "{ with  { name = \"Luca\", age = \"35\" }; }";
-        MvelParser.parseBlock(expr);
+        assertThatExceptionOfType(ParseProblemException.class).isThrownBy(() -> MvelParser.parseBlock(expr));
     }
 
     @Test

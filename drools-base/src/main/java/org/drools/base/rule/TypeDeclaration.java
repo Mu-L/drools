@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.base.rule;
 
 import java.io.Externalizable;
@@ -24,12 +26,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.drools.base.base.ClassObjectType;
+import org.drools.base.base.ObjectType;
 import org.drools.base.factmodel.ClassDefinition;
 import org.drools.base.factmodel.GeneratedFact;
-import org.drools.base.facttemplates.FactTemplate;
-import org.drools.base.facttemplates.FactTemplateObjectType;
+import org.drools.base.prototype.PrototypeObjectType;
 import org.drools.base.rule.accessor.ReadAccessor;
-import org.drools.base.base.ObjectType;
 import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.base.util.TimeIntervalParser;
 import org.drools.util.ClassUtils;
@@ -39,6 +40,7 @@ import org.kie.api.definition.type.Expires.Policy;
 import org.kie.api.definition.type.PropertyReactive;
 import org.kie.api.definition.type.Role;
 import org.kie.api.io.Resource;
+import org.kie.api.prototype.Prototype;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 import org.kie.internal.definition.KnowledgeDefinition;
 
@@ -108,7 +110,7 @@ public class TypeDeclaration
     private ReadAccessor           timestampExtractor;
     private transient Class< ? >   typeClass;
     private String                 typeClassName;
-    private FactTemplate           typeTemplate;
+    private Prototype              prototype;
     private ClassDefinition        typeClassDef;
     private Resource               resource;
     private boolean                dynamic;
@@ -161,7 +163,7 @@ public class TypeDeclaration
 
         this.durationAttribute = null;
         this.timestampAttribute = null;
-        this.typeTemplate = null;
+        this.prototype = null;
         this.typesafe =  true;
         this.valid =  true;
     }
@@ -176,7 +178,7 @@ public class TypeDeclaration
         this.durationAttribute = (String) in.readObject();
         this.timestampAttribute = (String) in.readObject();
         this.typeClassName = (String) in.readObject();
-        this.typeTemplate = (FactTemplate) in.readObject();
+        this.prototype = (Prototype) in.readObject();
         this.typeClassDef = (ClassDefinition) in.readObject();
         this.durationExtractor = (ReadAccessor) in.readObject();
         this.timestampExtractor = (ReadAccessor) in.readObject();
@@ -198,7 +200,7 @@ public class TypeDeclaration
         out.writeObject( durationAttribute );
         out.writeObject( timestampAttribute );
         out.writeObject( typeClassName );
-        out.writeObject( typeTemplate );
+        out.writeObject( prototype );
         out.writeObject( typeClassDef );
         out.writeObject( durationExtractor );
         out.writeObject( timestampExtractor );
@@ -340,26 +342,16 @@ public class TypeDeclaration
         return typeClass != null && GeneratedFact.class.isAssignableFrom( typeClass );
     }
 
-    /**
-     * @return the typeTemplate
-     */
-    public FactTemplate getTypeTemplate() {
-        return typeTemplate;
-    }
-
-    /**
-     * @param typeTemplate the typeTemplate to set
-     */
-    public void setTypeTemplate(FactTemplate typeTemplate) {
-        this.typeTemplate = typeTemplate;
+    public Prototype getPrototype() {
+        return prototype;
     }
 
     /**
      * Returns true if the given parameter matches this type declaration
      */
     public boolean matches(Object clazz) {
-        return clazz instanceof FactTemplate ?
-               this.typeTemplate.equals( clazz ) :
+        return clazz instanceof Prototype ?
+               this.prototype.equals( clazz ) :
                this.typeClass.isAssignableFrom( (Class< ? >) clazz );
     }
 
@@ -379,13 +371,23 @@ public class TypeDeclaration
      */
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj ) {
+            return true;
+        }
+        if ( obj == null ) {
+            return false;
+        }
+        if ( getClass() != obj.getClass() ) {
+            return false;
+        }
         TypeDeclaration other = (TypeDeclaration) obj;
         if ( typeName == null ) {
-            if ( other.typeName != null ) return false;
-        } else if ( !typeName.equals( other.typeName ) ) return false;
+            if ( other.typeName != null ) {
+            return false;
+            }
+        } else if ( !typeName.equals( other.typeName ) ) {
+            return false;
+        }
         return true;
     }
 
@@ -432,7 +434,7 @@ public class TypeDeclaration
             if ( this.getFormat() == Format.POJO ) {
                 this.objectType = new ClassObjectType( this.getTypeClass() );
             } else {
-                this.objectType = new FactTemplateObjectType( this.getTypeTemplate() );
+                this.objectType = new PrototypeObjectType(this.getPrototype() );
             }
         }
         return this.objectType;

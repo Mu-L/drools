@@ -1,27 +1,30 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests.session;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.drools.core.ClassObjectFilter;
+import org.kie.api.runtime.ClassObjectFilter;
 import org.drools.core.common.DefaultFactHandle;
 import org.drools.mvel.compiler.Cheese;
 import org.drools.mvel.compiler.CheeseEqual;
@@ -30,9 +33,9 @@ import org.drools.mvel.compiler.PersonInterface;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
@@ -40,22 +43,15 @@ import org.kie.api.runtime.rule.FactHandle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@RunWith(Parameterized.class)
 public class StatefulSessionTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public StatefulSessionTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testDispose() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDispose(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final StringBuilder rule = new StringBuilder();
         rule.append("package org.drools.mvel.compiler\n");
         rule.append("rule X\n");
@@ -84,8 +80,9 @@ public class StatefulSessionTest {
         }
     }
 
-    @Test
-    public void testGetStatefulKnowledgeSessions() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGetStatefulKnowledgeSessions(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "../empty.drl");
         KieSession ksession_1 = kbase.newKieSession();
 
@@ -113,8 +110,9 @@ public class StatefulSessionTest {
         assertThat(coll_3.size() == 0).isTrue();
     }
 
-    @Test
-    public void testGetFactHandle() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGetFactHandle(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "../empty.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -128,8 +126,9 @@ public class StatefulSessionTest {
         ksession.dispose();
     }
 
-    @Test
-    public void testGetFactHandleEqualityBehavior() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGetFactHandleEqualityBehavior(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBaseTestConfiguration equalityConfig = TestParametersUtil.getEqualityInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", equalityConfig);
         KieSession ksession = kbase.newKieSession();
@@ -140,8 +139,9 @@ public class StatefulSessionTest {
         assertThat(fh).isNotNull();
     }
 
-    @Test
-    public void testGetFactHandleIdentityBehavior() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGetFactHandleIdentityBehavior(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBaseTestConfiguration identityConfig = TestParametersUtil.getIdentityInstanceOf(kieBaseTestConfiguration);
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", identityConfig);
         KieSession ksession = kbase.newKieSession();
@@ -154,8 +154,9 @@ public class StatefulSessionTest {
         assertThat(fh2).isNotNull();
     }
 
-    @Test
-    public void testDisconnectedFactHandle() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDisconnectedFactHandle(KieBaseTestConfiguration kieBaseTestConfiguration) {
         KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("test", kieBaseTestConfiguration);
         KieSession ksession = kbase.newKieSession();
         final DefaultFactHandle helloHandle = (DefaultFactHandle) ksession.insert( "hello" );
@@ -168,8 +169,9 @@ public class StatefulSessionTest {
         assertThat(ksession.getObject(key)).isEqualTo("goodbye");
     }
 
-    @Test
-    public void testIterateObjects() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testIterateObjects(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "test_IterateObjects.drl");
         KieSession ksession = kbase.newKieSession();
 

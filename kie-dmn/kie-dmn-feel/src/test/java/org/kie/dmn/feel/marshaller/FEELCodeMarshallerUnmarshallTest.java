@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.kie.dmn.feel.marshaller;
 
 import java.math.BigDecimal;
@@ -12,22 +30,20 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.dmn.feel.lang.Type;
 import org.kie.dmn.feel.lang.types.BuiltInType;
 import org.kie.dmn.feel.lang.types.impl.ComparablePeriod;
 import org.kie.dmn.feel.runtime.Range;
 import org.kie.dmn.feel.runtime.impl.RangeImpl;
+import org.kie.dmn.feel.runtime.impl.UndefinedValueComparable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class FEELCodeMarshallerUnmarshallTest {
 
-    @Parameterized.Parameters(name = "{index}: {0} ({1}) = {2}")
-    public static Collection<Object[]> data() {
+    private static Collection<Object[]> data() {
         final Object[][] cases = new Object[][] {
                 // numbers
                 { BuiltInType.UNKNOWN, "2", BigDecimal.valueOf( 2 ) },
@@ -76,28 +92,31 @@ public class FEELCodeMarshallerUnmarshallTest {
                 { BuiltInType.UNKNOWN, "[ duration( \"P4D\" ), duration( \"P2D\" ), duration( \"P1DT1H\" ) ]", Arrays.asList( Duration.ofDays( 4 ), Duration.ofDays( 2 ), Duration.ofHours( 25 ) ) },
                 { BuiltInType.UNKNOWN, "[ [ 1, 2 ], [ 3, 4 ] ]", Arrays.asList( Arrays.asList( BigDecimal.valueOf( 1 ), BigDecimal.valueOf( 2 ) ), Arrays.asList( BigDecimal.valueOf( 3 ), BigDecimal.valueOf( 4 ) ) ) },
                 // ranges
-                { BuiltInType.UNKNOWN, "[ \"a\" .. \"z\" )", new RangeImpl( Range.RangeBoundary.CLOSED, "a", "z", Range.RangeBoundary.OPEN ) },
-                { BuiltInType.UNKNOWN, "[ duration( \"P1DT6H\" ) .. duration( \"P2DT2H\" ) )", new RangeImpl( Range.RangeBoundary.CLOSED, Duration.ofHours( 30 ), Duration.ofHours( 50 ), Range.RangeBoundary.OPEN ) },
+                { BuiltInType.UNKNOWN, "[ \"a\" .. \"z\" )", new RangeImpl( Range.RangeBoundary.CLOSED, "a", "z", Range.RangeBoundary.OPEN) },
+                { BuiltInType.UNKNOWN, "[ duration( \"P1DT6H\" ) .. duration( \"P2DT2H\" ) )", new RangeImpl( Range.RangeBoundary.CLOSED, Duration.ofHours( 30 ), Duration.ofHours( 50 ), Range.RangeBoundary.OPEN) },
+
+                {  BuiltInType.UNKNOWN, "( > 1 )", new RangeImpl(Range.RangeBoundary.OPEN, BigDecimal.ONE, new UndefinedValueComparable(), Range.RangeBoundary.OPEN)},
+                { BuiltInType.UNKNOWN, "( >= 1 )", new RangeImpl(Range.RangeBoundary.CLOSED, BigDecimal.ONE, new UndefinedValueComparable(), Range.RangeBoundary.OPEN) },
+                { BuiltInType.UNKNOWN, "( < 1 )",  new RangeImpl(Range.RangeBoundary.OPEN, new UndefinedValueComparable(), BigDecimal.ONE, Range.RangeBoundary.OPEN)},
+                { BuiltInType.UNKNOWN, "( <= 1 )", new RangeImpl(Range.RangeBoundary.OPEN, new UndefinedValueComparable(), BigDecimal.ONE, Range.RangeBoundary.CLOSED) },
+
                 // context
                 { BuiltInType.UNKNOWN, "{ Full Name : \"John Doe\", Age : 35, Date of Birth : date( \"1982-06-09\" ) }",
                   new LinkedHashMap() {{ put( "Full Name", "John Doe"); put( "Age", BigDecimal.valueOf( 35 ) ); put( "Date of Birth", LocalDate.of( 1982, 6, 9 ) ); }} },
                 // null
-                { BuiltInType.UNKNOWN, "null", null }
+                { BuiltInType.UNKNOWN, "null", null },
+                { BuiltInType.UNKNOWN, "undefined", new UndefinedValueComparable() }
         };
         return Arrays.asList( cases );
     }
-
-    @Parameterized.Parameter(0)
     public Type feelType;
-
-    @Parameterized.Parameter(1)
     public String value;
-
-    @Parameterized.Parameter(2)
     public Object result;
 
-    @Test
-    public void testExpression() {
+    @MethodSource("data")
+    @ParameterizedTest(name = "{index}: {0} ({1}) = {2}")
+    public void expression(Type feelType, String value, Object result) {
+        initFEELCodeMarshallerUnmarshallTest(feelType, value, result);
         assertResult( feelType, value, result );
     }
 
@@ -107,5 +126,11 @@ public class FEELCodeMarshallerUnmarshallTest {
         } else {
         	assertThat(FEELCodeMarshaller.INSTANCE.unmarshall( feelType, value )).as("Unmarshalling: '" + value + "'").isEqualTo(result);
         }
+    }
+
+    public void initFEELCodeMarshallerUnmarshallTest(Type feelType, String value, Object result) {
+        this.feelType = feelType;
+        this.value = value;
+        this.result = result;
     }
 }

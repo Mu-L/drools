@@ -1,23 +1,26 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests.incrementalcompilation;
 
 import org.drools.commands.runtime.rule.FireAllRulesCommand;
 import org.drools.compiler.kie.builder.impl.DrlProject;
-import org.drools.core.ClassObjectFilter;
+import org.kie.api.runtime.ClassObjectFilter;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.event.DefaultAgendaEventListener;
 import org.drools.core.impl.InternalRuleBase;
@@ -34,11 +37,11 @@ import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieSessionTestConfiguration;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestConstants;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
@@ -88,28 +91,22 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.drools.core.util.DroolsTestUtil.rulestoMap;
 
-@RunWith(Parameterized.class)
 public class IncrementalCompilationTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public IncrementalCompilationTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testLoadOrderAfterRuleRemoval() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testLoadOrderAfterRuleRemoval(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String header = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n";
 
@@ -138,20 +135,20 @@ public class IncrementalCompilationTest {
         KieUtil.getKieModuleFromDrls(releaseId1, kieBaseTestConfiguration, header);
         final KieContainer kc = ks.newKieContainer(releaseId1);
 
-        createAndDeployAndTest(kc, "2", header, drl1 + drl2 + drl3, "R1", "R2", "R3");
+        createAndDeployAndTest(kieBaseTestConfiguration, kc, "2", header, drl1 + drl2 + drl3, "R1", "R2", "R3");
 
-        createAndDeployAndTest(kc, "3", header, drl1 + drl3, "R1", "R3");
+        createAndDeployAndTest(kieBaseTestConfiguration, kc, "3", header, drl1 + drl3, "R1", "R3");
 
-        createAndDeployAndTest(kc, "4", header, drl2 + drl1 + drl4, "R2", "R1", "R4");
+        createAndDeployAndTest(kieBaseTestConfiguration, kc, "4", header, drl2 + drl1 + drl4, "R2", "R1", "R4");
 
-        createAndDeployAndTest(kc, "5", header, drl2 + drl1, "R2", "R1");
+        createAndDeployAndTest(kieBaseTestConfiguration, kc, "5", header, drl2 + drl1, "R2", "R1");
 
-        createAndDeployAndTest(kc, "6", header, "");
+        createAndDeployAndTest(kieBaseTestConfiguration, kc, "6", header, "");
 
-        createAndDeployAndTest(kc, "7", header, drl3, "R3");
+        createAndDeployAndTest(kieBaseTestConfiguration, kc, "7", header, drl3, "R3");
     }
 
-    private void createAndDeployAndTest(final KieContainer kc,
+    private void createAndDeployAndTest(KieBaseTestConfiguration kieBaseTestConfiguration, final KieContainer kc,
                                         final String version,
                                         final String header,
                                         final String drls,
@@ -175,8 +172,9 @@ public class IncrementalCompilationTest {
         }
     }
 
-    @Test
-    public void testKJarUpgrade() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgrade(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -224,8 +222,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testKJarUpgradeSameSession() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeSameSession(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -270,8 +269,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(3);
     }
 
-    @Test
-    public void testDeletedFile() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDeletedFile(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -317,8 +317,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession2.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testIncrementalCompilationWithAddedError() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithAddedError(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -365,8 +366,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testIncrementalCompilationWithRemovedError() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithRemovedError(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -409,8 +411,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testIncrementalCompilationAddErrorThenRemoveError() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationAddErrorThenRemoveError(KieBaseTestConfiguration kieBaseTestConfiguration) {
         //Valid
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -458,8 +461,9 @@ public class IncrementalCompilationTest {
         assertThat(removeResults.getRemovedMessages().size()).isEqualTo(1);
     }
 
-    @Test
-    public void testIncrementalCompilationAddErrorThenRemoveIt() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationAddErrorThenRemoveIt(KieBaseTestConfiguration kieBaseTestConfiguration) {
         //Fact Type is unknown ("NonExistentClass" not "Message")
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -508,8 +512,9 @@ public class IncrementalCompilationTest {
         assertThat(removeResults.getRemovedMessages().size()).isEqualTo(1);
     }
 
-    @Test
-    public void testIncrementalCompilationWithDuplicatedRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithDuplicatedRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -545,8 +550,9 @@ public class IncrementalCompilationTest {
         assertThat(removeResults.getRemovedMessages().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testIncrementalCompilationWithDuplicatedRuleInSameDRL() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithDuplicatedRuleInSameDRL(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -568,8 +574,9 @@ public class IncrementalCompilationTest {
         assertThat(kieBuilder.getResults().getMessages(org.kie.api.builder.Message.Level.ERROR).isEmpty()).isFalse();
     }
 
-    @Test
-    public void testIncrementalCompilationAddErrorBuildAllMessages() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationAddErrorBuildAllMessages(KieBaseTestConfiguration kieBaseTestConfiguration) {
         //Valid
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -605,8 +612,9 @@ public class IncrementalCompilationTest {
         assertThat(ks.newKieBuilder(kfs).buildAll().getResults().getMessages().size()).isEqualTo(1);
     }
 
-    @Test
-    public void testIncrementalCompilationAddErrorThenEmptyWithoutError() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationAddErrorThenEmptyWithoutError(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1009369
 
         //Invalid. Type "Smurf" is unknown
@@ -644,8 +652,9 @@ public class IncrementalCompilationTest {
         assertThat(addResults2.getRemovedMessages().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testRuleRemoval() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRuleRemoval(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -706,30 +715,33 @@ public class IncrementalCompilationTest {
         assertThat(rules.get("R3")).isNotNull();
     }
 
-    @Test
-    public void testIncrementalCompilationWithSnapshots() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithSnapshots(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-358
         final ReleaseId releaseId = KieServices.Factory.get().newReleaseId("org.test", "test", "1.0.0-SNAPSHOT");
-        testIncrementalCompilation(releaseId, releaseId, false);
+        testIncrementalCompilation(kieBaseTestConfiguration, releaseId, releaseId, false);
     }
 
-    @Test
-    public void testIncrementalCompilationWithFixedVersions() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithFixedVersions(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-358
         final ReleaseId releaseId1 = KieServices.Factory.get().newReleaseId("org.test", "test", "1.0.1");
         final ReleaseId releaseId2 = KieServices.Factory.get().newReleaseId("org.test", "test", "1.0.2");
-        testIncrementalCompilation(releaseId1, releaseId2, false);
+        testIncrementalCompilation(kieBaseTestConfiguration, releaseId1, releaseId2, false);
     }
 
-    @Test
-    public void testIncrementalCompilationWithDeclaredType() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithDeclaredType(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-358
         final ReleaseId releaseId1 = KieServices.Factory.get().newReleaseId("org.test", "test", "1.0.1");
         final ReleaseId releaseId2 = KieServices.Factory.get().newReleaseId("org.test", "test", "1.0.2");
-        testIncrementalCompilation(releaseId1, releaseId2, true);
+        testIncrementalCompilation(kieBaseTestConfiguration, releaseId1, releaseId2, true);
     }
 
-    private void testIncrementalCompilation(final ReleaseId releaseId1,
+    private void testIncrementalCompilation(KieBaseTestConfiguration kieBaseTestConfiguration, final ReleaseId releaseId1,
                                             final ReleaseId releaseId2,
                                             final boolean useDeclaredType) {
         final String drl1 = "package org.drools.compiler\n" +
@@ -794,8 +806,9 @@ public class IncrementalCompilationTest {
         assertThat(list.containsAll(asList("bBar", "bFoo", "aBar"))).isTrue();
     }
 
-    @Test
-    public void testIncrementalCompilationWithRedeclares() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithRedeclares(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-363
         final String drl1 = "package org.drools.compiler\n" +
                 "global java.util.List list\n" +
@@ -844,8 +857,9 @@ public class IncrementalCompilationTest {
         assertThat(list.size()).isEqualTo(2);
     }
 
-    @Test
-    public void testIncrementalCompilationWithAmbiguousRedeclares() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithAmbiguousRedeclares(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package domestic; " +
 
                 "import foreign.*; " +
@@ -900,8 +914,9 @@ public class IncrementalCompilationTest {
         assertThat(updateResults.getMessages().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testIncrementalCompilationWithModuleOverride() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithModuleOverride(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.test.compiler; " +
                 "global java.util.List list; " +
 
@@ -973,8 +988,9 @@ public class IncrementalCompilationTest {
         assertThat(list).isEqualTo(Arrays.asList("AX", "BX", "CX"));
     }
 
-    @Test
-    public void testIncrementalCompilationWithMissingKSession() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithMissingKSession(KieBaseTestConfiguration kieBaseTestConfiguration) {
         //https://bugzilla.redhat.com/show_bug.cgi?id=1066059
         final String pom = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<project xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\" xmlns=\"http://maven.apache.org/POM/4.0.0\"\n" +
@@ -1022,8 +1038,9 @@ public class IncrementalCompilationTest {
         assertThat(results.getRemovedMessages().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testIncrementalCompilationWithIncludes() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithIncludes(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-462
 
         final String drl1 = "global java.util.List list\n" +
@@ -1090,8 +1107,9 @@ public class IncrementalCompilationTest {
         assertThat(list.containsAll(asList("bBar", "bFoo"))).isTrue();
     }
 
-    @Test
-    public void testIncrementalCompilationWithInvalidDRL() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithInvalidDRL(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "Smurf";
 
         final String drl2_1 = "package org.drools.compiler\n" +
@@ -1141,8 +1159,9 @@ public class IncrementalCompilationTest {
         assertThat(results4.getRemovedMessages().size()).isEqualTo(2);
     }
 
-    @Test
-    public void testKJarUpgradeSameSessionAddingGlobal() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeSameSessionAddingGlobal(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-523
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -1193,8 +1212,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testKJarUpgradeWithDSL() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeWithDSL(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-718
         final String dsl = "[when][]There is a Message=Message()\n" +
                 "[when][]-with message \"{factId}\"=message==\"{factId}\"\n" +
@@ -1251,9 +1271,10 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    @Ignore("this test takes too long and cannot be emulated with a pseudo clock")
-    public void testIncrementalCompilationWithFireUntilHalt() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Disabled("this test takes too long and cannot be emulated with a pseudo clock")
+    public void testIncrementalCompilationWithFireUntilHalt(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-782
         final String drl1 = getCronRule(3) + getCronRule(6);
         final String drl2 = getCronRule(8) + getCronRule(10) + getCronRule(5);
@@ -1291,8 +1312,9 @@ public class IncrementalCompilationTest {
                 "end\n";
     }
 
-    @Test
-    public void testKJarUpgradeSameSessionRemovingGlobal() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeSameSessionRemovingGlobal(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-752
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -1336,8 +1358,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.getGlobal("baz")).isEqualTo("baz");
     }
 
-    @Test
-    public void testUpdateVersionWithKSessionLogger() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUpdateVersionWithKSessionLogger(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-790
         final String drl1 =
                 "import java.util.List\n" +
@@ -1384,8 +1407,9 @@ public class IncrementalCompilationTest {
         kc.updateToVersion(releaseId2);
     }
 
-    @Test
-    public void testChangeParentRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testChangeParentRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 =
                 "global java.util.List list;" +
                         "rule B extends A when\n" +
@@ -1460,8 +1484,9 @@ public class IncrementalCompilationTest {
         assertThat(list.size()).isEqualTo(0);
     }
 
-    @Test
-    public void testRuleRemovalAfterUpdate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRuleRemovalAfterUpdate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-801
         final String drl = "rule Rule1\n" +
                 "  when\n" +
@@ -1504,8 +1529,9 @@ public class IncrementalCompilationTest {
         kc.updateToVersion(releaseId3);
     }
 
-    @Test
-    public void testIncrementalTypeDeclarationOnInterface() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalTypeDeclarationOnInterface(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-861
         final String drl1 =
                 "import " + KieService.class.getCanonicalName() + "\n" +
@@ -1535,8 +1561,9 @@ public class IncrementalCompilationTest {
         kc.updateToVersion(releaseId2);
     }
 
-    @Test
-    public void testNonHashablePropertyWithIncrementalCompilation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testNonHashablePropertyWithIncrementalCompilation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-870
         final String drl1 =
                 "rule \"HelloGreetingService\"\n" +
@@ -1579,8 +1606,9 @@ public class IncrementalCompilationTest {
         kc.updateToVersion(releaseId2);
     }
 
-    @Test
-    public void testConcurrentKJarDeployment() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testConcurrentKJarDeployment(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-923
         final int parallelThreads = 10;
         final ExecutorService executor = Executors.newFixedThreadPool(parallelThreads);
@@ -1638,8 +1666,9 @@ public class IncrementalCompilationTest {
         }
     }
 
-    @Test
-    public void testSegmentSplitOnIncrementalCompilation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSegmentSplitOnIncrementalCompilation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-930
         final String drl =
                 "import " + Person.class.getCanonicalName() + "\n" +
@@ -1689,8 +1718,9 @@ public class IncrementalCompilationTest {
         assertThat(list.containsAll(asList("R1", "R2"))).isTrue();
     }
 
-    @Test
-    public void testSegmentMergeOnRuleRemovalWithNotExistingSegment() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSegmentMergeOnRuleRemovalWithNotExistingSegment(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-950
         final String drl1 =
                 "rule R1 when\n" +
@@ -1724,8 +1754,9 @@ public class IncrementalCompilationTest {
         kc.updateToVersion(releaseId2);
     }
 
-    @Test
-    public void testRemoveRuleWithRia() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveRuleWithRia(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-954
         final String drl1 =
                 "import " + List.class.getCanonicalName() + "\n" +
@@ -1755,8 +1786,9 @@ public class IncrementalCompilationTest {
         }
     }
 
-    @Test
-    public void testRetractLogicalAssertedObjectOnRuleRemoval() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRetractLogicalAssertedObjectOnRuleRemoval(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-951
         final String drl1 =
                 "rule R1 when\n" +
@@ -1808,8 +1840,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.getObjects(new ClassObjectFilter(String.class)).size()).isEqualTo(0);
     }
 
-    @Test
-    public void testRetractLogicalAssertedObjectOnRuleRemovalWithSameObject() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRetractLogicalAssertedObjectOnRuleRemovalWithSameObject(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-951
         final String drl1 =
                 "rule R1 when\n" +
@@ -1861,8 +1894,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.getObjects(new ClassObjectFilter(String.class)).size()).isEqualTo(0);
     }
 
-    @Test
-    public void testUpdateWithNewDrlAndChangeInOldOne() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUpdateWithNewDrlAndChangeInOldOne(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1275378
         String drl1 = "package org.kie.test\n" +
                 "global java.util.List list\n" +
@@ -1916,8 +1950,9 @@ public class IncrementalCompilationTest {
         assertThat(list.contains("rule2")).isTrue();
     }
 
-    @Test
-    public void testIncrementalCompilationWithEagerRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithEagerRules(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-978
         final String drl1 =
                 "rule R1 when\n" +
@@ -1957,8 +1992,9 @@ public class IncrementalCompilationTest {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testMultipleIncrementalCompilationWithExistentialRules() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testMultipleIncrementalCompilationWithExistentialRules(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-988
         final List<String> drls = new ArrayList<>();
         drls.add(getExistenzialRule("R0", "> 10"));
@@ -1996,8 +2032,9 @@ public class IncrementalCompilationTest {
                 "end";
     }
 
-    @Test
-    public void testRuleRemovalWithOR() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRuleRemovalWithOR(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1007
         final String drl1 =
                 "rule R1 when\n" +
@@ -2028,8 +2065,9 @@ public class IncrementalCompilationTest {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testSplitAfterQuery() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSplitAfterQuery(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 =
                 "global java.util.List list; " +
                         "query foo( Integer $i ) " +
@@ -2111,8 +2149,9 @@ public class IncrementalCompilationTest {
         assertThat((int) list.get(1)).isEqualTo(22);
     }
 
-    @Test
-    public void testGetFactTypeOnIncrementalUpdate() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testGetFactTypeOnIncrementalUpdate(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-980 - DROOLS-2195
         final String drl1 =
                 "package org.mytest\n" +
@@ -2164,8 +2203,9 @@ public class IncrementalCompilationTest {
         ftype.set(fact, "address", "World");
     }
 
-    @Test
-    public void testRuleRemovalWithSubnetworkAndOR() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRuleRemovalWithSubnetworkAndOR(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1025
         final String drl1 =
                 "global java.util.concurrent.atomic.AtomicInteger globalInt\n" +
@@ -2204,8 +2244,9 @@ public class IncrementalCompilationTest {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testIncrementalCompilationWithClassFieldReader() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithClassFieldReader(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1318532
         final String personSrc = "package org.test;" +
                 "import java.util.ArrayList;" +
@@ -2278,8 +2319,9 @@ public class IncrementalCompilationTest {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testIncrementalCompilationRemovingParentRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationRemovingParentRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1031
         final String drl1 = "package org.drools.compiler\n" +
                 "rule R1 when\n" +
@@ -2320,8 +2362,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testIncrementalCompilationChangeParentRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationChangeParentRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1031
         final String drl1_1 =
                 "rule R1 when\n" +
@@ -2360,8 +2403,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testIncrementalCompilationChangeParentRuleInDifferentFile() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationChangeParentRuleInDifferentFile(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6497
         final String drl1_1 =
                 "rule R1 when\n" +
@@ -2400,8 +2444,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test
-    public void testRemovePackageFromKieBaseModel() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemovePackageFromKieBaseModel(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1287
         final String drl1 = "global java.util.List list;\n" +
                 "rule R1 when\n" +
@@ -2453,8 +2498,9 @@ public class IncrementalCompilationTest {
         assertThat(list.contains("R2")).isTrue();
     }
 
-    @Test
-    public void testAddPackageToKieBaseModel() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAddPackageToKieBaseModel(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1287
         // DROOLS-1287
         final String drl1 = "global java.util.List list;\n" +
@@ -2507,8 +2553,9 @@ public class IncrementalCompilationTest {
         assertThat(list.containsAll(asList("R1", "R2"))).isTrue();
     }
 
-    @Test
-    public void testKJarUpgradeWithSpace() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeWithSpace(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2524,11 +2571,12 @@ public class IncrementalCompilationTest {
                 "then\n" +
                 "end\n";
 
-        testKJarUpgradeDRLWithSpace(drl1, drl2, "Hello World", 1, 0);
+        testKJarUpgradeDRLWithSpace(kieBaseTestConfiguration, drl1, drl2, "Hello World", 1, 0);
     }
 
-    @Test
-    public void testKJarUpgradeDRLWithSpace2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeDRLWithSpace2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 bis
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2544,11 +2592,12 @@ public class IncrementalCompilationTest {
                 "then\n" +
                 "end\n";
 
-        testKJarUpgradeDRLWithSpace(drl1, drl2, "Hello World", 1, 0);
+        testKJarUpgradeDRLWithSpace(kieBaseTestConfiguration, drl1, drl2, "Hello World", 1, 0);
     }
 
-    @Test
-    public void testKJarUpgradeDRLWithSpace3() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeDRLWithSpace3(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 ter
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2568,11 +2617,12 @@ public class IncrementalCompilationTest {
                 "  System.out.println($m); \n" +
                 "end\n";
 
-        testKJarUpgradeWithSpaceVariant2(drl1, drl2);
+        testKJarUpgradeWithSpaceVariant2(kieBaseTestConfiguration, drl1, drl2);
     }
 
-    @Test
-    public void testKJarUpgradeDRLWithSpace4() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeDRLWithSpace4(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 quater
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2588,11 +2638,12 @@ public class IncrementalCompilationTest {
                 "then\n" +
                 "end\n";
 
-        testKJarUpgradeDRLWithSpace(drl1, drl2, "Hello World", 0, 1);
+        testKJarUpgradeDRLWithSpace(kieBaseTestConfiguration, drl1, drl2, "Hello World", 0, 1);
     }
 
-    @Test
-    public void testKJarUpgradeDRLWithSpace5() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeDRLWithSpace5(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 quinquies
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2608,11 +2659,12 @@ public class IncrementalCompilationTest {
                 "then\n" +
                 "end\n";
 
-        testKJarUpgradeDRLWithSpace(drl1, drl2, "Hello' World", 0, 1); // <<- notice the ' character
+        testKJarUpgradeDRLWithSpace(kieBaseTestConfiguration, drl1, drl2, "Hello' World", 0, 1); // <<- notice the ' character
     }
 
-    @Test
-    public void testKJarUpgradeWithSpace_usingSingleQuote() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeWithSpace_usingSingleQuote(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 (using single quote)
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2628,11 +2680,12 @@ public class IncrementalCompilationTest {
                 "then\n" +
                 "end\n";
 
-        testKJarUpgradeDRLWithSpace(drl1, drl2, "Hello World", 1, 0);
+        testKJarUpgradeDRLWithSpace(kieBaseTestConfiguration, drl1, drl2, "Hello World", 1, 0);
     }
 
-    @Test
-    public void testKJarUpgradeDRLWithSpace2_usingSingleQuote() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeDRLWithSpace2_usingSingleQuote(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 bis (using single quote)
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2648,11 +2701,12 @@ public class IncrementalCompilationTest {
                 "then\n" +
                 "end\n";
 
-        testKJarUpgradeDRLWithSpace(drl1, drl2, "Hello World", 1, 0);
+        testKJarUpgradeDRLWithSpace(kieBaseTestConfiguration, drl1, drl2, "Hello World", 1, 0);
     }
 
-    @Test
-    public void testKJarUpgradeDRLWithSpace3_usingSingleQuote() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeDRLWithSpace3_usingSingleQuote(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 ter (using single quote)
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2672,11 +2726,12 @@ public class IncrementalCompilationTest {
                 "  System.out.println($m); \n" +
                 "end\n";
 
-        testKJarUpgradeWithSpaceVariant2(drl1, drl2);
+        testKJarUpgradeWithSpaceVariant2(kieBaseTestConfiguration, drl1, drl2);
     }
 
-    @Test
-    public void testKJarUpgradeDRLWithSpace4_usingSingleQuote() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeDRLWithSpace4_usingSingleQuote(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 quater (using single quote)
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2692,11 +2747,12 @@ public class IncrementalCompilationTest {
                 "then\n" +
                 "end\n";
 
-        testKJarUpgradeDRLWithSpace(drl1, drl2, "Hello World", 0, 1);
+        testKJarUpgradeDRLWithSpace(kieBaseTestConfiguration, drl1, drl2, "Hello World", 0, 1);
     }
 
-    @Test
-    public void testKJarUpgradeDRLWithSpace5_usingSingleQuote() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeDRLWithSpace5_usingSingleQuote(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1399 quinquies (using single quote)
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -2712,10 +2768,10 @@ public class IncrementalCompilationTest {
                 "then\n" +
                 "end\n";
 
-        testKJarUpgradeDRLWithSpace(drl1, drl2, "Hello' World", 0, 1);
+        testKJarUpgradeDRLWithSpace(kieBaseTestConfiguration, drl1, drl2, "Hello' World", 0, 1);
     }
 
-    private void testKJarUpgradeDRLWithSpace(final String drl1, final String drl2, final String factString,
+    private void testKJarUpgradeDRLWithSpace(KieBaseTestConfiguration kieBaseTestConfiguration, final String drl1, final String drl2, final String factString,
                                              final int firstFireCount, final int secondFireCount) {
         final KieServices ks = KieServices.Factory.get();
 
@@ -2734,7 +2790,7 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(secondFireCount);
     }
 
-    private void testKJarUpgradeWithSpaceVariant2(final String drl1, final String drl2) {
+    private void testKJarUpgradeWithSpaceVariant2(KieBaseTestConfiguration kieBaseTestConfiguration, final String drl1, final String drl2) {
         final KieServices ks = KieServices.Factory.get();
 
         final ReleaseId releaseId1 = ks.newReleaseId("org.kie", "test-upgrade", "1.0.0");
@@ -2769,8 +2825,9 @@ public class IncrementalCompilationTest {
         assertThat(fired.contains("Rx")).isFalse();
     }
 
-    @Test
-    public void testJavaClassRedefinition() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testJavaClassRedefinition(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1402
         final String JAVA1 = "package org.test;" +
                 "    public class MyBean {\n" +
@@ -2882,8 +2939,9 @@ public class IncrementalCompilationTest {
         assertThat(fired).isEqualTo(2);
     }
 
-    @Test
-    public void testJavaClassRedefinitionJoined() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testJavaClassRedefinitionJoined(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1402
         final String JAVA1 = "package org.test;" +
                 "    public class MyBean {\n" +
@@ -2998,8 +3056,10 @@ public class IncrementalCompilationTest {
         assertThat(fired).isEqualTo(2);
     }
 
-    @Test(timeout = 20000L)
-    public void testMultipleIncrementalCompilationsWithFireUntilHalt() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(20000L)
+    public void testMultipleIncrementalCompilationsWithFireUntilHalt(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-1406
         final KieServices ks = KieServices.Factory.get();
 
@@ -3068,8 +3128,9 @@ public class IncrementalCompilationTest {
         }
     }
 
-    @Test
-    public void testIncrementalCompilationWithExtendsRule() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithExtendsRule(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1405
         final String drl1 =
                 "rule \"test1\" when then end\n";
@@ -3105,8 +3166,9 @@ public class IncrementalCompilationTest {
         }
     }
 
-    @Test
-    public void testUpdateWithPojoExtensionDifferentPackages() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUpdateWithPojoExtensionDifferentPackages(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-1491
         final String drlDeclare = "package org.drools.compiler.integrationtests\n" +
                 "declare DroolsApplications extends " + BaseClass.class.getCanonicalName() + "\n" +
@@ -3171,8 +3233,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testPropertyReactivityOfAKnownClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testPropertyReactivityOfAKnownClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 =
                 "import " + TypeA.class.getCanonicalName() + "\n" +
                         "import " + TypeB.class.getCanonicalName() + "\n" +
@@ -3210,8 +3273,9 @@ public class IncrementalCompilationTest {
         assertThat(fired).isEqualTo(1);
     }
 
-    @Test
-    public void testPropertyReactivityOfAnOriginallyUnknownClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testPropertyReactivityOfAnOriginallyUnknownClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1684
         final String drl1 =
                 "import " + TypeA.class.getCanonicalName() + "\n" +
@@ -3296,8 +3360,9 @@ public class IncrementalCompilationTest {
                     "    insert( new Message(\"HAL\", \"reply 2\" ) ); \n" +
                     "end \n";
 
-    @Test
-    public void testDeclaredTypeInDifferentPackage() throws IllegalAccessException, InstantiationException {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDeclaredTypeInDifferentPackage(KieBaseTestConfiguration kieBaseTestConfiguration) throws IllegalAccessException, InstantiationException {
         // DROOLS-1707
         final KieServices ks = KieServices.Factory.get();
 
@@ -3314,8 +3379,9 @@ public class IncrementalCompilationTest {
         doFire(kContainer.getKieBase(), "reply 2");
     }
 
-    @Test
-    public void testDeclaredTypeInIncludedKieBase() throws IllegalAccessException, InstantiationException {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testDeclaredTypeInIncludedKieBase(KieBaseTestConfiguration kieBaseTestConfiguration) throws IllegalAccessException, InstantiationException {
         // DROOLS-1707
         final KieServices ks = KieServices.Factory.get();
 
@@ -3376,8 +3442,9 @@ public class IncrementalCompilationTest {
         return fact;
     }
 
-    @Test
-    public void testRemoveAndReaddJavaClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveAndReaddJavaClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1704
         final String javaSource = "package org.drools.test;\n" +
                 "public class Person { }\n";
@@ -3422,8 +3489,9 @@ public class IncrementalCompilationTest {
         kContainer.updateToVersion(releaseId3);
     }
 
-    @Test
-    public void testChangedPackage() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testChangedPackage(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-1742
         final String drl1 = "package org.a\n" +
                 "rule \"RG_1\"\n" +
@@ -3460,8 +3528,9 @@ public class IncrementalCompilationTest {
         assertThat(kieSession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testSegmentSplitAfterMerge() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testSegmentSplitAfterMerge(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1A = "package org.hightea.a\n" +
                 "rule \"RG_1\"\n" +
                 "    when\n" +
@@ -3505,8 +3574,9 @@ public class IncrementalCompilationTest {
         assertThat(kieSession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testAddFieldToDeclaredType() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAddFieldToDeclaredType(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-2197
         final String declares1 = "declare Address\n" +
                 "   streetName : String\n" +
@@ -3547,8 +3617,9 @@ public class IncrementalCompilationTest {
         assertThat(kieSession.fireAllRules()).isEqualTo(0);
     }
 
-    @Test
-    public void testIncremenatalCompilationAddingFieldToDeclaredType() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncremenatalCompilationAddingFieldToDeclaredType(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-2197
         final String declares1 = "declare Address\n" +
                 "   streetName : String\n" +
@@ -3612,8 +3683,9 @@ public class IncrementalCompilationTest {
         assertThat(updateResults.getMessages().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testUnchangedAccumulate() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUnchangedAccumulate(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-2194
         final String drl1 =
                 "import java.util.*;\n" +
@@ -3655,8 +3727,9 @@ public class IncrementalCompilationTest {
         ksession.fireAllRules();
     }
 
-    @Test
-    public void testGlobalRemovedFromOneDrl() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testGlobalRemovedFromOneDrl(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // RHDM-311
         final String drlAWithGlobal = "package org.x.a\nglobal Boolean globalBool\n";
         final String drlANoGlobal = "package org.x.a\n";
@@ -3691,8 +3764,9 @@ public class IncrementalCompilationTest {
         }
     }
 
-    @Test
-    public void testGlobalRemovedAndAdded() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testGlobalRemovedAndAdded(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // RHDM-311
         final String drlAWithGlobal = "package org.x.a\nglobal Boolean globalBool\n";
         final String drlANoGlobal = "package org.x.a\n";
@@ -3716,8 +3790,9 @@ public class IncrementalCompilationTest {
         ksession.setGlobal("globalBool", Boolean.TRUE);
     }
 
-    @Test
-    public void testRuleRemovalAndEval() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRuleRemovalAndEval(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-2276
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -3784,8 +3859,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testGetFactTypeOnIncrementalUpdateWithNestedFacts() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testGetFactTypeOnIncrementalUpdateWithNestedFacts(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-2385
         final String drl1 =
                 "package org.drools.example.api.kiemodulemodel\n" +
@@ -3853,8 +3929,9 @@ public class IncrementalCompilationTest {
         ftype.set(fact, "nested", nestedfact);
     }
 
-    @Test
-    public void testKJarUpgradeWithNewRule() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeWithNewRule(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-2596
         String drl1a = "package org.drools.incremental\n" +
                 "global java.util.List list\n" +
@@ -3911,8 +3988,9 @@ public class IncrementalCompilationTest {
         assertThat(list.get(1)).isEqualTo("1");
     }
 
-    @Test
-    public void testKJarUpgradeWithNewRuleAndStatelessSession() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeWithNewRuleAndStatelessSession(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-2596
         String drl1a = "package org.drools.incremental\n" +
                 "global java.util.List list\n" +
@@ -3970,8 +4048,9 @@ public class IncrementalCompilationTest {
         assertThat(list.get(1)).isEqualTo("1");
     }
 
-    @Test
-    public void testArgumentRedefinitionInStaticInvocation() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testArgumentRedefinitionInStaticInvocation(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // RHDM-709
         final String ARG1 = "package org.test;" +
                 "    public class MyArg {\n" +
@@ -4051,8 +4130,9 @@ public class IncrementalCompilationTest {
         assertThat(updateResults.hasMessages(Level.ERROR)).isFalse();
     }
 
-    @Test
-    public void testRemoveRulesWithLogicalAssertions() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveRulesWithLogicalAssertions(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-2646
         final String DRL1 =
                 "declare MyInt\n" +
@@ -4127,8 +4207,9 @@ public class IncrementalCompilationTest {
         assertThat(kieSession.getObjects().size()).isEqualTo(4);
     }
 
-    @Test
-    public void testRemoveRulesWithAccumulateAndLogicalAssertions() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveRulesWithAccumulateAndLogicalAssertions(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-3554
         final String DRL1 =
                 "rule R1 when\n" +
@@ -4184,17 +4265,19 @@ public class IncrementalCompilationTest {
         assertThat(kieSession.getObjects(new ClassObjectFilter( Integer.class )).isEmpty()).isTrue();
     }
 
-    @Test
-    public void testRemoveRulesWithSubnetworkAndOR() throws Exception {
-        checkRemoveRulesWithSubnetworkAndOR(false);
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveRulesWithSubnetworkAndOR(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        checkRemoveRulesWithSubnetworkAndOR(kieBaseTestConfiguration, false);
     }
 
-    @Test
-    public void testRemoveRulesWithSubnetworkAndORWithDispose() throws Exception {
-        checkRemoveRulesWithSubnetworkAndOR(true);
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveRulesWithSubnetworkAndORWithDispose(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        checkRemoveRulesWithSubnetworkAndOR(kieBaseTestConfiguration, true);
     }
 
-    public void checkRemoveRulesWithSubnetworkAndOR(boolean dispose) throws Exception {
+    public void checkRemoveRulesWithSubnetworkAndOR(KieBaseTestConfiguration kieBaseTestConfiguration, boolean dispose) throws Exception {
         // DROOLS-4454
         String DRL1 =
                 " package org.drools.compiler;\n" +
@@ -4321,17 +4404,19 @@ public class IncrementalCompilationTest {
         ks2.dispose();
     }
 
-    @Test
-    public void testRemoveAndAddRules() throws Exception {
-        checkRemoveAndAddRules(false);
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveAndAddRules(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        checkRemoveAndAddRules(kieBaseTestConfiguration, false);
     }
 
-    @Test
-    public void testRemoveAndAddRulesWithDispose() throws Exception {
-        checkRemoveAndAddRules(true);
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveAndAddRulesWithDispose(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        checkRemoveAndAddRules(kieBaseTestConfiguration, true);
     }
 
-    public void checkRemoveAndAddRules(boolean dispose) throws Exception {
+    public void checkRemoveAndAddRules(KieBaseTestConfiguration kieBaseTestConfiguration, boolean dispose) throws Exception {
         String DRL1 =
                 "package org.kie.test\n" +
                 "global java.util.List list\n" +
@@ -4428,8 +4513,9 @@ public class IncrementalCompilationTest {
         assertThat(list2.containsAll(Arrays.asList("R2", "R3"))).isTrue();
     }
 
-    @Test
-    public void testKJarUpgradeWithSerializedSession() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testKJarUpgradeWithSerializedSession(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl1 = "package org.drools.compiler\n" +
                 "import " + Message.class.getCanonicalName() + ";\n" +
                 "rule R1 when\n" +
@@ -4495,8 +4581,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession2.fireAllRules()).isEqualTo(3);
     }
 
-    @Test
-    public void testGetFactTypeOnIncrementalUpdateWithNestedFactsRulesFired() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testGetFactTypeOnIncrementalUpdateWithNestedFactsRulesFired(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-4886
         final String drl1 =
                 "package org.drools.example.api.kiemodulemodel\n" +
@@ -4574,13 +4661,15 @@ public class IncrementalCompilationTest {
         session.dispose();
     }
 
-    @Test
-    public void testDecisionTable() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Disabled("It fails. See issue #6190")
+    public void testDecisionTable(KieBaseTestConfiguration kieBaseTestConfiguration) {
         KieServices ks = KieServices.get();
         KieResources kr = ks.getResources();
 
         ReleaseId releaseId1 = ks.newReleaseId("org.kie", "test-dtable", "1.1.1");
-        buildDTableProject( ks, kr, releaseId1, "CanDrinkAndDrive.drl.xls" );
+        buildDTableProject( kieBaseTestConfiguration, ks, kr, releaseId1, "CanDrinkAndDrive.drl.xls" );
 
         KieContainer kc = ks.newKieContainer(releaseId1);
 
@@ -4598,7 +4687,7 @@ public class IncrementalCompilationTest {
         }
 
         ReleaseId releaseId2 = ks.newReleaseId("org.kie", "test-dtable", "1.1.2");
-        buildDTableProject( ks, kr, releaseId2, "CanDrinkAndDrive2.drl.xls" );
+        buildDTableProject( kieBaseTestConfiguration, ks, kr, releaseId2, "CanDrinkAndDrive2.drl.xls" );
 
         kc.updateToVersion(releaseId2);
 
@@ -4612,7 +4701,7 @@ public class IncrementalCompilationTest {
         }
     }
 
-    private void buildDTableProject( KieServices ks, KieResources kr, ReleaseId releaseId, String dtableFile ) {
+    private void buildDTableProject(KieBaseTestConfiguration kieBaseTestConfiguration, KieServices ks, KieResources kr, ReleaseId releaseId, String dtableFile ) {
         KieFileSystem kfs = ks.newKieFileSystem()
                 .write( "src/main/resources/org/drools/simple/candrink/CanDrink.drl.xls",
                         kr.newFileSystemResource( "src/test/resources/data/" + dtableFile ) )
@@ -4635,8 +4724,9 @@ public class IncrementalCompilationTest {
         }
     }
 
-    @Test
-    public void testIncrementalCompilationFromEmptyProject() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationFromEmptyProject(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-5547
         final String drl1 =
                 "rule \"test1\" when then end\n";
@@ -4661,8 +4751,9 @@ public class IncrementalCompilationTest {
         assertThat(addResults2.getAddedMessages().size()).isEqualTo(0);
     }
 
-    @Test
-    public void testIncrementalCompilationFromEmptyProject2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationFromEmptyProject2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-5584
         final String drl1 =
                 "package org.drools.test;\n" +
@@ -4695,8 +4786,9 @@ public class IncrementalCompilationTest {
         assertThat(globals.iterator().next()).isEqualTo("list");
     }
 
-    @Test
-    public void testIncrementalCompilationWithErrorFromEmptyProject() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testIncrementalCompilationWithErrorFromEmptyProject(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-5584
         final String drl_KO =
                 "package org.drools.test;\n" +
@@ -4729,8 +4821,9 @@ public class IncrementalCompilationTest {
         assertThat(addResults2.getRemovedMessages().size()).isEqualTo(1);
     }
 
-    @Test
-    public void testUnusedDeclaredTypeUpdate() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUnusedDeclaredTypeUpdate(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-5560
         final String drl1 = "package org.example.rules \n" +
                 "\n" +
@@ -4799,8 +4892,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testConsecutiveDeclaredTypeUpdates() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testConsecutiveDeclaredTypeUpdates(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-5687
         final String drl1 =
                 "package org.example.rules \n" +
@@ -4871,8 +4965,9 @@ public class IncrementalCompilationTest {
         ksession = kc.newKieSession();
     }
 
-    @Test
-    public void testUnlinkedPathUpdate() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testUnlinkedPathUpdate(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-5982
         final String drl1 =
                 "rule R1 when\n" +
@@ -4931,8 +5026,10 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(2);
     }
 
-    @Test(timeout = 20000L)
-    public void testUpdateToVersionWithFireUntilHaltWithSlowRHS() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Timeout(20000L)
+    public void testUpdateToVersionWithFireUntilHaltWithSlowRHS(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-6392
         final KieServices ks = KieServices.Factory.get();
 
@@ -4992,8 +5089,9 @@ public class IncrementalCompilationTest {
                 "end\n";
     }
 
-    @Test
-    public void testAddEntryPoint() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAddEntryPoint(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6906
         final KieServices ks = KieServices.Factory.get();
 
@@ -5033,8 +5131,9 @@ public class IncrementalCompilationTest {
         return rules.toString();
     }
 
-    @Test
-    public void testRemoveSharedConstraintWithEval() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testRemoveSharedConstraintWithEval(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // DROOLS-6960
         final String drl1 =
                 "rule R1 when\n" +
@@ -5071,8 +5170,9 @@ public class IncrementalCompilationTest {
         assertThat(ksession.fireAllRules()).isEqualTo(1);
     }
 
-    @Test
-    public void testReaddAllRulesWithComplexNodeSharing() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testReaddAllRulesWithComplexNodeSharing(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-7430
         final String drl1 =
                 "import " + Message.class.getCanonicalName() + ";\n" +
@@ -5164,5 +5264,64 @@ public class IncrementalCompilationTest {
 
         assertThat(ksession.fireAllRules()).isEqualTo(1);
         assertThat(fired).containsExactly("R6");
+    }
+
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testReaddAllRulesWithIdenticalRules(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        // DROOLS-7462
+
+        final String drl1 =
+                "import " + Message.class.getCanonicalName() + ";\n" +
+                "\n" +
+                "rule R1 when\n" +
+                "    $m: Message()\n" +
+                "    exists String(toString == $m.message)\n" +
+                "then\n" +
+                "end\n" +
+                "\n" +
+                "rule R2 when\n" +
+                "    $m: Message()\n" +
+                "    exists String(toString == $m.message)\n" +
+                "then\n" +
+                "end\n";
+
+        final String drl2 =
+                "import " + Message.class.getCanonicalName() + ";\n" +
+                "\n" +
+                "rule R3 when\n" +
+                "    $m: Message()\n" +
+                "    exists String(toString == $m.message)\n" +
+                "then\n" +
+                "end\n" +
+                "\n" +
+                "rule R4 when\n" +
+                "    $m: Message()\n" +
+                "    exists String(toString == $m.message)\n" +
+                "then\n" +
+                "end\n";
+
+        final KieServices ks = KieServices.Factory.get();
+
+        final ReleaseId releaseId1 = ks.newReleaseId("org.kie", "test-upgrade", "1.0.0");
+        KieUtil.getKieModuleFromDrls(releaseId1, kieBaseTestConfiguration, drl1);
+
+        final KieContainer kc = ks.newKieContainer(releaseId1);
+        KieSession ksession = kc.newKieSession();
+
+        ksession.insert(new Message("test1"));
+        ksession.insert("test1");
+        ksession.insert(new Message("test2"));
+        ksession.insert("test2");
+
+        int fired = ksession.fireAllRules();
+        assertThat(fired).isEqualTo(4);
+
+        final ReleaseId releaseId2 = ks.newReleaseId("org.kie", "test-upgrade", "1.1.0");
+        KieUtil.getKieModuleFromDrls(releaseId2, kieBaseTestConfiguration, drl2);
+
+        kc.updateToVersion(releaseId2);
+        fired = ksession.fireAllRules();
+        assertThat(fired).isEqualTo(4);
     }
 }

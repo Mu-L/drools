@@ -1,36 +1,36 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests.session;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.core.test.model.Cheese;
 import org.drools.core.test.model.Person;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
@@ -38,39 +38,32 @@ import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-
-@RunWith(Parameterized.class)
 public class BasicUpdateTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public BasicUpdateTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
     private static final String UPDATE_TEST_DRL = "org/drools/mvel/integrationtests/session/update_test.drl";
 
     private KieSession ksession;
 
-    @Before
-    public void setUp() {
+    public void setUp(KieBaseTestConfiguration kieBaseTestConfiguration) {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, UPDATE_TEST_DRL);
         ksession = kbase.newKieSession();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         ksession.dispose();
     }
 
-    @Test
-    public void updateTheOnlyFactTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void updateTheOnlyFactTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        setUp(kieBaseTestConfiguration);
         final Person person = new Person("George", 18);
         final FactHandle factPerson = ksession.insert(person);
         assertThat(ksession.getObjects()).hasSize(1);
@@ -86,17 +79,21 @@ public class BasicUpdateTest {
         verifyPerson(person, personToBeVerified, 21, "Henry", false);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void updateWithNullTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void updateWithNullTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        setUp(kieBaseTestConfiguration);
         final Person person = new Person("George", 18);
         final FactHandle factPerson = ksession.insert(person);
         verifyFactsPresentInSession(1, Person.class);
 
-        ksession.update(factPerson, null);
+        assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> ksession.update(factPerson, null));
     }
 
-    @Test
-    public void updateWithDifferentClassGetQueryResultsTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void updateWithDifferentClassGetQueryResultsTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        setUp(kieBaseTestConfiguration);
         final Person person = new Person("George", 18);
         final FactHandle fact = ksession.insert(person);
 
@@ -116,8 +113,10 @@ public class BasicUpdateTest {
 
     }
 
-    @Test
-    public void updateWithDifferentClassGetObjectsTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void updateWithDifferentClassGetObjectsTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        setUp(kieBaseTestConfiguration);
         final Person person = new Person("George", 18);
         final FactHandle factPerson = ksession.insert(person);
         final Person personToBeVerified = verifyFactsPresentInSession(1, Person.class).get(0);
@@ -131,8 +130,10 @@ public class BasicUpdateTest {
         verifyCheese(cheeseToBeVerified, 50, "Camembert");
     }
 
-    @Test
-    public void updateFireRulesTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void updateFireRulesTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        setUp(kieBaseTestConfiguration);
         final Person george = new Person("George", 17);
         final Person henry = new Person("Henry", 25);
         final FactHandle georgeFact = ksession.insert(george);
@@ -156,8 +157,10 @@ public class BasicUpdateTest {
         verifyList(drivers, null, george, henry);
     }
 
-    @Test
-    public void updateFactOnRuleFireTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void updateFactOnRuleFireTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        setUp(kieBaseTestConfiguration);
         final Cheese camembert = new Cheese("Camembert", 19);
         final Cheese cheddar = new Cheese("Cheddar", 45);
 

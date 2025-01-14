@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.common;
 
 import java.io.Serializable;
@@ -22,14 +24,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.drools.base.base.ClassObjectType;
-import org.drools.base.facttemplates.Fact;
+import org.drools.base.base.ObjectType;
+import org.drools.base.rule.EntryPointId;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.ClassObjectTypeConf;
-import org.drools.core.reteoo.FactTemplateTypeConf;
 import org.drools.core.reteoo.ObjectTypeConf;
-import org.drools.base.rule.EntryPointId;
+import org.drools.core.reteoo.PrototypeTypeConf;
+import org.drools.core.reteoo.RuleTerminalNodeLeftTuple;
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.base.base.ObjectType;
+import org.kie.api.prototype.PrototypeFactInstance;
 
 public class ObjectTypeConfigurationRegistry implements Serializable {
     private static final long serialVersionUID = 510l;
@@ -63,19 +66,23 @@ public class ObjectTypeConfigurationRegistry implements Serializable {
         return conf;
     }
 
+    // Avoid secondary super cache invalidation by testing for abstract classes first
+    // Then interfaces
+    // See: https://issues.redhat.com/browse/DROOLS-7521
     private Object getKey( Object object ) {
-        if ( object instanceof InternalMatch) {
+        if (object instanceof RuleTerminalNodeLeftTuple) {
             return ClassObjectType.Match_ObjectType.getClassType();
-        }
-        if ( object instanceof Fact) {
-            return ((Fact) object).getFactTemplate().getName();
+        } else if (object instanceof PrototypeFactInstance p) {
+            return p.getPrototype().getFullName();
+        } else if (object instanceof InternalMatch) {
+            return ClassObjectType.Match_ObjectType.getClassType();
         }
         return object.getClass();
     }
 
     private ObjectTypeConf createObjectTypeConf(EntryPointId entrypoint, Object key, Object object) {
-        return object instanceof Fact ?
-                new FactTemplateTypeConf( entrypoint, ((Fact) object).getFactTemplate(), this.ruleBase ) :
+        return object instanceof PrototypeFactInstance p ?
+                new PrototypeTypeConf(entrypoint, p.getPrototype(), this.ruleBase ) :
                 new ClassObjectTypeConf( entrypoint, (Class<?>) key, this.ruleBase );
     }
 

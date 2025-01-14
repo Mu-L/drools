@@ -1,19 +1,21 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.core.internal.utils;
 
 import java.math.BigDecimal;
@@ -26,7 +28,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.core.DMNContext;
 import org.kie.dmn.api.core.DMNModel;
 import org.kie.dmn.api.core.DMNResult;
@@ -61,7 +63,7 @@ public class DynamicDMNContextBuilderTest {
     }
 
     @Test
-    public void testOneOfEachType() throws Exception {
+    void oneOfEachType() throws Exception {
         DMNRuntime runtime = createRuntime("OneOfEachType.dmn", DMNRuntimeTypesTest.class);
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_4f5608e9-4d74-4c22-a47e-ab657257fc9c", "OneOfEachType");
         assertThat(dmnModel).isNotNull();
@@ -94,7 +96,7 @@ public class DynamicDMNContextBuilderTest {
     }
 
     @Test
-    public void testNextDays() throws Exception {
+    void nextDays() throws Exception {
         final DMNRuntime runtime = createRuntime("nextDays.dmn", DMNRuntimeTypesTest.class);
         final DMNModel dmnModel = runtime.getModel("https://kiegroup.org/dmn/_8A1F9719-02AA-4517-97D4-5C4F5D22FE82", "nextDays");
         assertThat(dmnModel).isNotNull();
@@ -113,7 +115,7 @@ public class DynamicDMNContextBuilderTest {
     }
 
     @Test
-    public void testTrafficViolationAll() throws Exception {
+    void trafficViolationAll() throws Exception {
         final DMNRuntime runtime = createRuntimeWithAdditionalResources("Traffic Violation.dmn", DMNRuntimeTypesTest.class);
         final DMNModel dmnModel = runtime.getModel("https://github.com/kiegroup/drools/kie-dmn/_A4BCA8B8-CF08-433F-93B2-A2598F19ECFF", "Traffic Violation");
         assertThat(dmnModel).isNotNull();
@@ -143,7 +145,7 @@ public class DynamicDMNContextBuilderTest {
     }
 
     @Test
-    public void testTrafficViolationMin() throws Exception {
+    void trafficViolationMin() throws Exception {
         final DMNRuntime runtime = createRuntimeWithAdditionalResources("Traffic Violation.dmn", DMNRuntimeTypesTest.class);
         final DMNModel dmnModel = runtime.getModel("https://github.com/kiegroup/drools/kie-dmn/_A4BCA8B8-CF08-433F-93B2-A2598F19ECFF", "Traffic Violation");
         assertThat(dmnModel).isNotNull();
@@ -167,7 +169,7 @@ public class DynamicDMNContextBuilderTest {
     }
 
     @Test
-    public void testTrafficViolationArbitraryFine() throws Exception {
+    void trafficViolationArbitraryFine() throws Exception {
         final DMNRuntime runtime = createRuntimeWithAdditionalResources("Traffic Violation.dmn", DMNRuntimeTypesTest.class);
         final DMNModel dmnModel = runtime.getModel("https://github.com/kiegroup/drools/kie-dmn/_A4BCA8B8-CF08-433F-93B2-A2598F19ECFF", "Traffic Violation");
         assertThat(dmnModel).isNotNull();
@@ -204,7 +206,7 @@ public class DynamicDMNContextBuilderTest {
     }
 
     @Test
-    public void testDSBasicDS1() throws Exception {
+    void dSBasicDS1() throws Exception {
         final DMNRuntime runtime = createRuntime("0004-decision-services.dmn", DMNDecisionServicesTest.class);
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_686f58d4-4ec3-4c65-8c06-0e4fd8983def", "Decision Services");
         assertThat(dmnModel).isNotNull();
@@ -221,7 +223,7 @@ public class DynamicDMNContextBuilderTest {
     }
 
     @Test
-    public void testDSBasicDS2() throws Exception {
+    void dSBasicDS2() throws Exception {
         final DMNRuntime runtime = createRuntime("0004-decision-services.dmn", DMNDecisionServicesTest.class);
         final DMNModel dmnModel = runtime.getModel("http://www.trisotech.com/definitions/_686f58d4-4ec3-4c65-8c06-0e4fd8983def", "Decision Services");
         assertThat(dmnModel).isNotNull();
@@ -236,9 +238,9 @@ public class DynamicDMNContextBuilderTest {
         assertThat(dmnResult.hasErrors()).as(DMNRuntimeUtil.formatMessages(dmnResult.getMessages())).isFalse();
         assertThat(dmnResult.getDecisionResultByName("A").getResult()).isEqualTo("inBinC");
     }
-    
+
     @Test
-    public void testFloatFromREST() throws Exception {
+    void floatFromREST() throws Exception {
         final DMNRuntime runtime = createRuntime("numberRESTinLIST.dmn", this.getClass());
         final DMNModel dmnModel = runtime.getModel("https://kiegroup.org/dmn/_91CAD4BC-859F-465A-9294-300EABF4EC8A", "numberRESTinLIST");
         Assertions.assertThat(dmnModel).isNotNull();

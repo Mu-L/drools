@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.compiler.rule.builder.dialect.mvel;
 
 import java.io.InputStreamReader;
@@ -28,7 +31,10 @@ import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
 import org.drools.compiler.compiler.Dialect;
 import org.drools.compiler.compiler.DialectCompiletimeRegistry;
+import org.drools.core.reteoo.MockLeftTupleSink;
 import org.drools.core.reteoo.RuleTerminalNodeLeftTuple;
+import org.drools.core.reteoo.TupleFactory;
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.drl.parser.DrlParser;
 import org.drools.drl.parser.DroolsParserException;
 import org.drools.compiler.compiler.PackageRegistry;
@@ -46,13 +52,12 @@ import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.BetaNode;
 import org.drools.core.reteoo.CoreComponentFactory;
 import org.drools.core.reteoo.LeftTuple;
-import org.drools.core.reteoo.JoinNodeLeftTuple;
+import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.LeftTupleSource;
 import org.drools.core.reteoo.MockTupleSource;
 import org.drools.core.reteoo.ModifyPreviousTuples;
 import org.drools.core.reteoo.ObjectSource;
 import org.drools.core.reteoo.ReteooBuilder;
-import org.drools.core.reteoo.RightTuple;
 import org.drools.core.reteoo.RuleRemovalContext;
 import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.RuntimeComponentFactory;
@@ -78,7 +83,7 @@ import org.drools.mvel.builder.MVELDialect;
 import org.drools.mvel.compiler.Cheese;
 import org.drools.mvel.expr.MVELConsequence;
 import org.drools.mvel.expr.MVELDebugHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
 import org.kie.internal.builder.conf.LanguageLevelOption;
 import org.mvel2.ParserContext;
@@ -144,10 +149,10 @@ public class MVELConsequenceBuilderTest {
 
         final Cheese cheddar = new Cheese( "cheddar", 10 );
         final InternalFactHandle f0 = (InternalFactHandle) ksession.insert( cheddar );
-        final JoinNodeLeftTuple tuple = new JoinNodeLeftTuple( f0, rtn, true );
+        final LeftTuple tuple = new LeftTuple( f0, rtn, true );
         f0.removeLeftTuple(tuple);
 
-        final RuleTerminalNodeLeftTuple item = (RuleTerminalNodeLeftTuple) rtn.createLeftTuple(tuple, rtn, pctxFactory.createPropagationContext(1, PropagationContext.Type.DELETION, null, null, null), true);
+        final RuleTerminalNodeLeftTuple item = (RuleTerminalNodeLeftTuple) TupleFactory.createLeftTuple(tuple, rtn, pctxFactory.createPropagationContext(1, PropagationContext.Type.DELETION, null, null, null), true);
         item.init(0, 0, item.getPropagationContext(), null, null);
 
 
@@ -209,12 +214,12 @@ public class MVELConsequenceBuilderTest {
         final Cheese cheddar = new Cheese( "cheddar",
                                            10 );
         final InternalFactHandle f0 = (InternalFactHandle) ksession.insert( cheddar );
-        final JoinNodeLeftTuple tuple = new JoinNodeLeftTuple( f0,
-                                               null,
+        final LeftTuple tuple = new LeftTuple( f0,
+                                               new MockLeftTupleSink(0),
                                                true );
 
         RuleTerminalNode rtn = new RuleTerminalNode();
-        final RuleTerminalNodeLeftTuple item = (RuleTerminalNodeLeftTuple) rtn.createLeftTuple(tuple, rtn, null, true);
+        final RuleTerminalNodeLeftTuple item = (RuleTerminalNodeLeftTuple) TupleFactory.createLeftTuple(tuple, rtn, null, true);
         item.init(0, 0, item.getPropagationContext(), null, null);
 
         final DefaultKnowledgeHelper kbHelper = new DefaultKnowledgeHelper( ksession );
@@ -489,58 +494,23 @@ public class MVELConsequenceBuilderTest {
         public void modifyObject( InternalFactHandle factHandle, ModifyPreviousTuples modifyPreviousTuples, PropagationContext context, ReteEvaluator reteEvaluator) {
         }
 
-        public void retractRightTuple(final RightTuple rightTuple,
+        public void retractRightTuple(final TupleImpl rightTuple,
                                       final PropagationContext context,
                                       final ReteEvaluator reteEvaluator) {
         }
 
-        public short getType() {
+        public int getType() {
             return 0;
         }
 
-        public void modifyRightTuple(RightTuple rightTuple,
+        public void modifyRightTuple(TupleImpl rightTuple,
                                      PropagationContext context,
                                      ReteEvaluator reteEvaluator) {
         }
 
-        public LeftTuple createLeftTuple( InternalFactHandle factHandle,
-                                          boolean leftTupleMemoryEnabled) {
-            return new JoinNodeLeftTuple(factHandle, this, leftTupleMemoryEnabled );
-        }    
-        
-        public LeftTuple createLeftTuple(LeftTuple leftTuple,
-                                         Sink sink,
-                                         PropagationContext pctx, boolean leftTupleMemoryEnabled) {
-            return new JoinNodeLeftTuple(leftTuple,sink, pctx, leftTupleMemoryEnabled );
-        }
-
-        public LeftTuple createLeftTuple(final InternalFactHandle factHandle,
-                                         final LeftTuple leftTuple,
-                                         final Sink sink) {
-            return new JoinNodeLeftTuple(factHandle,leftTuple, sink );
-        }
-
-        public LeftTuple createLeftTuple(LeftTuple leftTuple,
-                                         RightTuple rightTuple,
-                                         Sink sink) {
-            return new JoinNodeLeftTuple(leftTuple, rightTuple, sink );
-        }   
-        
-        public LeftTuple createLeftTuple(LeftTuple leftTuple,
-                                         RightTuple rightTuple,
-                                         LeftTuple currentLeftChild,
-                                         LeftTuple currentRightChild,
-                                         Sink sink,
-                                         boolean leftTupleMemoryEnabled) {
-            return new JoinNodeLeftTuple(leftTuple, rightTuple, currentLeftChild, currentRightChild, sink, leftTupleMemoryEnabled );        
-        }
         public Memory createMemory(RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
             return super.createMemory( config, reteEvaluator);
         }
 
-        @Override
-        public LeftTuple createPeer(LeftTuple original) {
-            return null;
-        }                
     }
 }

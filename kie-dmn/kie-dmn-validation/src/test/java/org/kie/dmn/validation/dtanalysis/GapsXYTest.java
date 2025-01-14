@@ -1,26 +1,28 @@
-/*
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.validation.dtanalysis;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.dmn.api.core.DMNMessage;
 import org.kie.dmn.feel.runtime.Range.RangeBoundary;
 import org.kie.dmn.validation.dtanalysis.model.Bound;
@@ -35,21 +37,21 @@ import static org.kie.dmn.validation.DMNValidator.Validation.VALIDATE_COMPILATIO
 public class GapsXYTest extends AbstractDTAnalysisTest {
 
     @Test
-    public void test_GapsXY() {
+    void gaps_xy() {
         List<DMNMessage> validate = validator.validate(getReader("GapsXY.dmn"), VALIDATE_COMPILATION, ANALYZE_DECISION_TABLE);
         checkAnalysis(validate);
     }
-    
+
     @Test
-    public void test_GapsXY_usingResource() {
+    void gaps_xy_using_resource() {
         List<DMNMessage> validate = validator.validate(getResource("GapsXY.dmn"), VALIDATE_COMPILATION, ANALYZE_DECISION_TABLE);
         checkAnalysis(validate);
         LOG.debug("{}", validate);
         assertThat(validate).allMatch(m -> m.getPath().endsWith("GapsXY.dmn"));
     }
-    
+
     @Test
-    public void test_GapsXY_usingBuilderWithResource() {
+    void gaps_xy_using_builder_with_resource() {
         List<DMNMessage> validate = validator.validateUsing(VALIDATE_COMPILATION, ANALYZE_DECISION_TABLE).theseModels(getResource("GapsXY.dmn"));
         checkAnalysis(validate);
         LOG.debug("{}", validate);
@@ -57,7 +59,7 @@ public class GapsXYTest extends AbstractDTAnalysisTest {
     }
 
     @Test
-    public void test_GapsXYv2() {
+    void gaps_xyv2() {
         List<DMNMessage> validate = validator.validate(getReader("GapsXYv2.dmn"), VALIDATE_COMPILATION, ANALYZE_DECISION_TABLE);
         checkAnalysis(validate);
     }

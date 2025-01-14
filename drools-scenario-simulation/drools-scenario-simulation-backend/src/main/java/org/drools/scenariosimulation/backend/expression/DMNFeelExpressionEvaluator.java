@@ -1,19 +1,21 @@
-/*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.scenariosimulation.backend.expression;
 
 import java.util.AbstractMap;
@@ -33,6 +35,7 @@ import org.kie.dmn.api.feel.runtime.events.FEELEventListener;
 import org.kie.dmn.core.compiler.profiles.ExtendedDMNProfile;
 import org.kie.dmn.feel.FEEL;
 import org.kie.dmn.feel.lang.EvaluationContext;
+import org.kie.dmn.feel.lang.impl.FEELBuilder;
 import org.kie.dmn.feel.lang.impl.FEELImpl;
 import org.kie.dmn.feel.lang.types.BuiltInType;
 import org.kie.dmn.feel.runtime.UnaryTest;
@@ -48,7 +51,7 @@ import static org.kie.dmn.api.feel.runtime.events.FEELEvent.Severity.ERROR;
 public class DMNFeelExpressionEvaluator extends AbstractExpressionEvaluator {
 
     private final ClassLoader classLoader;
-    private final CodeFunction codeFunction = new CodeFunction();
+    private final CodeFunction codeFunction = CodeFunction.INSTANCE;
 
     public DMNFeelExpressionEvaluator(ClassLoader classLoader) {
         this.classLoader = classLoader;
@@ -64,7 +67,7 @@ public class DMNFeelExpressionEvaluator extends AbstractExpressionEvaluator {
     protected FEEL newFeelEvaluator(AtomicReference<FEELEvent> errorHolder) {
         // cleanup existing error
         errorHolder.set(null);
-        FEEL feel = FEEL.newInstance(singletonList(new ExtendedDMNProfile()));
+        FEEL feel = FEELBuilder.builder().withProfiles(singletonList(new ExtendedDMNProfile())).build();
         feel.addListener(event -> {
             FEELEvent feelEvent = errorHolder.get();
             if (!(feelEvent instanceof SyntaxErrorEvent) &&

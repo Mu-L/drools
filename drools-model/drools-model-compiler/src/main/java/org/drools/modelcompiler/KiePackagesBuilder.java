@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler;
 
 import java.util.ArrayList;
@@ -42,7 +44,6 @@ import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.definitions.impl.KnowledgePackageImpl;
 import org.drools.base.definitions.rule.impl.QueryImpl;
 import org.drools.base.definitions.rule.impl.RuleImpl;
-import org.drools.base.facttemplates.FactTemplateObjectType;
 import org.drools.base.rule.Accumulate;
 import org.drools.base.rule.AsyncReceive;
 import org.drools.base.rule.AsyncSend;
@@ -98,8 +99,6 @@ import org.drools.model.Global;
 import org.drools.model.GroupByPattern;
 import org.drools.model.Index;
 import org.drools.model.Model;
-import org.drools.model.Prototype;
-import org.drools.model.PrototypeVariable;
 import org.drools.model.Query;
 import org.drools.model.Rule;
 import org.drools.model.SingleConstraint;
@@ -152,6 +151,7 @@ import org.kie.internal.builder.KnowledgeBuilderConfiguration;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 
 import static java.util.stream.Collectors.toList;
+import static org.drools.base.rule.EvalCondition.logWarnIfImproperEval;
 import static org.drools.base.rule.GroupElement.AND;
 import static org.drools.base.rule.GroupElement.OR;
 import static org.drools.compiler.rule.builder.RuleBuilder.buildTimer;
@@ -159,7 +159,6 @@ import static org.drools.model.DSL.declarationOf;
 import static org.drools.model.bitmask.BitMaskUtil.calculatePatternMask;
 import static org.drools.model.functions.FunctionUtils.toFunctionN;
 import static org.drools.model.impl.NamesGenerator.generateName;
-import static org.drools.modelcompiler.facttemplate.FactFactory.prototypeToFactTemplate;
 import static org.drools.modelcompiler.util.EvaluationUtil.adaptBitMask;
 import static org.drools.modelcompiler.util.TimerUtil.buildTimerExpression;
 import static org.drools.modelcompiler.util.TypeDeclarationUtil.createTypeDeclaration;
@@ -671,7 +670,9 @@ public class KiePackagesBuilder {
     private EvalCondition buildEval(RuleContext ctx, EvalImpl eval) {
         Declaration[] declarations = Stream.of( eval.getExpr().getVariables() ).map( ctx::getDeclaration ).toArray( Declaration[]::new );
         EvalExpression evalExpr = new LambdaEvalExpression(declarations, eval.getExpr());
-        return new EvalCondition(evalExpr, declarations);
+        EvalCondition evalCondition = new EvalCondition(evalExpr, declarations);
+        logWarnIfImproperEval(evalCondition, eval.getExpr().predicateInformation().getStringConstraint());
+        return evalCondition;
     }
 
     private ConditionalBranch buildConditionalConsequence(RuleContext ctx, ConditionalNamedConsequenceImpl consequence) {
@@ -1202,18 +1203,9 @@ public class KiePackagesBuilder {
     }
 
     ObjectType getObjectType( Variable patternVariable ) {
-        return patternVariable instanceof PrototypeVariable ?
-                getPrototypeObjectType( (( PrototypeVariable ) patternVariable).getPrototype() ) :
+        return patternVariable.isPrototype() ?
+                PrototypeService.get().getPrototypeObjectType( objectTypeCache, packages, this::createKiePackage, patternVariable ) :
                 getClassObjectType( patternVariable.getType() );
-    }
-
-    private ObjectType getPrototypeObjectType( Prototype prototype ) {
-        return objectTypeCache.computeIfAbsent( prototype.getFullName(), name -> {
-            KnowledgePackageImpl pkg = (KnowledgePackageImpl) packages.computeIfAbsent( prototype.getPackage(), this::createKiePackage );
-            FactTemplateObjectType objectType = new FactTemplateObjectType(prototypeToFactTemplate( prototype, pkg ));
-            objectType.setEvent(prototype.isEvent());
-            return objectType;
-        } );
     }
 
     private ObjectType getClassObjectType( Class<?> patternClass ) {

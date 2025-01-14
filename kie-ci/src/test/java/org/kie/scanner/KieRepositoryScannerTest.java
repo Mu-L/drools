@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.kie.scanner;
 
 import java.io.File;
@@ -28,10 +31,10 @@ import org.drools.compiler.kie.builder.impl.KieFileSystemImpl;
 import org.drools.compiler.kie.builder.impl.event.KieScannerStatusChangeEventImpl;
 import org.drools.compiler.kie.builder.impl.event.KieScannerUpdateResultsEventImpl;
 import org.drools.core.util.FileManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -60,14 +63,14 @@ public class KieRepositoryScannerTest extends AbstractKieCiTest {
 
     private FileManager fileManager;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.fileManager = new FileManager();
         this.fileManager.setUp();
         ReleaseId releaseId = KieServices.Factory.get().newReleaseId("org.kie", "scanner-test", "1.0-SNAPSHOT");
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         this.fileManager.tearDown();
     }
@@ -112,7 +115,8 @@ public class KieRepositoryScannerTest extends AbstractKieCiTest {
         ks.getRepository().removeKieModule(releaseId);
     }
 
-    @Test @Ignore("used only for check performances")
+    @Test 
+    @Disabled("used only for check performances")
     public void testKScannerWithDependencies() throws Exception {
         KieServices ks = KieServices.Factory.get();
         ReleaseId releaseIdNoDep = ks.newReleaseId( "org.kie", "test-no-dep", "1.0-SNAPSHOT" );
@@ -133,7 +137,8 @@ public class KieRepositoryScannerTest extends AbstractKieCiTest {
         System.out.println("done in " + (System.nanoTime() - start));
     }
 
-    @Test @Ignore("avoid use external dependency")
+    @Test 
+    @Disabled("avoid use external dependency")
     public void testKScannerWithTransitiveInclusion() throws Exception {
         String pom = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
@@ -165,7 +170,8 @@ public class KieRepositoryScannerTest extends AbstractKieCiTest {
         }
     }
 
-    @Test @Ignore("avoid use external dependency")
+    @Test 
+    @Disabled("avoid use external dependency")
     public void testKScannerWithExclusion() throws Exception {
         String pom = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
@@ -899,7 +905,8 @@ public class KieRepositoryScannerTest extends AbstractKieCiTest {
         ks.getRepository().removeKieModule(includedReleaseId);
     }
 
-    @Test @Ignore
+    @Test 
+    @Disabled
     public void testScanIncludedAndIncludingDependency() throws Exception {
         KieMavenRepository repository = getKieMavenRepository();
         KieServices ks = KieServices.Factory.get();

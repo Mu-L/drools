@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.kie.dmn.core.pmml;
 
 import java.io.IOException;
@@ -12,15 +30,15 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.kie.api.io.Resource;
 import org.kie.api.pmml.PMML4Result;
 import org.kie.api.pmml.PMMLRequestData;
 import org.kie.dmn.api.core.DMNResult;
 import org.kie.dmn.api.core.DMNRuntime;
 import org.kie.dmn.api.core.event.DMNRuntimeEventManager;
-import org.kie.dmn.feel.util.EvalHelper;
+import org.kie.dmn.feel.util.NumberEvalHelper;
 import org.kie.dmn.model.api.DMNElement;
 import org.kie.efesto.common.api.model.GeneratedResources;
 import org.mockito.Mockito;
@@ -32,7 +50,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class DMNKiePMMLTrustyInvocationEvaluatorTest {
+class DMNKiePMMLTrustyInvocationEvaluatorTest {
 
     private static DMNKiePMMLTrustyInvocationEvaluator dmnKiePMMLTrustyInvocationEvaluator;
 
@@ -40,8 +58,8 @@ public class DMNKiePMMLTrustyInvocationEvaluatorTest {
     private static final String pmmlFileName = pmmlFileNameNoSuffix + ".pmml";
     private static final String model = "LogisticRegression";
 
-    @Before
-    public void setup() throws IOException {
+    @BeforeEach
+    void setup() throws IOException {
         URL pmmlUrl =  DMNKiePMMLTrustyInvocationEvaluatorTest.class.getResource(pmmlFileName);
         assertThat(pmmlUrl).isNotNull();
         String pmmlFilePath = pmmlUrl.getPath();
@@ -70,7 +88,7 @@ public class DMNKiePMMLTrustyInvocationEvaluatorTest {
     }
 
     @Test
-    public void getPMML4Result() {
+    void getPMML4Result() {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         DMNRuntime dmnRuntimeMock = mock(DMNRuntime.class);
         when(dmnRuntimeMock.getRootClassLoader()).thenReturn(classLoader);
@@ -83,7 +101,7 @@ public class DMNKiePMMLTrustyInvocationEvaluatorTest {
     }
 
     @Test
-    public void getOutputFieldValues() {
+    void getOutputFieldValues() {
         List<Object> values = getValues();
         Map<String, Object> resultVariables = new HashMap<>();
         for (int i = 0; i < values.size(); i++) {
@@ -94,26 +112,26 @@ public class DMNKiePMMLTrustyInvocationEvaluatorTest {
         resultVariables.forEach((s, value) -> {
             assertThat(retrieved).containsKey(s);
             Object retObject = retrieved.get(s);
-            Object expected = EvalHelper.coerceNumber(value);
+            Object expected = NumberEvalHelper.coerceNumber(value);
             assertThat(retObject).isEqualTo(expected);
         });
     }
 
     @Test
-    public void getPredictedValues() {
+    void getPredictedValues() {
         List<Object> values = getValues();
         values.forEach(value -> {
             PMML4Result result = getPMML4Result(value);
             Map<String, Object> retrieved = dmnKiePMMLTrustyInvocationEvaluator.getPredictedValues(result, null);
             assertThat(retrieved).containsKey(result.getResultObjectName());
             Object retObject = retrieved.get(result.getResultObjectName());
-            Object expected = EvalHelper.coerceNumber(value);
+            Object expected = NumberEvalHelper.coerceNumber(value);
             assertThat(retObject).isEqualTo(expected);
         });
     }
 
     @Test
-    public void evaluate() {
+    void evaluate() {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         DMNRuntime dmnRuntimeMock = mock(DMNRuntime.class);
         when(dmnRuntimeMock.getRootClassLoader()).thenReturn(classLoader);
@@ -125,7 +143,7 @@ public class DMNKiePMMLTrustyInvocationEvaluatorTest {
     }
 
     @Test
-    public void compileFile() {
+    void compileFile() {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Map<String, GeneratedResources> retrieved = dmnKiePMMLTrustyInvocationEvaluator.compileFile(pmmlFileName, classLoader);
         assertThat(retrieved).isNotNull().isNotEmpty().containsKey("pmml");

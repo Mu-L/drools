@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.compiler.rule.builder.dialect.mvel;
 
 import java.util.Collections;
@@ -28,12 +31,13 @@ import org.drools.base.base.ClassObjectType;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.core.reteoo.CoreComponentFactory;
-import org.drools.core.reteoo.JoinNodeLeftTuple;
+import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.MockLeftTupleSink;
 import org.drools.core.reteoo.MockTupleSource;
 import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.RuleTerminalNodeLeftTuple;
+import org.drools.core.reteoo.TupleFactory;
 import org.drools.core.reteoo.builder.BuildContext;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.GroupElement;
@@ -51,8 +55,8 @@ import org.drools.mvel.builder.MVELDialect;
 import org.drools.mvel.builder.MVELSalienceBuilder;
 import org.drools.mvel.compiler.Person;
 import org.drools.mvel.expr.MVELSalienceExpression;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.kie.api.definition.rule.Rule;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,7 +66,7 @@ public class MVELSalienceBuilderTest {
     private InternalKnowledgeBase kBase ;
     private BuildContext buildContext;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         InternalKnowledgePackage pkg = CoreComponentFactory.get().createKnowledgePackage( "pkg1" );
         final RuleDescr ruleDescr = new RuleDescr( "rule 1" );
@@ -123,13 +127,13 @@ public class MVELSalienceBuilderTest {
 
         RuleTerminalNode rtn = new RuleTerminalNode(0, source, context.getRule(), new GroupElement(), 0, buildContext);
 
-        final JoinNodeLeftTuple tuple = new JoinNodeLeftTuple( f0,
+        final LeftTuple tuple = new LeftTuple( f0,
                                                                rtn,
                                                        true );
 
         rtn.setSalienceDeclarations( context.getDeclarationResolver().getDeclarations( context.getRule() ).values().toArray( new Declaration[1] ) );
 
-        final RuleTerminalNodeLeftTuple item = (RuleTerminalNodeLeftTuple) rtn.createLeftTuple(tuple, rtn, null, true);
+        final RuleTerminalNodeLeftTuple item = (RuleTerminalNodeLeftTuple) TupleFactory.createLeftTuple(tuple, rtn, null, true);
         item.init(0, 0, item.getPropagationContext(), null, null);
 
         assertThat(context.getRule().getSalience().getValue(item, context.getRule(), ksession)).isEqualTo(25);
@@ -203,7 +207,7 @@ public class MVELSalienceBuilderTest {
             source.setObjectCount(1);
             sink.setLeftTupleSource(source);
 
-            tuple = new JoinNodeLeftTuple(f0,
+            tuple = new LeftTuple(f0,
                                           sink,
                                           true );
             this.salience = salience;
@@ -214,7 +218,7 @@ public class MVELSalienceBuilderTest {
             RuleTerminalNode rtn = new RuleTerminalNode(0, source, context.getRule(), new GroupElement(), 0, buildContext);
             rtn.setSalienceDeclarations( context.getDeclarationResolver().getDeclarations( context.getRule() ).values().toArray( new Declaration[1] ) );
 
-            item = (RuleTerminalNodeLeftTuple) rtn.createLeftTuple(tuple, rtn, null, true);
+            item = (RuleTerminalNodeLeftTuple) TupleFactory.createLeftTuple(tuple, rtn, null, true);
             item.init(0, 0, item.getPropagationContext(), null, null);
         }
 

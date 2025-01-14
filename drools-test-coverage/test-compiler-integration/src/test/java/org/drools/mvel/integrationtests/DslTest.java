@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.io.IOException;
@@ -22,6 +25,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.drl.parser.lang.Expander;
 import org.drools.drl.parser.lang.dsl.DefaultExpanderResolver;
@@ -33,11 +37,10 @@ import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
 import org.drools.testcoverage.common.util.TestConstants;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
@@ -53,22 +56,15 @@ import org.kie.internal.io.ResourceFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class DslTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public DslTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-   
-    @Test
-    public void testMultiLineTemplates() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMultiLineTemplates(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final Reader source = new InputStreamReader( getClass().getResourceAsStream( "rule_with_expander_multiline.dslr" ) );
         final Reader dsl = new InputStreamReader( getClass().getResourceAsStream( "test_dsl_multiline.dsl" ) );
         Expander ex =  new DefaultExpanderResolver(dsl).get("*", null);
@@ -76,8 +72,9 @@ public class DslTest {
         assertThat(r.trim()).isEqualTo("when Car(color==\"Red\") then doSomething();");
     }
 
-    @Test
-    public void testWithExpanderDSL() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testWithExpanderDSL(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final Resource resource1 = KieServices.Factory.get().getResources().newClassPathResource("test_expander.dsl", getClass());
         resource1.setSourcePath(TestConstants.TEST_RESOURCES_FOLDER + "test_expander.dsl");
         final Resource resource2 = KieServices.Factory.get().getResources().newClassPathResource("rule_with_expander_dsl.dslr", getClass());
@@ -112,8 +109,9 @@ public class DslTest {
         assertThat(messages.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testWithExpanderMore() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testWithExpanderMore(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final Resource resource1 = KieServices.Factory.get().getResources().newClassPathResource("test_expander.dsl", getClass());
         resource1.setSourcePath(TestConstants.TEST_RESOURCES_FOLDER + "test_expander.dsl");
         final Resource resource2 = KieServices.Factory.get().getResources().newClassPathResource("rule_with_expander_dsl_more.dslr", getClass());
@@ -159,8 +157,10 @@ public class DslTest {
         assertThat(messages.size()).isEqualTo(1);
     }
 
-    @Test @Ignore("antlr cannot parse correctly if the file ends with a comment without a further line break")
-    public void testEmptyDSL() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    @Disabled("antlr cannot parse correctly if the file ends with a comment without a further line break")
+    public void testEmptyDSL(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         // FIXME etirelli / mic_hat not sure what to do with this?
         final String DSL = "# This is an empty dsl file.";  // gives antlr <EOF> error
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
@@ -191,8 +191,9 @@ public class DslTest {
         assertThat(pkgs).isNull();
     }
 
-    @Test
-    public void testDSLWithIndividualConstraintMappings() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDSLWithIndividualConstraintMappings(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         final Resource resource1 = KieServices.Factory.get().getResources().newClassPathResource("test_dslWithIndividualConstraints.dsl", getClass());
         resource1.setSourcePath(TestConstants.TEST_RESOURCES_FOLDER + "test_dslWithIndividualConstraints.dsl");
         final Resource resource2 = KieServices.Factory.get().getResources().newClassPathResource("test_dslWithIndividualConstraints.dslr", getClass());
@@ -226,8 +227,9 @@ public class DslTest {
 
     }
 
-    @Test
-    public void testDSLWithSpaceBetweenParenthesis() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDSLWithSpaceBetweenParenthesis(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3438
         String dsl = "[when]There is a Person=Person( )\n"
                 + "[when]-named {name}=name == \"{name}\"\n"
@@ -245,11 +247,12 @@ public class DslTest {
                 + "Log \"OK\"\n"
                 + "end\n";
 
-        assertThat(doTest(dsl, drl).contains("OK")).isTrue();
+        assertThat(doTest(kieBaseTestConfiguration, dsl, drl).contains("OK")).isTrue();
     }
 
-    @Test
-    public void testDSLWithVariableBinding() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDSLWithVariableBinding(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String dsl = "[when]There is a Person=$p : Person()\n"
                 + "[when]-named {name}=name == \"{name}\"\n"
                 + "[when]-aged less than {age}=age < {age}\n"
@@ -266,11 +269,12 @@ public class DslTest {
                 + "Log person name\n"
                 + "end\n";
 
-        assertThat(doTest(dsl, drl).contains("Mario")).isTrue();
+        assertThat(doTest(kieBaseTestConfiguration, dsl, drl).contains("Mario")).isTrue();
     }
 
-    @Test
-    public void testDSLWithApostrophe() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDSLWithApostrophe(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String dsl = "[when]Person's name is {name}=$p : Person(name == \"{name}\")\n"
                 + "[then]Log person name=list.add($p.getName());";
 
@@ -283,11 +287,12 @@ public class DslTest {
                 + "Log person name\n"
                 + "end\n";
 
-        assertThat(doTest(dsl, drl).contains("Mario")).isTrue();
+        assertThat(doTest(kieBaseTestConfiguration, dsl, drl).contains("Mario")).isTrue();
     }
 
-    @Test
-    public void testDSLWithCommentedBlock() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDSLWithCommentedBlock(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // JBRULES-3445
         String dsl = "[when]There is a Person=Person()\n"
                 + "[when]-named {name}=name == \"{name}\"\n"
@@ -307,11 +312,12 @@ public class DslTest {
                 + "Log \"OK\"\n"
                 + "end\n";
 
-        assertThat(doTest(dsl, drl).contains("OK")).isTrue();
+        assertThat(doTest(kieBaseTestConfiguration, dsl, drl).contains("OK")).isTrue();
     }
 
-    @Test
-    public void testDSLWithSingleDotRegex() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDSLWithSingleDotRegex(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-430
         String dsl = "[then]Log {message:.}=list.add(\"{message}\");";
 
@@ -323,10 +329,10 @@ public class DslTest {
                 + "Log X\n"
                 + "end\n";
 
-        assertThat(doTest(dsl, drl).contains("X")).isTrue();
+        assertThat(doTest(kieBaseTestConfiguration, dsl, drl).contains("X")).isTrue();
     }
 
-    private List doTest(String dsl, String drl) {
+    private List doTest(KieBaseTestConfiguration kieBaseTestConfiguration, String dsl, String drl) {
         final Resource resource1 = KieServices.Factory.get().getResources().newReaderResource(new StringReader(dsl));
         resource1.setSourcePath(TestConstants.TEST_RESOURCES_FOLDER + "test_dsl.dsl");
         final Resource resource2 = KieServices.Factory.get().getResources().newReaderResource(new StringReader(drl));
@@ -351,8 +357,9 @@ public class DslTest {
         return list;
     }
 
-    @Test
-    public void testGreedyDsl() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testGreedyDsl(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // BZ-1078839
         String dsl = "[when]There is a number with value of {value}=i:Integer(intValue() == {value})\n"
                 + "[when]There is a number with=i:Integer()\n";
@@ -373,8 +380,9 @@ public class DslTest {
         assertThat(messages.size()).isEqualTo(0);
     }
 
-    @Test
-    public void testDSLWithSingleDot() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testDSLWithSingleDot(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-768
         String dsl = "[when][]if there is a simple event\n" +
                      "{evtName}={evtName}" +

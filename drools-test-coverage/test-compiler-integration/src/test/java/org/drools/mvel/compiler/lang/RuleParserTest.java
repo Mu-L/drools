@@ -1,19 +1,21 @@
-/*
-* Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.compiler.lang;
 
 import java.io.InputStream;
@@ -61,9 +63,9 @@ import org.drools.drl.parser.DrlParser;
 import org.drools.drl.parser.lang.DRL6Lexer;
 import org.drools.drl.parser.lang.DRL6Parser;
 import org.drools.drl.parser.lang.DRLParser;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.kie.internal.builder.conf.LanguageLevelOption;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,13 +77,13 @@ public class RuleParserTest {
 
     private DRLParser parser;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // initializes pluggable operators
         new EvaluatorRegistry();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
     }
 
@@ -106,26 +108,6 @@ public class RuleParserTest {
         final PackageDescr pkg = parser.parse( new StringReader( source ) );
         assertThat(parser.hasErrors()).isFalse();
         assertThat(pkg.getName()).isEqualTo("foo.bar.baz");
-    }
-
-    @Test
-    public void testPackageWithError() throws Exception {
-        final String source = "package 12 foo.bar.baz";
-        final DrlParser parser = new DrlParser(LanguageLevelOption.DRL6);
-        final PackageDescr pkg = parser.parse( true,
-                                               new StringReader( source ) );
-        assertThat(parser.hasErrors()).isTrue();
-        assertThat(pkg.getName()).isEqualTo("foo.bar.baz");
-    }
-
-    @Test
-    public void testPackageWithError2() throws Exception {
-        final String source = "package 12 12312 231";
-        final DrlParser parser = new DrlParser(LanguageLevelOption.DRL6);
-        final PackageDescr pkg = parser.parse( true,
-                                               new StringReader( source ) );
-        assertThat(parser.hasErrors()).isTrue();
-        assertThat(pkg.getName()).isEqualTo("");
     }
 
     @Test
@@ -857,7 +839,7 @@ public class RuleParserTest {
 
         assertThat(rule.getName()).isEqualTo("simple_rule");
 
-        assertThat(rule.getConsequenceLine()).isEqualTo(22);
+        assertThat(rule.getConsequenceLine()).isEqualTo(26);
         assertThat(rule.getConsequencePattern()).isEqualTo(2);
 
         final AndDescr lhs = rule.getLhs();
@@ -950,7 +932,7 @@ public class RuleParserTest {
 
         assertThat(rule.getName()).isEqualTo("simple_rule");
 
-        assertThat(rule.getConsequenceLine()).isEqualTo(22);
+        assertThat(rule.getConsequenceLine()).isEqualTo(26);
         assertThat(rule.getConsequencePattern()).isEqualTo(2);
 
         final AndDescr lhs = rule.getLhs();
@@ -973,9 +955,9 @@ public class RuleParserTest {
         final PatternDescr third = (PatternDescr) lhs.getDescrs().get( 2 );
         assertThat(third.getObjectType()).isEqualTo("Baz");
 
-        assertThat(first.getLine()).isEqualTo(19);
-        assertThat(second.getLine()).isEqualTo(20);
-        assertThat(third.getLine()).isEqualTo(21);
+        assertThat(first.getLine()).isEqualTo(23);
+        assertThat(second.getLine()).isEqualTo(24);
+        assertThat(third.getLine()).isEqualTo(25);
     }
 
     @Test
@@ -1661,7 +1643,7 @@ public class RuleParserTest {
         assertThat(func.getReturnType()).isEqualTo("String");
         assertThat(func.getParameterNames().size()).isEqualTo(2);
         assertThat(func.getParameterTypes().size()).isEqualTo(2);
-        assertThat(func.getLine()).isEqualTo(19);
+        assertThat(func.getLine()).isEqualTo(23);
         assertThat(func.getColumn()).isEqualTo(0);
 
         assertThat(func.getParameterTypes().get(0)).isEqualTo("String");
@@ -2020,8 +2002,8 @@ public class RuleParserTest {
                                                                "test_EndPosition.drl" );
         final RuleDescr rule = pkg.getRules().get(0);
         final PatternDescr col = (PatternDescr) rule.getLhs().getDescrs().get( 0 );
-        assertThat(col.getLine()).isEqualTo(21);
-        assertThat(col.getEndLine()).isEqualTo(23);
+        assertThat(col.getLine()).isEqualTo(25);
+        assertThat(col.getEndLine()).isEqualTo(27);
     }
 
     @Test

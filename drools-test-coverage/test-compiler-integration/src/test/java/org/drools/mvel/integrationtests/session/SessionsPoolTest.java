@@ -1,23 +1,24 @@
-/*
- * Copyright 2018 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.integrationtests.session;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
@@ -25,6 +26,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import org.drools.core.common.EventSupport;
 import org.drools.core.event.DefaultAgendaEventListener;
@@ -35,10 +37,9 @@ import org.drools.mvel.compiler.FactC;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.KieServices;
@@ -58,23 +59,16 @@ import org.kie.internal.event.rule.RuleEventManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@RunWith(Parameterized.class)
 public class SessionsPoolTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public SessionsPoolTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testKieSessionsPool() {
-        KieContainerSessionsPool pool = getKieContainer().newKieSessionsPool( 1 );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testKieSessionsPool(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieContainerSessionsPool pool = getKieContainer(kieBaseTestConfiguration).newKieSessionsPool( 1 );
 
         KieSession ksession = pool.newKieSession();
         try {
@@ -108,11 +102,12 @@ public class SessionsPoolTest {
         } catch (IllegalStateException e) { }
     }
 
-    @Test
-    public void testPooledKieBase() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testPooledKieBase(KieBaseTestConfiguration kieBaseTestConfiguration) {
         KieBaseConfiguration kbConf = KieServices.get().newKieBaseConfiguration();
         kbConf.setOption(SessionsPoolOption.get(1));
-        KieBase kBase = getKieContainer().newKieBase(kbConf);
+        KieBase kBase = getKieContainer(kieBaseTestConfiguration).newKieBase(kbConf);
 
         KieSession ksession = kBase.newKieSession();
         try {
@@ -134,9 +129,10 @@ public class SessionsPoolTest {
         checkKieSession( ksession2 );
     }
 
-    @Test
-    public void testKieSessionsPoolInMultithreadEnv() throws InterruptedException, ExecutionException {
-        KieContainerSessionsPool pool = getKieContainer().newKieSessionsPool( 4 );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testKieSessionsPoolInMultithreadEnv(KieBaseTestConfiguration kieBaseTestConfiguration) throws InterruptedException, ExecutionException {
+        KieContainerSessionsPool pool = getKieContainer(kieBaseTestConfiguration).newKieSessionsPool( 4 );
 
         final int THREAD_NR = 10;
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_NR, r -> {
@@ -178,9 +174,10 @@ public class SessionsPoolTest {
         } catch (IllegalStateException e) { }
     }
 
-    @Test
-    public void testStatelessKieSessionsPool() {
-        KieContainerSessionsPool pool = getKieContainer().newKieSessionsPool( 1 );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStatelessKieSessionsPool(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieContainerSessionsPool pool = getKieContainer(kieBaseTestConfiguration).newKieSessionsPool( 1 );
         StatelessKieSession session = pool.newStatelessKieSession();
 
         List<String> list = new ArrayList<>();
@@ -193,7 +190,25 @@ public class SessionsPoolTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    private KieContainer getKieContainer() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStatelessKieSessionsPoolWithConf(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieServices kieServices = KieServices.get();
+
+        KieSessionsPool pool = getKieContainer(kieBaseTestConfiguration).getKieBase().newKieSessionsPool( 1 );
+        StatelessKieSession session = pool.newStatelessKieSession(kieServices.newKieSessionConfiguration());
+
+        List<String> list = new ArrayList<>();
+        session.setGlobal( "list", list );
+        session.execute( "test" );
+        assertThat(list.size()).isEqualTo(1);
+
+        list.clear();
+        session.execute( "test" );
+        assertThat(list.size()).isEqualTo(1);
+    }
+
+    private KieContainer getKieContainer(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "global java.util.List list\n" +
                         "rule R1 when\n" +
@@ -213,8 +228,9 @@ public class SessionsPoolTest {
         assertThat(list.size()).isEqualTo(1);
     }
 
-    @Test
-    public void testSegmentMemoriesReset() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSegmentMemoriesReset(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-3228
         String drl =
                 "import " + AtomicInteger.class.getCanonicalName() + ";\n" +
@@ -272,8 +288,9 @@ public class SessionsPoolTest {
         pool.shutdown();
     }
 
-    @Test
-    public void testSegmentMemoriesResetWithNotNodeInTheMiddle() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSegmentMemoriesResetWithNotNodeInTheMiddle(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl =
                 "import " + FactA.class.getCanonicalName() + ";\n" +
                 "import " + FactB.class.getCanonicalName() + ";\n" +
@@ -324,8 +341,9 @@ public class SessionsPoolTest {
         pool.shutdown();
     }
 
-    @Test
-    public void testSegmentMemoriesResetWithNotNodeInTheMiddle2() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSegmentMemoriesResetWithNotNodeInTheMiddle2(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // FactB constrains in R1 and R2 are different from testSegmentMemoriesResetWithNotNodeInTheMiddle()
         String drl =
                 "import " + FactA.class.getCanonicalName() + ";\n" +
@@ -392,8 +410,9 @@ public class SessionsPoolTest {
         ksession.insert(factC);
     }
 
-    @Test
-    public void testStatelessSequential() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStatelessSequential(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-3228
         String drl =
                 "import " + AtomicInteger.class.getCanonicalName() + ";\n" +
@@ -431,9 +450,10 @@ public class SessionsPoolTest {
         pool.shutdown();
     }
 
-    @Test
-    public void testListenersReset() {
-        final KieContainerSessionsPool pool = getKieContainer().newKieSessionsPool( 1 );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testListenersReset(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        final KieContainerSessionsPool pool = getKieContainer(kieBaseTestConfiguration).newKieSessionsPool( 1 );
         KieSession ksession = pool.newKieSession();
         try {
             ksession.addEventListener(new DefaultAgendaEventListener());

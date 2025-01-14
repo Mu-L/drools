@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.lang.impl;
 
 import java.util.ArrayDeque;
@@ -28,30 +30,35 @@ import org.kie.dmn.api.core.DMNRuntime;
 import org.kie.dmn.api.feel.runtime.events.FEELEvent;
 import org.kie.dmn.api.feel.runtime.events.FEELEventListener;
 import org.kie.dmn.feel.lang.EvaluationContext;
-import org.kie.dmn.feel.util.EvalHelper;
-import org.kie.dmn.model.api.GwtIncompatible;
+import org.kie.dmn.feel.lang.FEELDialect;
+import org.kie.dmn.feel.util.NumberEvalHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@GwtIncompatible
 public class EvaluationContextImpl implements EvaluationContext {
+
+    private static final Logger LOG = LoggerFactory.getLogger(EvaluationContextImpl.class);
 
     private final FEELEventListenersManager eventsManager;
     private ArrayDeque<ExecutionFrame> stack;
     private DMNRuntime dmnRuntime;
     private boolean performRuntimeTypeCheck = false;
     private ClassLoader rootClassLoader;
+    private final FEELDialect feelDialect;
 
-    private EvaluationContextImpl(ClassLoader cl, FEELEventListenersManager eventsManager, Deque<ExecutionFrame> stack) {
+    private EvaluationContextImpl(ClassLoader cl, FEELEventListenersManager eventsManager, Deque<ExecutionFrame> stack, FEELDialect feelDialect) {
         this.eventsManager = eventsManager;
         this.rootClassLoader = cl;
         this.stack = new ArrayDeque<>(stack);
+        this.feelDialect = feelDialect;
     }
 
-    public EvaluationContextImpl(ClassLoader cl, FEELEventListenersManager eventsManager) {
-        this(cl, eventsManager, 32);
+    public EvaluationContextImpl(ClassLoader cl, FEELEventListenersManager eventsManager, FEELDialect feelDialect) {
+        this(cl, eventsManager, 32, feelDialect);
     }
 
-    public EvaluationContextImpl(ClassLoader cl, FEELEventListenersManager eventsManager, int size) {
-        this(cl, eventsManager, new ArrayDeque<>());
+    public EvaluationContextImpl(ClassLoader cl, FEELEventListenersManager eventsManager, int size, FEELDialect feelDialect) {
+        this(cl, eventsManager, new ArrayDeque<>(), feelDialect);
         // we create a rootFrame to hold all the built in functions
         push( RootExecutionFrame.INSTANCE );
         // and then create a global frame to be the starting frame
@@ -61,18 +68,19 @@ public class EvaluationContextImpl implements EvaluationContext {
     }
 
     @Deprecated
-    public EvaluationContextImpl(FEELEventListenersManager eventsManager, DMNRuntime dmnRuntime) {
-        this(dmnRuntime.getRootClassLoader(), eventsManager);
+    public EvaluationContextImpl(FEELEventListenersManager eventsManager, DMNRuntime dmnRuntime, FEELDialect feelDialect) {
+        this(dmnRuntime.getRootClassLoader(), eventsManager, feelDialect);
         this.dmnRuntime = dmnRuntime;
     }
 
-    private EvaluationContextImpl(FEELEventListenersManager eventsManager) {
+    private EvaluationContextImpl(FEELEventListenersManager eventsManager, FEELDialect feelDialect) {
         this.eventsManager = eventsManager;
+        this.feelDialect = feelDialect;
     }
 
     @Override
     public EvaluationContext current() {
-        EvaluationContextImpl ec = new EvaluationContextImpl(eventsManager);
+        EvaluationContextImpl ec = new EvaluationContextImpl(eventsManager, feelDialect);
         ec.stack = stack.clone();
         ec.rootClassLoader = this.rootClassLoader;
         ec.dmnRuntime = this.dmnRuntime;
@@ -98,6 +106,7 @@ public class EvaluationContextImpl implements EvaluationContext {
 
     @Override
     public void enterFrame() {
+        LOG.trace("Creating new head element in stack");
         push( new ExecutionFrameImpl( peek() /*, symbols, scope*/ ) );
     }
 
@@ -107,12 +116,14 @@ public class EvaluationContextImpl implements EvaluationContext {
 
     @Override
     public void exitFrame() {
+        LOG.trace("Removing head element from stack");
         pop();
     }
 
     @Override
     public void setValue(String name, Object value) {
-        peek().setValue( name, EvalHelper.coerceNumber( value ) );
+        LOG.trace("put {} -> {} in head stack element", name, value);
+        peek().setValue(name, NumberEvalHelper.coerceNumber(value ) );
     }
     
     public void setValues(Map<String, Object> values) {
@@ -223,4 +234,8 @@ public class EvaluationContextImpl implements EvaluationContext {
         return peek().getRootObject();
     }
 
+    @Override
+    public FEELDialect getDialect() {
+        return feelDialect;
+    }
 }

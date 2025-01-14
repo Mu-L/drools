@@ -1,56 +1,51 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.drools.mvel.compiler.Person;
 import org.drools.mvel.compiler.RoutingMessage;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class StrEvaluatorTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public StrEvaluatorTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
-    }
-
-    @Test
-    public void testStrStartsWith() {
-        KieBase kbase = readKnowledgeBase();
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrStartsWith(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieBase kbase = readKnowledgeBase(kieBaseTestConfiguration);
         KieSession ksession = kbase.newKieSession();
         try {
             List list = new ArrayList();
@@ -72,9 +67,10 @@ public class StrEvaluatorTest {
         }
     }
 
-    @Test
-    public void testStrEndsWith() {
-        KieBase kbase = readKnowledgeBase();
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrEndsWith(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieBase kbase = readKnowledgeBase(kieBaseTestConfiguration);
         KieSession ksession = kbase.newKieSession();
         try {
             List list = new ArrayList();
@@ -96,9 +92,10 @@ public class StrEvaluatorTest {
         }
     }
 
-    @Test
-    public void testStrLengthEquals() {
-        KieBase kbase = readKnowledgeBase();
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrLengthEquals(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieBase kbase = readKnowledgeBase(kieBaseTestConfiguration);
         KieSession ksession = kbase.newKieSession();
         try {
             List list = new ArrayList();
@@ -116,9 +113,10 @@ public class StrEvaluatorTest {
         }
     }
 
-    @Test
-    public void testStrNotStartsWith() {
-        KieBase kbase = readKnowledgeBase();
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrNotStartsWith(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieBase kbase = readKnowledgeBase(kieBaseTestConfiguration);
         KieSession ksession = kbase.newKieSession();
         try {
             List list = new ArrayList();
@@ -136,9 +134,10 @@ public class StrEvaluatorTest {
         }
     }
 
-    @Test
-    public void testStrNotEndsWith() {
-        KieBase kbase = readKnowledgeBase();
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrNotEndsWith(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieBase kbase = readKnowledgeBase(kieBaseTestConfiguration);
         KieSession ksession = kbase.newKieSession();
         try {
             List list = new ArrayList();
@@ -158,9 +157,10 @@ public class StrEvaluatorTest {
         }
     }
 
-    @Test
-    public void testStrLengthNoEquals() {
-        KieBase kbase = readKnowledgeBase();
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrLengthNoEquals(KieBaseTestConfiguration kieBaseTestConfiguration) {
+        KieBase kbase = readKnowledgeBase(kieBaseTestConfiguration);
         KieSession ksession = kbase.newKieSession();
         try {
             List list = new ArrayList();
@@ -181,8 +181,9 @@ public class StrEvaluatorTest {
         }
     }
 
-    @Test
-    public void testStrWithLogicalOr() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrWithLogicalOr(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.integrationtests\n"
                      + "import org.drools.mvel.compiler.RoutingMessage\n"
                      + "rule R1\n"
@@ -206,8 +207,9 @@ public class StrEvaluatorTest {
         }
     }
 
-    @Test
-    public void testStrWithInlineCastAndFieldOnThis() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrWithInlineCastAndFieldOnThis(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.integrationtests " +
                      "import " + Person.class.getName() + "; " +
                      "rule R1 " +
@@ -227,8 +229,9 @@ public class StrEvaluatorTest {
         }
     }
 
-    @Test
-    public void testStrWithInlineCastOnThis() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testStrWithInlineCastOnThis(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String drl = "package org.drools.mvel.integrationtests " +
                      "rule R1 " +
                      " when " +
@@ -247,13 +250,14 @@ public class StrEvaluatorTest {
         }
     }
 
-    private KieBase readKnowledgeBase() {
+    private KieBase readKnowledgeBase(KieBaseTestConfiguration kieBaseTestConfiguration) {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(getClass(), kieBaseTestConfiguration, "strevaluator_test.drl");
         return kbase;
     }
 
-    @Test
-    public void testUrlInStringComparison() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testUrlInStringComparison(KieBaseTestConfiguration kieBaseTestConfiguration) {
         // DROOLS-6983
         String drl = "package org.drools.mvel.integrationtests " +
                 "import " + FactMap.class.getCanonicalName() + "; " +

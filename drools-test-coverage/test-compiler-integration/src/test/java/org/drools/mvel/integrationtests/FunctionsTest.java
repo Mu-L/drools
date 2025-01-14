@@ -1,34 +1,36 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.drools.mvel.compiler.Cheese;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.io.Resource;
 import org.kie.api.runtime.KieSession;
@@ -36,23 +38,16 @@ import org.kie.api.runtime.KieSession;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@RunWith(Parameterized.class)
 public class FunctionsTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public FunctionsTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
     @SuppressWarnings("unchecked")
-    @Test
-    public void testFunction() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFunction(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(this.getClass(), kieBaseTestConfiguration, "test_FunctionInConsequence.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -69,8 +64,9 @@ public class FunctionsTest {
         assertThat(((List<Integer>) ksession.getGlobal("list")).get(0)).isEqualTo(new Integer( 5 ));
     }
 
-    @Test
-    public void testFunctionException() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFunctionException(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(this.getClass(), kieBaseTestConfiguration, "test_FunctionException.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -86,8 +82,9 @@ public class FunctionsTest {
         }
     }
 
-    @Test
-    public void testFunctionWithPrimitives() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFunctionWithPrimitives(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         KieBase kbase = KieBaseUtil.getKieBaseFromClasspathResources(this.getClass(), kieBaseTestConfiguration, "test_FunctionWithPrimitives.drl");
         KieSession ksession = kbase.newKieSession();
 
@@ -104,8 +101,9 @@ public class FunctionsTest {
         assertThat(list.get(0)).isEqualTo(new Integer( 10 ));
     }
     
-    @Test
-    public void testFunctionCallingFunctionWithEclipse() throws Exception {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testFunctionCallingFunctionWithEclipse(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
         Resource[] resources = KieUtil.createResources("test_functionCallingFunction.drl", this.getClass());
         Map<String, String> kieModuleConfigurationProperties = new HashMap<>();
         kieModuleConfigurationProperties.put("drools.dialect.java.compiler", "ECLIPSE");
@@ -125,8 +123,9 @@ public class FunctionsTest {
         assertThat(list.get(0).intValue()).isEqualTo(12);
     }
 
-    @Test
-    public void testJBRULES3117() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testJBRULES3117(KieBaseTestConfiguration kieBaseTestConfiguration) {
         String str = "package org.kie\n" +
                      "function boolean isOutOfRange( Object value, int lower ) { return true; }\n" + 
                      "function boolean isNotContainedInt( Object value, int[] values ) { return true; }\n" +

@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.compiler.kproject.models;
 
 import java.util.ArrayList;
@@ -36,6 +39,7 @@ import org.kie.api.conf.DeclarativeAgendaOption;
 import org.kie.api.conf.EqualityBehaviorOption;
 import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.conf.KieBaseMutabilityOption;
+import org.kie.api.conf.PrototypesOption;
 import org.kie.api.conf.SequentialOption;
 import org.kie.api.conf.SessionsPoolOption;
 import org.kie.api.io.ResourceType;
@@ -54,6 +58,8 @@ public class KieBaseModelImpl
 
     private EqualityBehaviorOption       equalsBehavior = EqualityBehaviorOption.IDENTITY;
 
+    private PrototypesOption             prototypes = PrototypesOption.DISABLED;
+
     private KieBaseMutabilityOption      mutability = KieBaseMutabilityOption.ALLOWED;
 
     private EventProcessingOption        eventProcessingMode = EventProcessingOption.CLOUD;
@@ -70,7 +76,7 @@ public class KieBaseModelImpl
 
     private KieModuleModel               kModule;
     
-    private String                       scope = "javax.enterprise.context.ApplicationScoped";
+    private String                       scope = "jakarta.enterprise.context.ApplicationScoped";
 
     private List<RuleTemplateModel>      ruleTemplates = new ArrayList<>();
 
@@ -79,8 +85,11 @@ public class KieBaseModelImpl
     public KieBaseModelImpl() {
     }
 
-    public KieBaseModelImpl(KieModuleModel kModule,
-                            String name) {
+    public KieBaseModelImpl(String name) {
+        this(null, name);
+    }
+
+    public KieBaseModelImpl(KieModuleModel kModule, String name) {
         this.kModule = kModule;
         this.includes = new HashSet<>();
         this.name = name;
@@ -169,15 +178,6 @@ public class KieBaseModelImpl
         return this;
     }
 
-    public void moveKSession(String oldQName,
-                             String newQName) {
-        Map<String, KieSessionModel> newMap = new HashMap<>();
-        newMap.putAll( this.kSessions );
-        KieSessionModel kieSessionModel = newMap.remove( oldQName );
-        newMap.put(newQName, kieSessionModel);
-        setKSessions( newMap );
-    }
-
     public List<RuleTemplateModel> getRuleTemplates() {
         return Collections.unmodifiableList( ruleTemplates );
     }
@@ -231,18 +231,21 @@ public class KieBaseModelImpl
         return this;
     }
 
-    /* (non-Javadoc)
-     * @see org.kie.kproject.KieBaseModel#getEqualsBehavior()
-     */
     public EqualityBehaviorOption getEqualsBehavior() {
         return equalsBehavior;
     }
 
-    /* (non-Javadoc)
-     * @see org.kie.kproject.KieBaseModel#setEqualsBehavior(org.kie.api.conf.EqualityBehaviorOption)
-     */
     public KieBaseModel setEqualsBehavior(EqualityBehaviorOption equalsBehaviour) {
         this.equalsBehavior = equalsBehaviour;
+        return this;
+    }
+
+    public PrototypesOption getPrototypes() {
+        return prototypes;
+    }
+
+    public KieBaseModel setPrototypes(PrototypesOption prototypes) {
+        this.prototypes = prototypes;
         return this;
     }
 
@@ -350,13 +353,17 @@ public class KieBaseModelImpl
 
     @Override
     public String toString() {
-        return "KieBaseModelImpl [name=" + name + ", includes=" + includes + ", packages=" + getPackages() + ", equalsBehavior=" + equalsBehavior + ", mutability=" + mutability + ", eventProcessingMode=" + eventProcessingMode + ", kSessions=" + kSessions + "]";
+        return "KieBaseModelImpl [name=" + name + ", includes=" + includes + ", packages=" + getPackages() + ", equalsBehavior=" + equalsBehavior + ", prototypes=" + prototypes + ", mutability=" + mutability + ", eventProcessingMode=" + eventProcessingMode + ", kSessions=" + kSessions + "]";
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         KieBaseModelImpl that = (KieBaseModelImpl) o;
         return name.equals(that.name);

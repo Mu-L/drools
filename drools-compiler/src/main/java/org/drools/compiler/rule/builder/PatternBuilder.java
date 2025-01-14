@@ -1,19 +1,21 @@
-/*
- * Copyright 2006 Red Hat, Inc. and/or its affiliates.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.rule.builder;
 
 import java.lang.reflect.Field;
@@ -30,22 +32,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
-import org.drools.compiler.builder.impl.TypeDeclarationContext;
-import org.drools.compiler.compiler.AnalysisResult;
-import org.drools.compiler.compiler.BoundIdentifiers;
-import org.drools.compiler.compiler.DescrBuildError;
-import org.drools.compiler.compiler.Dialect;
-import org.drools.compiler.compiler.DroolsErrorWrapper;
-import org.drools.compiler.compiler.DroolsWarningWrapper;
-import org.drools.compiler.compiler.PackageRegistry;
-import org.drools.compiler.lang.DescrDumper;
-import org.drools.compiler.lang.DumperContext;
-import org.drools.compiler.rule.builder.EvaluatorDefinition.Target;
-import org.drools.compiler.rule.builder.XpathAnalysis.XpathPart;
-import org.drools.compiler.rule.builder.util.ConstraintUtil;
 import org.drools.base.base.AcceptsClassObjectType;
 import org.drools.base.base.ClassObjectType;
-import org.drools.core.base.FieldNameSupplier;
 import org.drools.base.base.ObjectType;
 import org.drools.base.base.ValueType;
 import org.drools.base.definitions.InternalKnowledgePackage;
@@ -54,18 +42,13 @@ import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.factmodel.AnnotationDefinition;
 import org.drools.base.factmodel.ClassDefinition;
 import org.drools.base.factmodel.FieldDefinition;
-import org.drools.base.facttemplates.FactTemplate;
-import org.drools.base.facttemplates.FactTemplateFieldExtractor;
-import org.drools.base.facttemplates.FactTemplateObjectType;
+import org.drools.base.prototype.PrototypeFieldExtractor;
+import org.drools.base.prototype.PrototypeObjectType;
 import org.drools.base.reteoo.SortDeclarations;
-import org.drools.core.rule.BehaviorRuntime;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.PatternSource;
-import org.drools.base.rule.PredicateConstraint;
 import org.drools.base.rule.RuleConditionElement;
-import org.drools.core.rule.SlidingLengthWindow;
-import org.drools.core.rule.SlidingTimeWindow;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.base.rule.XpathBackReference;
 import org.drools.base.rule.accessor.AcceptsReadAccessor;
@@ -78,6 +61,24 @@ import org.drools.base.rule.constraint.NegConstraint;
 import org.drools.base.rule.constraint.XpathConstraint;
 import org.drools.base.time.TimeUtils;
 import org.drools.base.util.index.ConstraintTypeOperator;
+import org.drools.compiler.builder.impl.TypeDeclarationContext;
+import org.drools.compiler.compiler.AnalysisResult;
+import org.drools.compiler.compiler.BoundIdentifiers;
+import org.drools.compiler.compiler.DescrBuildError;
+import org.drools.compiler.compiler.Dialect;
+import org.drools.compiler.compiler.DroolsErrorWrapper;
+import org.drools.compiler.compiler.DroolsWarningWrapper;
+import org.drools.compiler.compiler.PackageRegistry;
+import org.drools.compiler.lang.DescrDumper;
+import org.drools.compiler.lang.DumperContext;
+import org.drools.compiler.rule.builder.EvaluatorDefinition.Target;
+import org.drools.drl.parser.lang.XpathAnalysis;
+import org.drools.drl.parser.lang.XpathAnalysis.XpathPart;
+import org.drools.compiler.rule.builder.util.ConstraintUtil;
+import org.drools.core.base.FieldNameSupplier;
+import org.drools.core.rule.BehaviorRuntime;
+import org.drools.core.rule.SlidingLengthWindow;
+import org.drools.core.rule.SlidingTimeWindow;
 import org.drools.drl.ast.descr.AnnotationDescr;
 import org.drools.drl.ast.descr.AtomicExprDescr;
 import org.drools.drl.ast.descr.BaseDescr;
@@ -98,12 +99,14 @@ import org.drools.drl.ast.descr.RelationalExprDescr;
 import org.drools.drl.ast.descr.ReturnValueRestrictionDescr;
 import org.drools.drl.ast.descr.RuleDescr;
 import org.drools.drl.parser.DrlExprParser;
+import org.drools.drl.parser.DrlExprParserFactory;
 import org.drools.drl.parser.DroolsParserException;
 import org.drools.util.ClassUtils;
 import org.drools.util.StringUtils;
 import org.drools.util.TypeResolver;
 import org.kie.api.definition.rule.Watch;
 import org.kie.api.definition.type.Role;
+import org.kie.api.prototype.Prototype;
 import org.kie.internal.builder.KnowledgeBuilderResult;
 import org.kie.internal.builder.ResultSeverity;
 import org.kie.internal.builder.conf.LanguageLevelOption;
@@ -320,9 +323,9 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
     }
 
     private ObjectType getObjectType(RuleBuildContext context, PatternDescr patternDescr, String objectType) {
-        final FactTemplate factTemplate = context.getPkg().getFactTemplate(objectType);
-        if (factTemplate != null) {
-            return new FactTemplateObjectType(factTemplate);
+        Prototype prototype = context.getPkg().getPrototype(objectType);
+        if (prototype != null) {
+            return new PrototypeObjectType(prototype);
         } else {
             try {
                 final Class<?> userProvidedClass = context.getDialect().getTypeResolver().resolveType(objectType);
@@ -557,8 +560,8 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
 
     protected Collection<String> getSettableProperties(RuleBuildContext context, PatternDescr patternDescr, Pattern pattern) {
         ObjectType patternType = pattern.getObjectType();
-        if (patternType.isTemplate()) {
-            return ((FactTemplateObjectType) patternType).getFieldNames();
+        if (patternType.isPrototype()) {
+            return ((PrototypeObjectType) patternType).getFieldNames();
         }
 
         Class<?> patternClass = ((ClassObjectType) patternType).getClassType();
@@ -842,7 +845,7 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
         XpathConstraint xpathConstraint = new XpathConstraint();
         ObjectType objectType = pattern.getObjectType();
 
-        if (objectType.isTemplate()) {
+        if (objectType.isPrototype()) {
             throw new UnsupportedOperationException("xpath is not supported with fact templates");
         }
 
@@ -1085,8 +1088,8 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
         }
 
         ObjectType objectType = pattern.getObjectType();
-        if (objectType.isTemplate()) {
-            return ((FactTemplateObjectType) objectType).getFactTemplate().getFieldTemplate(leftValue).getValueType();
+        if (objectType.isPrototype()) {
+            return ValueType.determineValueType( ( (PrototypeObjectType) objectType).getPrototype().getField(leftValue).getType() );
         }
 
         Class<?> clazz = ((ClassObjectType) objectType).getClassType();
@@ -1120,7 +1123,7 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
         ConstraintBuilder.get().setExprInputs( context, valueExpr,
                                                (pattern.getObjectType() instanceof ClassObjectType) ?
                                                        ((ClassObjectType) pattern.getObjectType()).getClassType() :
-                                                       FactTemplate.class,
+                                                       Prototype.class,
                                                value);
         if (!isIdentifierLiteral(value)) {
             String identifier = StringUtils.extractFirstIdentifier(value, 0);
@@ -1519,27 +1522,6 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
         Arrays.sort(previousDeclarations, SortDeclarations.instance);
         Arrays.sort(localDeclarations, SortDeclarations.instance);
 
-        boolean isJavaEval = isEvalExpression && context.getDialect().isJava();
-
-        if (isJavaEval) {
-            final PredicateConstraint predicateConstraint = new PredicateConstraint(null,
-                                                                                    previousDeclarations,
-                                                                                    localDeclarations);
-
-            final PredicateBuilder builder = context.getDialect().getPredicateBuilder();
-
-            builder.build(context,
-                          usedIdentifiers,
-                          previousDeclarations,
-                          localDeclarations,
-                          predicateConstraint,
-                          predicateDescr,
-                          analysis);
-
-            return predicateConstraint;
-        }
-
-
         String[] requiredGlobals = usedIdentifiers.getGlobals().keySet().toArray(new String[usedIdentifiers.getGlobals().size()]);
         Declaration[] mvelDeclarations = new Declaration[previousDeclarations.length + localDeclarations.length + requiredGlobals.length];
         int i = 0;
@@ -1553,7 +1535,7 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
             mvelDeclarations[i++] = context.getDeclarationResolver().getDeclaration(global);
         }
 
-        boolean isDynamic = pattern.getObjectType().isTemplate() ||
+        boolean isDynamic = pattern.getObjectType().isPrototype() ||
                 ( !((ClassObjectType) pattern.getObjectType()).getClassType().isArray() &&
                         !context.getKnowledgeBuilder().getTypeDeclaration(pattern.getObjectType()).isTypesafe() );
 
@@ -1741,7 +1723,7 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
                                             final ObjectType objectType,
                                             final String fieldName,
                                             final AcceptsReadAccessor target) {
-        if (!ValueType.FACTTEMPLATE_TYPE.equals(objectType.getValueType())) {
+        if (!ValueType.PROTOTYPE_TYPE.equals(objectType.getValueType())) {
             context.getPkg().getReader(objectType.getClassName(), fieldName, target);
         }
     }
@@ -1765,10 +1747,9 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
         // reportError is needed as some times failure to build accessor is not a failure, just an indication that building is not possible so try something else.
         ReadAccessor reader;
 
-        if (ValueType.FACTTEMPLATE_TYPE.equals(objectType.getValueType())) {
+        if (ValueType.PROTOTYPE_TYPE.equals(objectType.getValueType())) {
             //@todo use accessor cache            
-            final FactTemplate factTemplate = ((FactTemplateObjectType) objectType).getFactTemplate();
-            reader = new FactTemplateFieldExtractor(factTemplate, fieldName);
+            reader = new PrototypeFieldExtractor(((PrototypeObjectType) objectType).getPrototype(), fieldName);
             if (target != null) {
                 target.setReadAccessor(reader);
             }
@@ -1823,10 +1804,8 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
                                                         final PatternDescr patternDescr,
                                                         final BaseDescr original,
                                                         final String expression) {
-        DrlExprParser parser = new DrlExprParser(context.getConfiguration().getOption(LanguageLevelOption.KEY));
+        DrlExprParser parser = DrlExprParserFactory.getDrlExprParser(context.getConfiguration().getOption(LanguageLevelOption.KEY));
         ConstraintConnectiveDescr result = parser.parse(normalizeEval(expression));
-        result.setResource(patternDescr.getResource());
-        result.copyLocation(original);
         if (parser.hasErrors()) {
             for (DroolsParserException error : parser.getErrors()) {
                 registerDescrBuildError(context, patternDescr,
@@ -1834,6 +1813,8 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
             }
             return null;
         }
+        result.setResource(patternDescr.getResource());
+        result.copyLocation(original);
         return result;
     }
 

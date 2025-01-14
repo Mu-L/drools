@@ -1,30 +1,29 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.ruleunits.impl.sessions;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
+import org.drools.base.beliefsystem.Mode;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.factmodel.traits.Thing;
+import org.drools.base.factmodel.traits.TraitableBean;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.core.EntryPointsManager;
 import org.drools.core.QueryResultsImpl;
 import org.drools.core.RuleSessionConfiguration;
@@ -36,8 +35,8 @@ import org.drools.core.base.DroolsQueryImpl;
 import org.drools.core.base.MapGlobalResolver;
 import org.drools.core.base.NonCloningQueryViewListener;
 import org.drools.core.base.QueryRowWithSubruleIndex;
-import org.drools.base.beliefsystem.Mode;
 import org.drools.core.common.ActivationsManager;
+import org.drools.core.common.BaseNode;
 import org.drools.core.common.ConcurrentNodeMemories;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemoryEntryPoint;
@@ -48,12 +47,10 @@ import org.drools.core.common.PhreakPropagationContext;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.PropagationContextFactory;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.core.common.SuperCacheFixer;
 import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.event.RuleEventListenerSupport;
 import org.drools.core.event.RuleRuntimeEventSupport;
-import org.drools.base.factmodel.traits.Thing;
-import org.drools.base.factmodel.traits.TraitableBean;
 import org.drools.core.impl.ActivationsManagerImpl;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.phreak.PropagationEntry;
@@ -61,13 +58,11 @@ import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.reteoo.Tuple;
-import org.drools.base.rule.Declaration;
 import org.drools.core.rule.accessor.FactHandleFactory;
-import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.core.time.TimerService;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.BitMask;
 import org.drools.kiesession.consequence.DefaultKnowledgeHelper;
 import org.drools.kiesession.consequence.StatefulKnowledgeSessionForRHS;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
@@ -83,6 +78,15 @@ import org.kie.api.runtime.rule.FactHandle;
 import org.kie.api.runtime.rule.Match;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.time.SessionClock;
+
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.drools.base.base.ClassObjectType.InitialFact_ObjectType;
 
@@ -111,6 +115,8 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
     private Calendars calendars;
 
     private RuleUnits ruleUnits;
+
+    private boolean tmsEnabled;
 
     public RuleUnitExecutorImpl(InternalRuleBase knowledgeBase) {
         this(knowledgeBase, knowledgeBase.getSessionConfiguration().as(SessionConfiguration.KEY));
@@ -339,6 +345,16 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
     }
 
     @Override
+    public void enableTMS() {
+        tmsEnabled = true;
+    }
+
+    @Override
+    public boolean isTMSEnabled() {
+        return tmsEnabled;
+    }
+
+    @Override
     public KnowledgeHelper createKnowledgeHelper() {
         return new RuleUnitKnowledgeHelper((DefaultKnowledgeHelper) ReteEvaluator.super.createKnowledgeHelper(), this);
     }
@@ -389,9 +405,9 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
             if (h instanceof RuleUnitDefaultFactHandle && ((RuleUnitDefaultFactHandle) h).getDataStore() != null) {
                 // This handle has been insert from a datasource, so remove from it
                 ((RuleUnitDefaultFactHandle) h).getDataStore().delete((RuleUnitDefaultFactHandle) h,
-                        knowledgeHelper.getActivation().getRule(),
-                        knowledgeHelper.getActivation().getTuple().getTupleSink(),
-                        fhState);
+                                                                      knowledgeHelper.getActivation().getRule(),
+                                                                      SuperCacheFixer.asTerminalNode(knowledgeHelper.getActivation().getTuple()),
+                                                                      fhState);
                 return;
             }
 
@@ -402,7 +418,7 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
 
             h.getEntryPoint(reteEvaluator).delete(handle,
                     knowledgeHelper.getActivation().getRule(),
-                    knowledgeHelper.getActivation().getTuple().getTupleSink(),
+                    SuperCacheFixer.asTerminalNode(knowledgeHelper.getActivation().getTuple()),
                     fhState);
         }
 
@@ -641,7 +657,7 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
         }
 
         @Override
-        public InternalFactHandle bolster(Object object) {
+        public FactHandle bolster(Object object) {
             return knowledgeHelper.bolster(object);
         }
 

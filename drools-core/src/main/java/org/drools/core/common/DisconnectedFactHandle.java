@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.common;
 
 import java.io.Externalizable;
@@ -21,23 +24,23 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSchemaType;
-import javax.xml.bind.annotation.XmlSeeAlso;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlSchemaType;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
+import org.drools.base.factmodel.traits.TraitTypeEnum;
+import org.drools.base.rule.EntryPointId;
 import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.base.ArrayElements;
 import org.drools.core.base.DroolsQueryImpl;
-import org.drools.base.factmodel.traits.TraitTypeEnum;
-import org.drools.core.reteoo.AbstractLeftTuple;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.RightTuple;
-import org.drools.core.reteoo.Tuple;
-import org.drools.base.rule.EntryPointId;
+import org.drools.core.reteoo.TupleImpl;
 import org.kie.api.runtime.rule.FactHandle;
 
 @XmlRootElement(name="disconnected-fact-handle")
@@ -172,18 +175,13 @@ public class DisconnectedFactHandle
         return false;
     }
 
-    public void forEachRightTuple( Consumer<RightTuple> rightTupleConsumer ) { }
+    public void forEachRightTuple( Consumer<TupleImpl> rightTupleConsumer) { }
 
     @Override
-    public void forEachLeftTuple( Consumer<AbstractLeftTuple> leftTupleConsumer) { }
+    public void forEachLeftTuple( Consumer<TupleImpl> leftTupleConsumer) { }
 
     @Override
-    public RightTuple findFirstRightTuple( Predicate<RightTuple> rightTuplePredicate ) {
-        return null;
-    }
-
-    @Override
-    public AbstractLeftTuple findFirstLeftTuple( Predicate<AbstractLeftTuple> lefttTuplePredicate ) {
+    public LeftTuple findFirstLeftTuple(Predicate<TupleImpl> lefttTuplePredicate ) {
         return null;
     }
 
@@ -261,10 +259,6 @@ public class DisconnectedFactHandle
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
-    public void setFirstLeftTuple(LeftTuple leftTuple) {
-        throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
-    }
-
     @Override
     public LinkedTuples getLinkedTuples() {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
@@ -321,15 +315,15 @@ public class DisconnectedFactHandle
         return toExternalForm();
     }
 
-    public LeftTuple getFirstLeftTuple() {
+    public TupleImpl getFirstLeftTuple() {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
-    public RightTuple getFirstRightTuple() {
+    public TupleImpl getFirstRightTuple() {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
-    public RightTuple getLastRightTuple() {
+    public TupleImpl getLastRightTuple() {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
@@ -345,15 +339,15 @@ public class DisconnectedFactHandle
         throw new UnsupportedOperationException( "Not supported yet." );
     }
 
-    public void addFirstLeftTuple(LeftTuple leftTuple) {
+    public void addFirstLeftTuple(TupleImpl leftTuple) {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
-    public void addLastLeftTuple(LeftTuple leftTuple) {
+    public void addLastLeftTuple(TupleImpl leftTuple) {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
-    public void removeLeftTuple(LeftTuple leftTuple) {
+    public void removeLeftTuple(TupleImpl leftTuple) {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
@@ -365,19 +359,11 @@ public class DisconnectedFactHandle
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
-    public void addFirstRightTuple(RightTuple rightTuple) {
+    public void addLastRightTuple(TupleImpl rightTuple) {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 
-    public void addLastRightTuple(RightTuple rightTuple) {
-        throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
-    }
-
-    public void addTupleInPosition(Tuple rightTuple) {
-        throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
-    }
-
-    public void removeRightTuple(RightTuple rightTuple) {
+    public void removeRightTuple(TupleImpl rightTuple) {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_ERROR_MESSAGE);
     }
 

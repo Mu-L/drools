@@ -1,23 +1,26 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.drools.base.base.ClassObjectType;
 import org.drools.core.common.InternalWorkingMemory;
@@ -38,33 +41,25 @@ import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.SegmentMemory;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
 public class SegmentCreationTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public SegmentCreationTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
     
-    @Test
-    public void testSingleEmptyLhs() throws Exception {
-        KieBase kbase = buildKnowledgeBase(" ");
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSingleEmptyLhs(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, " ");
 
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase.newKieSession());
         
@@ -86,9 +81,10 @@ public class SegmentCreationTest {
         assertThat(smem.getFirst()).isNull();
     }
   
-    @Test
-    public void testSingleSharedEmptyLhs() throws Exception {
-        KieBase kbase = buildKnowledgeBase( " ", " ");
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSingleSharedEmptyLhs(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, " ", " ");
 
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase.newKieSession());
         
@@ -117,9 +113,10 @@ public class SegmentCreationTest {
         assertThat(rtnSmem2.getTipNode()).isEqualTo(rtn2);
     }    
     
-    @Test
-    public void testSinglePattern() throws Exception {
-        KieBase kbase = buildKnowledgeBase("   A() \n");
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSinglePattern(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, "   A() \n");
 
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase.newKieSession());
         
@@ -138,9 +135,10 @@ public class SegmentCreationTest {
         assertThat(smem).isNull();
     }
     
-    @Test
-    public void testSingleSharedPattern() throws Exception {
-        KieBase kbase = buildKnowledgeBase( "   A() B()\n",
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSingleSharedPattern(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, "   A() B()\n",
                                                   "   A() B()\n");
 
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase.newKieSession());
@@ -172,9 +170,10 @@ public class SegmentCreationTest {
         assertThat(rtnSmem2.getTipNode()).isEqualTo(rtn2);        
     }     
     
-    @Test
-    public void testMultiSharedPattern() throws Exception {
-        KieBase kbase = buildKnowledgeBase( " X() A() \n",
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testMultiSharedPattern(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, " X() A() \n",
                                                   "  X()  A() B() \n",
                                                   "  X() A() B() C() \n");
 
@@ -200,8 +199,8 @@ public class SegmentCreationTest {
         wm.flushPropagations();
 
         // LiaNode  is in it's own segment
-        BetaMemory betaMem = (BetaMemory ) wm.getNodeMemory( beta );
-        SegmentMemory smem = betaMem.getSegmentMemory();
+        BetaMemory betaMem = (BetaMemory) wm.getNodeMemory(beta);
+        SegmentMemory  smem    = betaMem.getSegmentMemory();
         assertThat(smem.getRootNode()).isEqualTo(lian);
         assertThat(smem.getTipNode()).isEqualTo(beta);
 
@@ -231,9 +230,10 @@ public class SegmentCreationTest {
         assertThat(cSmem.getTipNode()).isEqualTo(rtn3); // note rtn3 is in the same segment as C
     }       
   
-    @Test
-    public void testSubnetworkNoSharing() throws Exception {
-        KieBase kbase = buildKnowledgeBase( " A()  not ( B() and C() ) \n" );
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testSubnetworkNoSharing(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, " A()  not ( B() and C() ) \n" );
 
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase.newKieSession());
         
@@ -266,15 +266,16 @@ public class SegmentCreationTest {
         assertThat(bSmem.getRootNode()).isEqualTo(bNode);
         assertThat(bSmem.getTipNode()).isEqualTo(riaNode); 
         
-        BetaMemory bm = ( BetaMemory ) wm.getNodeMemory( notNode );
+        BetaMemory bm = (BetaMemory) wm.getNodeMemory(notNode);
         assertThat(smem.getNext()).isEqualTo(bm.getSegmentMemory());
         assertThat(bm.getRiaRuleMemory().getSegmentMemory()).isEqualTo(bSmem); // check subnetwork ref was made
     }        
 
     
-    @Test
-    public void tesSubnetworkAfterShare() throws Exception {
-        KieBase kbase = buildKnowledgeBase( "  X() A() \n",
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void tesSubnetworkAfterShare(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, "  X() A() \n",
                                                   "   X() A()  not ( B() and C() ) \n" );
 
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase.newKieSession());
@@ -300,8 +301,8 @@ public class SegmentCreationTest {
         wm.insert( new LinkingTest.C() );
         wm.fireAllRules();
 
-        BetaMemory liaMem = ( BetaMemory ) wm.getNodeMemory( joinNode );
-        SegmentMemory smem = liaMem.getSegmentMemory();
+        BetaMemory liaMem = (BetaMemory) wm.getNodeMemory(joinNode);
+        SegmentMemory  smem   = liaMem.getSegmentMemory();
         assertThat(smem.getRootNode()).isEqualTo(lian);
         assertThat(smem.getTipNode()).isEqualTo(joinNode);
         
@@ -321,9 +322,10 @@ public class SegmentCreationTest {
         assertThat(bSmem.getFirst()).isNull();
     }    
     
-    @Test
-    public void tesShareInSubnetwork() throws Exception {
-        KieBase kbase = buildKnowledgeBase( "  X() A() \n",
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void tesShareInSubnetwork(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, "  X() A() \n",
                                                   "   X() A() B() C() \n",
                                                   "   X() A()  not ( B() and C() ) \n" );
 
@@ -382,9 +384,10 @@ public class SegmentCreationTest {
         assertThat(notSmem.getTipNode()).isEqualTo(rtn3);     
     }
 
-    @Test
-    public void testBranchCESingleSegment() throws Exception {
-        KieBase kbase = buildKnowledgeBase( "   $a : A() \n" +
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBranchCESingleSegment(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, "   $a : A() \n" +
                                                   "   if ( $a != null ) do[t1] \n" +
                                                   "   B() \n" );
 
@@ -429,9 +432,10 @@ public class SegmentCreationTest {
         assertThat(pmem.isRuleLinked()).isTrue();
     }
 
-    @Test
-    public void testBranchCEMultipleSegments() throws Exception {
-        KieBase kbase = buildKnowledgeBase( "  X() $a : A() \n", // r1
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testBranchCEMultipleSegments(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, "  X() $a : A() \n", // r1
                                                   "  X()  $a : A() \n" +
                                                   "   if ( $a != null ) do[t1] \n" +
                                                   "   B() \n", // r2
@@ -458,8 +462,8 @@ public class SegmentCreationTest {
         FactHandle cFh = wm.insert( new LinkingTest.C() );
         wm.flushPropagations();
 
-        BetaMemory bNodeBm = ( BetaMemory ) wm.getNodeMemory( bNode );
-        SegmentMemory bNodeSmem = bNodeBm.getSegmentMemory();
+        BetaMemory bNodeBm   = (BetaMemory) wm.getNodeMemory(bNode);
+        SegmentMemory  bNodeSmem = bNodeBm.getSegmentMemory();
         assertThat(bNodeSmem.getAllLinkedMaskTest()).isEqualTo(0); // no beta nodes before branch CE, so never unlinks
         assertThat(bNodeSmem.getLinkedNodeMask()).isEqualTo(2);
 
@@ -474,8 +478,8 @@ public class SegmentCreationTest {
         assertThat(pmemr3.getSegmentMemories().length).isEqualTo(3);
         assertThat(pmemr3.isRuleLinked()).isFalse();
 
-        BetaMemory cNodeBm = ( BetaMemory ) wm.getNodeMemory( cNode );
-        SegmentMemory cNodeSmem = cNodeBm.getSegmentMemory();
+        BetaMemory cNodeBm   = (BetaMemory) wm.getNodeMemory(cNode);
+        SegmentMemory  cNodeSmem = cNodeBm.getSegmentMemory();
 
         assertThat(cNodeSmem.getAllLinkedMaskTest()).isEqualTo(PhreakBuilder.isEagerSegmentCreation() ? 0 : 1);
         assertThat(cNodeSmem.getLinkedNodeMask()).isEqualTo(1);
@@ -498,11 +502,13 @@ public class SegmentCreationTest {
         assertThat(pmemr3.isRuleLinked()).isTrue();
     }
 
-    @Test @Ignore
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    @Disabled
     // TODO the conditional branch node is broken for node sharing, it's dropping the 3rd rules [t1] rtn
     // This is because is probably because the network buider, that handles candidate node for sharing isn't being applied branch logic.
-    public void testShorterBranchInMultipleSegments() throws Exception {
-        KieBase kbase = buildKnowledgeBase( "  X() $a : A() \n", // r0
+    public void testShorterBranchInMultipleSegments(KieBaseTestConfiguration kieBaseTestConfiguration) throws Exception {
+        KieBase kbase = buildKnowledgeBase(kieBaseTestConfiguration, "  X() $a : A() \n", // r0
                                             "  X()  $a : A() \n" +
                                             "   if ( $a != null ) do[t1] \n" +
                                             "   B() \n", // r1
@@ -522,7 +528,7 @@ public class SegmentCreationTest {
         assertThat(list).contains("t1-rule1", "t1-rule2"); // r1
     }
 
-    private KieBase buildKnowledgeBase(String... rules) {
+    private KieBase buildKnowledgeBase(KieBaseTestConfiguration kieBaseTestConfiguration, String... rules) {
         String str = "";
         str += "package org.kie \n";
         str += "import " + LinkingTest.A.class.getCanonicalName() + "\n" ;

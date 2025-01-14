@@ -1,17 +1,20 @@
-/*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.kie.maven.plugin.ittests;
 
@@ -24,11 +27,11 @@ import org.kie.api.KieBase;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.KieSession;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 public class DeclaredTypesTestIT {
 
@@ -42,12 +45,12 @@ public class DeclaredTypesTestIT {
         final URL targetLocation = DeclaredTypesTestIT.class.getProtectionDomain().getCodeSource().getLocation();
         final KieContainer kieContainer = ITTestsUtils.getKieContainer(targetLocation, GAV_ARTIFACT_ID, GAV_VERSION);
         final KieBase kieBase = kieContainer.getKieBase(KBASE_NAME);
-        Assertions.assertThat(kieBase).isNotNull();
+        assertThat(kieBase).isNotNull();
         KieSession kSession = null;
         try {
 
             kSession = kieBase.newKieSession();
-            Assertions.assertThat(kSession).isNotNull();
+            assertThat(kSession).isNotNull();
 
             ClassLoader classLoader = kieContainer.getClassLoader();
             Class<?> aClass = Class.forName("org.declaredtype.FactA", true, classLoader);
@@ -58,7 +61,7 @@ public class DeclaredTypesTestIT {
             int rulesFired = kSession.fireAllRules();
             kSession.dispose();
 
-            assertEquals(1, rulesFired);
+            assertThat(rulesFired).isEqualTo(1);
         } finally {
             kSession.dispose();
         }

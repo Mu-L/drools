@@ -1,34 +1,38 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.lang.ast;
+
+import java.math.BigDecimal;
+import java.time.Duration;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.kie.dmn.api.feel.runtime.events.FEELEvent.Severity;
 import org.kie.dmn.feel.lang.EvaluationContext;
 import org.kie.dmn.feel.lang.Type;
-import org.kie.dmn.feel.util.EvalHelper;
+import org.kie.dmn.feel.lang.types.impl.ComparablePeriod;
 import org.kie.dmn.feel.util.Msg;
-
-import java.math.BigDecimal;
+import org.kie.dmn.feel.util.NumberEvalHelper;
 
 public class SignedUnaryNode
         extends BaseNode {
 
-    public static enum Sign {
+    public enum Sign {
         POSITIVE, NEGATIVE;
 
         public static Sign determineSign(String str) {
@@ -50,6 +54,12 @@ public class SignedUnaryNode
         expression = expr;
     }
 
+    public SignedUnaryNode(Sign sign, BaseNode expression, String text) {
+        this.sign = sign;
+        this.expression = expression;
+        this.setText(text);
+    }
+
     public Sign getSign() {
         return sign;
     }
@@ -66,7 +76,13 @@ public class SignedUnaryNode
             ctx.notifyEvt( astEvent(Severity.ERROR, Msg.createMessage(Msg.CANNOT_BE_SIGNED)));
             return null;
         }
-        BigDecimal result = EvalHelper.getBigDecimalOrNull( expressionResult );
+        if (expressionResult instanceof ComparablePeriod comparablePeriod) {
+            return  Sign.NEGATIVE == sign ? comparablePeriod.negated() : expressionResult;
+        }
+        if (expressionResult instanceof Duration duration) {
+            return  Sign.NEGATIVE == sign ? duration.negated() : expressionResult;
+        }
+        BigDecimal result = NumberEvalHelper.getBigDecimalOrNull(expressionResult );
         if ( result == null ) {
             ctx.notifyEvt( astEvent(Severity.WARN, Msg.createMessage(Msg.NEGATING_A_NULL)));
             return null;

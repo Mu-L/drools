@@ -1,19 +1,21 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvelcompiler;
 
 import java.math.BigDecimal;
@@ -22,7 +24,7 @@ import java.util.Map;
 
 import org.drools.Person;
 import org.drools.util.MethodUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -341,7 +343,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testSetterBigDecimalConstantModify() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify ( $p )  { salary = 50000 }; }",
-             "{ { $p.setSalary(new java.math.BigDecimal(50000)); } }",
+             "{ { $p.setSalary(new java.math.BigDecimal(50000)); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -349,7 +351,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testSetterBigDecimalLiteralModify() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify ( $p )  { salary = 50000B }; }",
-             "{ { $p.setSalary(new java.math.BigDecimal(\"50000\")); } }",
+             "{ { $p.setSalary(new java.math.BigDecimal(\"50000\")); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -357,7 +359,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testSetterBigDecimalLiteralModifyNegative() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify ( $p )  { salary = -50000B }; }",
-             "{ { $p.setSalary(new java.math.BigDecimal(\"-50000\")); } }",
+             "{ { $p.setSalary(new java.math.BigDecimal(\"-50000\")); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -407,7 +409,61 @@ public class MvelCompilerTest implements CompilerTest {
                          "      list.add(\"before \" + $p + \", money = \" + $p.getSalary()); " +
                          "      { $p.setSalary(new java.math.BigDecimal(50000)); }" +
                          "      list.add(\"after \" + $p + \", money = \" + $p.getSalary()); " +
+                         "      drools.update($p);" +
                          "}\n",
+             result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
+    }
+
+    @Test
+    public void modifyInsideIfTrueBlock() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+             "{" +
+                     "    if (true) { " +
+                     "        modify ( $p )  { salary = 50000 };  " +
+                     "    }" +
+                     "}",
+             "{\n" +
+                     "    if (true) {" +
+                     "        { $p.setSalary(new java.math.BigDecimal(50000)); }" +
+                     "        drools.update($p);" +
+                     "    }" +
+                     "}",
+             result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
+    }
+
+    @Test
+    public void modifyInsideIfFalseBlock() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+             "{" +
+                     "    if (false) { " +
+                     "        modify ( $p )  { salary = 50000 };  " +
+                     "    }" +
+                     "}",
+             "{\n" +
+                     "    if (false) {" +
+                     "        { $p.setSalary(new java.math.BigDecimal(50000)); }" +
+                     "        drools.update($p);" +
+                     "    }" +
+                     "}",
+             result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
+    }
+
+    @Test
+    public void emptyModifyInsideIfBlockAndSetterOutside() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+             "{" +
+                     "    $p.salary = 50000;" +
+                     "    if (false) { " +
+                     "        modify ( $p )  { };  " +
+                     "    }" +
+                     "}",
+             "{\n" +
+                     "    $p.setSalary(new java.math.BigDecimal(50000));" +
+                     "    if (false) {" +
+                     "        { }" +
+                     "        drools.update($p);" +
+                     "    }" +
+                     "}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -746,6 +802,17 @@ public class MvelCompilerTest implements CompilerTest {
     }
 
     @Test
+    public void testBigDecimalArithmeticWithValueOfDouble() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+            "{ " +
+                    "    $p.salary = $p.salary + BigDecimal.valueOf(0.5);\n" +
+                    "}",
+            "{ " +
+                    "    $p.setSalary($p.getSalary().add(BigDecimal.valueOf(0.5), java.math.MathContext.DECIMAL128));\n" +
+                    "}");
+    }
+
+    @Test
     public void testBigDecimalArithmeticWithConversionLiteral() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ " +
@@ -765,6 +832,116 @@ public class MvelCompilerTest implements CompilerTest {
              "{ " +
                      "    java.math.BigDecimal operation = $p.getSalary().add(new java.math.BigDecimal(10), java.math.MathContext.DECIMAL128);\n" +
                      "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToInt() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.age = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setAge($p.getSalary().intValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToIntegerBoxed() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.integerBoxed = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setIntegerBoxed($p.getSalary().intValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToLong() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.longValue = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setLongValue($p.getSalary().longValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToLongBoxed() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.longBoxed = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setLongBoxed($p.getSalary().longValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToShort() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.shortValue = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setShortValue($p.getSalary().shortValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToShortBoxed() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.shortBoxed = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setShortBoxed($p.getSalary().shortValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToDouble() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.doubleValue = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setDoubleValue($p.getSalary().doubleValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToDoubleBoxed() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.doubleBoxed = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setDoubleBoxed($p.getSalary().doubleValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToFloat() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.floatValue = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setFloatValue($p.getSalary().floatValue());\n" +
+                        "}");
+    }
+
+    @Test
+    public void testBigDecimalAssignmentToFloatBoxed() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+                "{ " +
+                        "    $p.floatBoxed = $p.salary;\n" +
+                        "}",
+                "{ " +
+                        "    $p.setFloatBoxed($p.getSalary().floatValue());\n" +
+                        "}");
     }
 
     @Test
@@ -820,7 +997,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testModify() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify ( $p )  { name = \"Luca\", age = 35 }; }",
-             "{\n {\n $p.setName(\"Luca\");\n $p.setAge(35);\n }\n }",
+             "{\n {\n $p.setName(\"Luca\");\n $p.setAge(35);\n } drools.update($p);\n }",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -831,7 +1008,7 @@ public class MvelCompilerTest implements CompilerTest {
                  ctx.addDeclaration("$p2", Person.class);
              },
              "{ modify ( $p )  { items = $p2.items }; }",
-             "{\n {\n $p.setItems($p2.getItems());\n }\n }",
+             "{\n {\n $p.setItems($p2.getItems());\n } drools.update($p);\n }",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -839,7 +1016,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testModifySemiColon() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify($p) { setAge(1); }; }",
-             "{ { $p.setAge(1); } }",
+             "{ { $p.setAge(1); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -847,7 +1024,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testModifyWithAssignment() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify($p) { age = $p.age+1 }; }",
-             "{ { $p.setAge($p.getAge() + 1); } }",
+             "{ { $p.setAge($p.getAge() + 1); } drools.update($p); }",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -855,7 +1032,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testModifyWithMethodCall() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify($p) { addresses.clear() }; }",
-             "{ { $p.getAddresses().clear(); } }",
+             "{ { $p.getAddresses().clear(); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -901,6 +1078,7 @@ public class MvelCompilerTest implements CompilerTest {
                      "      {\n" +
                      "          $p.setName(\"without_parent\");\n" +
                      "      }\n" +
+                     "      drools.update($p);\n" +
                      "  } " +
                      "}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
@@ -925,6 +1103,7 @@ public class MvelCompilerTest implements CompilerTest {
                      "{ " +
                      "  $person.setAddress($newAddress);\n" +
                      "}\n" +
+                     "drools.update($person);\n" +
                      "}");
     }
 
@@ -982,5 +1161,26 @@ public class MvelCompilerTest implements CompilerTest {
     public void testMultiLineStringLiteral() {
         test(" { java.lang.String s = \"\"\"\n string content\n \"\"\"; }",
              " { java.lang.String s = \"\"\"\n string content\n \"\"\"; }");
+    }
+
+    @Test
+    public void testReadMapField() {
+        test(ctx -> ctx.addDeclaration("$p", Map.class),
+             " { String name = $p.name; }",
+             " { java.lang.String name = (java.lang.String) ($p.get(\"name\")); }");
+    }
+
+    @Test
+    public void testWriteMapField() {
+        test(ctx -> ctx.addDeclaration("$p", Map.class),
+             " { $p.name = \"Mario\"; }",
+             " { $p.put(\"name\", \"Mario\"); }");
+    }
+
+    @Test
+    public void testReadAndWriteMapField() {
+        test(ctx -> ctx.addDeclaration("$a", Map.class).addDeclaration("$b", Map.class),
+             " { $a.name = $b.name; }",
+             " { $a.put(\"name\", $b.get(\"name\")); }");
     }
 }

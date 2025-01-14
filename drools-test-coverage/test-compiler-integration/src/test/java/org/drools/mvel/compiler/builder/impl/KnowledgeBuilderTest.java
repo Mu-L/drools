@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.compiler.builder.impl;
 
 import java.io.IOException;
@@ -41,7 +43,6 @@ import org.drools.core.common.PropagationContext;
 import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.phreak.RuleAgendaItem;
-import org.drools.core.reteoo.JoinNodeLeftTuple;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.TerminalNode;
@@ -89,9 +90,9 @@ import org.drools.mvel.compiler.Primitives;
 import org.drools.mvel.compiler.StockTick;
 import org.drools.mvel.integrationtests.SerializationHelper;
 import org.drools.mvel.java.JavaForMvelDialectConfiguration;
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.kie.api.definition.type.FactField;
 import org.kie.api.definition.type.FactType;
 import org.kie.api.definition.type.Role;
@@ -107,7 +108,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 public class KnowledgeBuilderTest {
     
-    @After
+    @AfterEach
     public void tearDown() {
         System.getProperties().remove( "drools.warning.filters" );
         System.getProperties().remove( "drools.kbuilder.severity." + DuplicateFunction.KEY);
@@ -187,7 +188,7 @@ public class KnowledgeBuilderTest {
         workingMemory.setGlobal( "map",
                                  map );
 
-        final LeftTuple tuple = new MockTuple( new HashMap() );
+        final LeftTuple tuple = new MockTuple(new HashMap() );
         tuple.setLeftTupleSink( new RuleTerminalNode(1, new MockBetaNode(), rule,rule.getLhs(), 0,new BuildContext(kBase, Collections.emptyList()) )  );
         final InternalMatch internalMatch = new MockInternalMatch(rule,
                                                                   0,
@@ -265,7 +266,7 @@ public class KnowledgeBuilderTest {
         workingMemory.setGlobal( "map",
                                  map );
 
-        final LeftTuple tuple = new MockTuple( new HashMap() );
+        final LeftTuple tuple = new MockTuple(new HashMap() );
         tuple.setLeftTupleSink( new RuleTerminalNode(1, new MockBetaNode(), newRule,newRule.getLhs(), 0, new BuildContext(kBase, Collections.emptyList()) )  );
         final InternalMatch internalMatch = new MockInternalMatch(newRule,
                                                                   0,
@@ -281,7 +282,7 @@ public class KnowledgeBuilderTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testNoPackageName() throws Exception {
         final KnowledgeBuilderImpl builder = new KnowledgeBuilderImpl();
         try {
@@ -898,7 +899,8 @@ public class KnowledgeBuilderTest {
         return packageDescr;
     }
 
-    @Test @Ignore // TODO we now allow bindings on declarations, so update the test for this
+    @Test 
+    @Disabled // TODO we now allow bindings on declarations, so update the test for this
     public void testDuplicateDeclaration() {
         final KnowledgeBuilderImpl builder = new KnowledgeBuilderImpl();
 
@@ -1429,7 +1431,7 @@ public class KnowledgeBuilderTest {
 
     class MockTuple
         extends
-        JoinNodeLeftTuple {
+        LeftTuple {
         private Map declarations;
 
         public MockTuple(final Map declarations) {

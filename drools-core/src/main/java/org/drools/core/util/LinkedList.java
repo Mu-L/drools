@@ -1,31 +1,34 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.util;
-
-import org.drools.core.reteoo.Tuple;
 
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 
+import org.drools.core.reteoo.TupleImpl;
+
 /**
- * This is a simple linked linked implementation. Each node must implement </code>LinkedListNode<code> so that it references
+ * This is a simple linked implementation. Each node must implement </code>LinkedListNode<code> so that it references
  * the node before and after it. This way a node can be removed without having to scan the list to find it. This class
  * does not provide an Iterator implementation as its designed for efficiency and not genericity. There are a number of
  * ways to iterate the list.
@@ -42,17 +45,16 @@ import java.util.NoSuchElementException;
  * }
  * </pre>
  */
-public class LinkedList<T extends LinkedListNode<T>>
+public class LinkedList<T extends DoubleLinkedEntry<T>>
     implements
     Externalizable {
     private static final long        serialVersionUID = 510l;
 
     private T                        firstNode;
     private T                        lastNode;
-
     private int                      size;
     
-    public static final FastIterator<Tuple> fastIterator = new LinkedListFastIterator(); // contains no state, so ok to be static
+    public static final FastIterator fastIterator = new LinkedListFastIterator(); // contains no state, so ok to be static
 
     /**
      * Construct an empty <code>LinkedList</code>
@@ -64,7 +66,13 @@ public class LinkedList<T extends LinkedListNode<T>>
         this.firstNode = node;
         this.lastNode = node;
         this.size++;
-    }    
+    }
+
+    public LinkedList(T firstNode, T lastNode, int size) {
+        this.firstNode = firstNode;
+        this.lastNode  = lastNode;
+        this.size      = size;
+    }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         firstNode   = (T)in.readObject();
@@ -137,7 +145,6 @@ public class LinkedList<T extends LinkedListNode<T>>
             node.setPrevious( currentLast );
             this.lastNode = node;            
         }
-        
         this.size++;
     }
 
@@ -151,7 +158,6 @@ public class LinkedList<T extends LinkedListNode<T>>
             node.setNext( currentFirst );
             this.firstNode = node;
         }
-
         this.size++;
     }
 
@@ -170,38 +176,11 @@ public class LinkedList<T extends LinkedListNode<T>>
             removeLast();
         } else {
             node.getPrevious().setNext( node.getNext() );
-            (node.getNext()).setPrevious( node.getPrevious() );
+            node.getNext().setPrevious( node.getPrevious() );
             this.size--;
             node.setPrevious( null );
             node.setNext( null );
         }
-    }
-
-    public boolean contains(T node) {
-        for (T currentNode = firstNode; currentNode != null; currentNode = currentNode.getNext()) {
-            if (currentNode == node) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Return the first node in the list
-     * @return
-     *      The first <code>LinkedListNode</code>.
-     */
-    public final T getFirst() {
-        return this.firstNode;
-    }
-
-    /**
-     * Return the last node in the list
-     * @return
-     *      The last <code>LinkedListNode</code>.
-     */
-    public final T getLast() {
-        return this.lastNode;
     }
 
     /**
@@ -222,6 +201,29 @@ public class LinkedList<T extends LinkedListNode<T>>
             this.firstNode.setPrevious( null );
         } else {
             this.lastNode = null;
+        }
+        this.size--;
+        return node;
+    }
+
+    /**
+     * Remove the last node from the list. The previous node then becomes the last node. If this is the last
+     * node then both first and last node references are set to null.
+     *
+     * @return
+     *      The first <code>LinkedListNode</code>.
+     */
+    public T removeLast() {
+        if ( this.lastNode == null ) {
+            return null;
+        }
+        final T node = this.lastNode;
+        this.lastNode = node.getPrevious();
+        node.setPrevious( null );
+        if ( this.lastNode != null ) {
+            this.lastNode.setNext( null );
+        } else {
+            this.firstNode = null;
         }
         this.size--;
         return node;
@@ -258,27 +260,52 @@ public class LinkedList<T extends LinkedListNode<T>>
         this.size++;
     }
 
+    public void removeAdd(final T node) {
+        if (this.lastNode == node) {
+            return;
+        }
+
+        T previous = node.getPrevious();
+        T next = node.getNext();
+        if (previous == null) {
+            next.setPrevious( null );
+            this.firstNode = next;
+        } else {
+            previous.setNext( next );
+            next.setPrevious( previous );
+        }
+
+        this.lastNode.setNext(node);
+        node.setPrevious( this.lastNode );
+        node.setNext( null );
+        this.lastNode = node;
+    }
+
+    public boolean contains(T node) {
+        for (T currentNode = firstNode; currentNode != null; currentNode = currentNode.getNext()) {
+            if (currentNode == node) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
-     * Remove the last node from the list. The previous node then becomes the last node. If this is the last
-     * node then both first and last node references are set to null.
-     *
+     * Return the first node in the list
      * @return
      *      The first <code>LinkedListNode</code>.
      */
-    public T removeLast() {
-        if ( this.lastNode == null ) {
-            return null;
-        }
-        final T node = this.lastNode;
-        this.lastNode = node.getPrevious();
-        node.setPrevious( null );
-        if ( this.lastNode != null ) {
-            this.lastNode.setNext( null );
-        } else {
-            this.firstNode = null;
-        }
-        this.size--;
-        return node;
+    public final T getFirst() {
+        return this.firstNode;
+    }
+
+    /**
+     * Return the last node in the list
+     * @return
+     *      The last <code>LinkedListNode</code>.
+     */
+    public final T getLast() {
+        return this.lastNode;
     }
     
     public T get(int i) {
@@ -287,6 +314,17 @@ public class LinkedList<T extends LinkedListNode<T>>
             current = current.getNext();
         }
         return current;
+    }
+
+    public T get(final T node) {
+        T current = getFirst();
+        while ( current != null ) {
+            if ( node.equals( current ) ) {
+                return current;
+            }
+            current = current.getNext();
+        }
+        return null;
     }
 
     /**
@@ -301,8 +339,11 @@ public class LinkedList<T extends LinkedListNode<T>>
      * Iterates the list removing all the nodes until there are no more nodes to remove.
      */
     public void clear() {
-        while ( removeFirst() != null ) {
-        }
+//        while ( removeFirst() != null ) {
+//        }
+        this.firstNode = null;
+        this.lastNode = null;
+        size = 0;
     }
 
     /**
@@ -344,23 +385,32 @@ public class LinkedList<T extends LinkedListNode<T>>
         }
         return true;
     }
-
-    public FastIterator iterator() {
-        return fastIterator();
-    }
     
-    public FastIterator fastIterator() {
+    public FastIterator<T> fastIterator() {
         return fastIterator;
     }
-    
-    public static class LinkedListFastIterator<K extends Entry<K>> implements FastIterator<K> {
-        public K next(K object) {
+
+    // All the tuples except for TMS are AbstractTuple
+    public static class LinkedListFastIterator implements FastIterator<TupleImpl> {
+
+        public TupleImpl next(TupleImpl object) {
             return object.getNext();
         }
         
         public boolean isFullIterator() {
             return false;
         }        
+    }
+
+    // Special case of iterator that uses K extends Entry<K> to support TMS custom objects
+    public static class TMSLinkedListFastIterator<K extends SingleLinkedEntry<K>> implements FastIterator<K> {
+        public K next(K object) {
+            return object.getNext();
+        }
+
+        public boolean isFullIterator() {
+            return false;
+        }
     }
 
     public java.util.Iterator<T> javaUtilIterator() {
@@ -371,7 +421,7 @@ public class LinkedList<T extends LinkedListNode<T>>
      * Returns a list iterator
      * @return
      */
-    public static class LinkedListIterator<T extends LinkedListNode<T>>
+    public static class LinkedListIterator<T extends DoubleLinkedEntry<T>>
         implements
         Iterator<T>,
         Externalizable {
@@ -404,7 +454,7 @@ public class LinkedList<T extends LinkedListNode<T>>
 
     }
 
-    public static class JavaUtilIterator<T extends LinkedListNode<T>>
+    public static class JavaUtilIterator<T extends DoubleLinkedEntry<T>>
         implements
         java.util.Iterator<T>,
         Externalizable {
@@ -419,8 +469,7 @@ public class LinkedList<T extends LinkedListNode<T>>
         }
 
         public JavaUtilIterator(final LinkedList<T> list) {
-            this( list,
-                  true );
+            this( list, true );
         }
 
         public JavaUtilIterator(final LinkedList<T> list,
@@ -472,4 +521,15 @@ public class LinkedList<T extends LinkedListNode<T>>
         }
     }
 
+    protected void copyStateInto(LinkedList<T> other) {
+        other.firstNode = firstNode;
+        other.lastNode = lastNode;
+        other.size = size;
+    }
+
+    public <I> void addAllToCollection(Collection<I> c) {
+        for (T item = getFirst(); item != null; item = item.getNext()) {
+            c.add((I) item);
+        }
+    }
 }

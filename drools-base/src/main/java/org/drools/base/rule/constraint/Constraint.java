@@ -1,33 +1,37 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.base.rule.constraint;
 
 import java.io.Externalizable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
-import org.drools.base.rule.RuleComponent;
-import org.drools.base.rule.Declaration;
-import org.drools.base.base.ObjectType;
-import org.drools.core.util.bitmask.AllSetButLastBitMask;
-import org.drools.core.util.bitmask.BitMask;
 import org.drools.base.RuleBase;
 import org.drools.base.RuleBuildContext;
+import org.drools.base.base.ObjectType;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.RuleComponent;
+import org.drools.util.bitmask.AllSetButLastBitMask;
+import org.drools.util.bitmask.BitMask;
 
 //import static org.drools.core.reteoo.PropertySpecificUtil.allSetButTraitBitMask;
 
@@ -79,7 +83,15 @@ public interface Constraint
      */
     boolean isTemporal();
 
-    default BitMask getListenedPropertyMask(ObjectType objectType, List<String> settableProperties ) {
+    /**
+     * Returns property reactivity BitMask of this constraint.
+     *
+     * @param pattern which this constraint belongs to. if pattern is empty, bind variables are considered to be declared in the same pattern. It should be fine for alpha constraints
+     * @param objectType
+     * @param settableProperties
+     * @return property reactivity BitMask
+     */
+    default BitMask getListenedPropertyMask(Optional<Pattern> pattern, ObjectType objectType, List<String> settableProperties ) {
         return AllSetButLastBitMask.get();
     }
 

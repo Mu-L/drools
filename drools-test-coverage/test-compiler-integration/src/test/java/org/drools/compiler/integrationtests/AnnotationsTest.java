@@ -1,19 +1,21 @@
-/*
- * Copyright 2011 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
 
 import java.lang.annotation.Annotation;
@@ -22,15 +24,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
-import org.drools.testcoverage.common.util.TestParametersUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.drools.testcoverage.common.util.TestParametersUtil2;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.definition.type.FactType;
@@ -41,18 +42,10 @@ import org.kie.api.definition.type.Role;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@RunWith(Parameterized.class)
 public class AnnotationsTest {
 
-    private final KieBaseTestConfiguration kieBaseTestConfiguration;
-
-    public AnnotationsTest(final KieBaseTestConfiguration kieBaseTestConfiguration) {
-        this.kieBaseTestConfiguration = kieBaseTestConfiguration;
-    }
-
-    @Parameterized.Parameters(name = "KieBase type={0}")
-    public static Collection<Object[]> getParameters() {
-        return TestParametersUtil.getKieBaseCloudConfigurations(true);
+    public static Stream<KieBaseTestConfiguration> parameters() {
+        return TestParametersUtil2.getKieBaseCloudConfigurations(true).stream();
     }
 
     public enum AnnPropEnum {
@@ -95,8 +88,9 @@ public class AnnotationsTest {
         AnnPropEnum[] enumArrProp() default {AnnPropEnum.TWO, AnnPropEnum.THREE};
     }
 
-    @Test
-    public void annotationTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void annotationTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.test;\n " +
                 "" +
@@ -190,8 +184,9 @@ public class AnnotationsTest {
         assertThat(ann2.enumArrProp()).isEqualTo(new AnnPropEnum[]{AnnPropEnum.TWO, AnnPropEnum.THREE});
     }
 
-    @Test
-    public void annotationErrorTest() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void annotationErrorTest(KieBaseTestConfiguration kieBaseTestConfiguration) {
 
         final String drl = "package org.drools.compiler.test;\n " +
                 "" +
@@ -219,8 +214,9 @@ public class AnnotationsTest {
         assertThat(kieBuilder2.getResults().getMessages()).hasSize(3);
     }
 
-    @Test
-    public void testAnnotationNameClash() {
+    @ParameterizedTest(name = "KieBase type={0}")
+    @MethodSource("parameters")
+    public void testAnnotationNameClash(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test\n" +
                 "" +
                 "declare Annot\n" +
@@ -254,8 +250,9 @@ public class AnnotationsTest {
 
     }
 
-    @Test
-    public void testAnnotationNameClashWithRegularClass() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAnnotationNameClashWithRegularClass(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl = "package org.drools.test\n" +
                 "import " + Duration.class.getCanonicalName() + "; " +
 
@@ -276,8 +273,9 @@ public class AnnotationsTest {
         int[] numbers();
     }
 
-    @Test
-    public void testAnnotationOnLHSAndMerging() {
+    @ParameterizedTest(name = "KieBase type={0}")
+	@MethodSource("parameters")
+    public void testAnnotationOnLHSAndMerging(KieBaseTestConfiguration kieBaseTestConfiguration) {
         final String drl =
                 "package org.drools.compiler; " +
                         " " +

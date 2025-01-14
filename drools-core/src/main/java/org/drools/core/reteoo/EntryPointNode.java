@@ -1,44 +1,49 @@
-/*
- * Copyright 2007 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
+import org.drools.base.common.NetworkNode;
 import org.drools.base.common.RuleBasePartitionId;
 import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.Pattern;
 import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.common.BaseNode;
 import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.ObjectTypeConfigurationRegistry;
-import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.PropagationContext;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.phreak.PropagationEntry;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.BitMask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A node that is an entry point into the Rete network.
@@ -74,6 +79,8 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
 
     private ObjectTypeConfigurationRegistry typeConfReg;
 
+    private boolean parallelExecution = false;
+
     // ------------------------------------------------------------
     // Constructors
     // ------------------------------------------------------------
@@ -86,19 +93,16 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
                           final BuildContext context) {
         this( id,
               context.getPartitionId(),
-              context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation(),
               objectSource,
               context.getCurrentEntryPoint() ); // irrelevant for this node, since it overrides sink management
     }
 
     public EntryPointNode(final int id,
                           final RuleBasePartitionId partitionId,
-                          final boolean partitionsEnabled,
                           final ObjectSource objectSource,
                           final EntryPointId entryPoint) {
         super( id,
                partitionId,
-               partitionsEnabled,
                objectSource,
                999,
                999); // irrelevant for this node, since it overrides sink management
@@ -113,11 +117,15 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
     // Instance methods
     // ------------------------------------------------------------
 
+    public void setupParallelExecution(InternalRuleBase kbase) {
+        parallelExecution = true;
+    }
+
     public ObjectTypeConfigurationRegistry getTypeConfReg() {
         return typeConfReg;
     }
 
-    public short getType() {
+    public int getType() {
         return NodeTypeEnums.EntryPointNode;
     }
 
@@ -126,9 +134,6 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
      */
     public EntryPointId getEntryPoint() {
         return entryPoint;
-    }
-    void setEntryPoint(EntryPointId entryPoint) {
-        this.entryPoint = entryPoint;
     }
 
     public ObjectTypeNode getQueryNode() {
@@ -189,9 +194,9 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
             log.trace("Insert {}", handle.toString());
         }
 
-        if ( partitionsEnabled || !reteEvaluator.isThreadSafe() ) {
-            // In case of multithreaded evaluation the CompositePartitionAwareObjectSinkAdapter
-            // used by the OTNs will take care of enqueueing this inseretion on the propagation queues
+        if ( parallelExecution || !reteEvaluator.isThreadSafe() ) {
+            // In case of parallel execution the CompositePartitionAwareObjectSinkAdapter
+            // used by the OTNs will take care of enqueueing this insertion on the propagation queues
             // of the different agendas
             PropagationEntry.Insert.execute( handle, context, reteEvaluator, objectTypeConf );
         } else {
@@ -217,9 +222,9 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
 
     public static void removeRightTuplesMatchingOTN( PropagationContext pctx, ReteEvaluator reteEvaluator, ModifyPreviousTuples modifyPreviousTuples, ObjectTypeNode node, int partition ) {
         // remove any right tuples that matches the current OTN before continue the modify on the next OTN cache entry
-        RightTuple rightTuple = modifyPreviousTuples.peekRightTuple(partition);
+        TupleImpl rightTuple = modifyPreviousTuples.peekRightTuple(partition);
         while ( rightTuple != null &&
-                ((BaseNode) rightTuple.getTupleSink()).getObjectTypeNode() == node ) {
+                ((BaseNode) rightTuple.getSink()).getObjectTypeNode() == node ) {
             modifyPreviousTuples.removeRightTuple(partition);
 
             modifyPreviousTuples.doRightDelete(pctx, reteEvaluator, rightTuple);
@@ -229,14 +234,14 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
 
 
         while ( true ) {
-            LeftTuple leftTuple = modifyPreviousTuples.peekLeftTuple(partition);
-            ObjectTypeNode otn = null;
+            TupleImpl      leftTuple = modifyPreviousTuples.peekLeftTuple(partition);
+            ObjectTypeNode otn       = null;
             if (leftTuple != null) {
-                LeftTupleSink leftTupleSink = leftTuple.getTupleSink();
-                if (leftTupleSink instanceof LeftTupleSource ) {
-                    otn = leftTupleSink.getLeftTupleSource().getObjectTypeNode();
-                } else if (leftTupleSink instanceof RuleTerminalNode ) {
+                Sink leftTupleSink = leftTuple.getSink();
+                if (NodeTypeEnums.isTerminalNode(leftTupleSink)) {
                     otn = ((RuleTerminalNode)leftTupleSink).getObjectTypeNode();
+                } else {
+                    otn = ((LeftTupleSource)leftTupleSink).getLeftTupleSource().getObjectTypeNode();
                 }
             }
 
@@ -287,15 +292,22 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
      * @param reteEvaluator
      *            The working memory session.
      */
-    public void retractObject(final InternalFactHandle handle,
-                              final PropagationContext context,
-                              final ObjectTypeConf objectTypeConf,
-                              final ReteEvaluator reteEvaluator) {
+    public void retractObject(InternalFactHandle handle, PropagationContext context,
+                              ObjectTypeConf objectTypeConf, ReteEvaluator reteEvaluator) {
         if ( log.isTraceEnabled() ) {
             log.trace( "Delete {}", handle.toString()  );
         }
 
         reteEvaluator.addPropagation(new PropagationEntry.Delete(this, handle, context, objectTypeConf));
+    }
+
+    public void immediateDeleteObject(InternalFactHandle handle, PropagationContext context,
+                                      ObjectTypeConf objectTypeConf, ReteEvaluator reteEvaluator) {
+        if ( log.isTraceEnabled() ) {
+            log.trace( "Delete {}", handle.toString()  );
+        }
+
+        PropagationEntry.Delete.execute(reteEvaluator, this, handle, context, objectTypeConf);
     }
 
     public void propagateRetract(InternalFactHandle handle, PropagationContext context, ObjectTypeConf objectTypeConf, ReteEvaluator reteEvaluator) {
@@ -374,8 +386,8 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
             return true;
         }
 
-        return (object instanceof EntryPointNode && this.hashCode() == object.hashCode() &&
-                 this.entryPoint.equals( ( (EntryPointNode) object ).entryPoint ) );
+        return (((NetworkNode)object).getType() == NodeTypeEnums.EntryPointNode && this.hashCode() == object.hashCode() &&
+                this.entryPoint.equals( ( (EntryPointNode) object ).entryPoint ) );
     }
 
     public void updateSink(ObjectSink sink, PropagationContext context, InternalWorkingMemory workingMemory) {
@@ -407,7 +419,7 @@ public class EntryPointNode extends ObjectSource implements ObjectSink {
     }
 
     @Override
-    public BitMask calculateDeclaredMask(ObjectType modifiedType, List<String> settableProperties) {
+    public BitMask calculateDeclaredMask(Pattern pattern, ObjectType modifiedType, List<String> settableProperties) {
         throw new UnsupportedOperationException();
     }
 

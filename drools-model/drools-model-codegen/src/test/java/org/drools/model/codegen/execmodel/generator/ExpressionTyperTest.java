@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.model.codegen.execmodel.generator;
 
 import java.math.BigDecimal;
@@ -32,10 +50,11 @@ import org.drools.mvel.parser.ast.expr.PointFreeExpr;
 import org.drools.mvel.parser.printer.PrintUtil;
 import org.drools.util.ClassTypeResolver;
 import org.drools.util.TypeResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.drools.model.codegen.execmodel.generator.DrlxParseUtil.THIS_PLACEHOLDER;
 
 public class ExpressionTyperTest {
@@ -47,7 +66,7 @@ public class ExpressionTyperTest {
     private KnowledgeBuilderImpl knowledgeBuilder = new KnowledgeBuilderImpl();
     private RuleDescr ruleDescr = new RuleDescr("testRule");
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         imports = new HashSet<>();
         packageModel = new PackageModel("", "", null, null, new DRLIdGenerator());
@@ -121,8 +140,8 @@ public class ExpressionTyperTest {
     public void testAssignment() {
         final TypedExpression expected = typedResult("total = total + $cheese.getPrice()", Integer.class);
         final TypedExpression actual = toTypedExpression("total = total + $cheese.price", Object.class,
-                                                         new DeclarationSpec("$cheese", Cheese.class),
-                                                         new DeclarationSpec("total", Integer.class));
+                                                         new TypedDeclarationSpec("$cheese", Cheese.class),
+                                                         new TypedDeclarationSpec("total", Integer.class));
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -155,7 +174,7 @@ public class ExpressionTyperTest {
     @Test
     public void mapAccessExpr2() {
         final TypedExpression expected3 = typedResult("$p.getItems().get(\"type\")", Integer.class, "$p.items[\"type\"]");
-        final TypedExpression actual3 = toTypedExpression("$p.items[\"type\"]", Object.class, new DeclarationSpec("$p", Person.class));
+        final TypedExpression actual3 = toTypedExpression("$p.items[\"type\"]", Object.class, new TypedDeclarationSpec("$p", Person.class));
         assertThat(actual3).isEqualTo(expected3);
     }
 
@@ -163,7 +182,7 @@ public class ExpressionTyperTest {
     public void mapAccessExpr3() {
         final TypedExpression expected = typedResult("$p.getItems().get(1)", Integer.class, "$p.items[1]");
         final TypedExpression actual = toTypedExpression("$p.items[1]", Object.class,
-                                                         new DeclarationSpec("$p", Person.class));
+                                                         new TypedDeclarationSpec("$p", Person.class));
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -171,7 +190,7 @@ public class ExpressionTyperTest {
     public void arrayAccessExprDeclaration() {
         final TypedExpression expected = typedResult("$data.getValues().get(0)", Integer.class, "$data.values[0]");
         final TypedExpression actual = toTypedExpression("$data.values[0]", Object.class,
-                                                         new DeclarationSpec("$data", Data.class));
+                                                         new TypedDeclarationSpec("$data", Data.class));
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -224,9 +243,9 @@ public class ExpressionTyperTest {
         assertThat(toTypedExpression("age < 15 || > 20 && < 30", Person.class).getExpression().toString()).isEqualTo(expected);
     }
 
-    @Test(expected = CannotTypeExpressionException.class)
+    @Test
     public void invalidHalfBinary() {
-        toTypedExpression("> 20 && < 30", Person.class).getExpression();
+    	assertThatExceptionOfType(CannotTypeExpressionException.class).isThrownBy(() ->toTypedExpression("> 20 && < 30", Person.class).getExpression());
     }
 
     @Test
@@ -235,9 +254,9 @@ public class ExpressionTyperTest {
         assertThat(toTypedExpression("name str[startsWith] \"M\" || str[endsWith] \"a\" && str[length] 4", Person.class).getExpression().toString()).isEqualTo(expected);
     }
 
-    @Test(expected = CannotTypeExpressionException.class)
+    @Test
     public void invalidHalfPointFree() {
-        toTypedExpression("str[endsWith] \"a\" && str[length] 4", Person.class).getExpression();
+    	assertThatExceptionOfType(CannotTypeExpressionException.class).isThrownBy(() -> toTypedExpression("str[endsWith] \"a\" && str[length] 4", Person.class).getExpression());
     }
 
     @Test
@@ -248,9 +267,24 @@ public class ExpressionTyperTest {
         assertThat(typedExpression.getExpression().toString()).isEqualTo(expected);
     }
 
-    private TypedExpression toTypedExpression(String inputExpression, Class<?> patternType, DeclarationSpec... declarations) {
+    @Test
+    public void coercionInMethodArgument() {
+        TypedExpression typedExpression = toTypedExpression("identityBigDecimal(money - 1)", Person.class);
+        assertThat(ruleContext.hasCompilationError()).isFalse();
+        String expected = "_this.identityBigDecimal(_this.getMoney().subtract(new java.math.BigDecimal(1), java.math.MathContext.DECIMAL128))";
+        assertThat(typedExpression.getExpression().toString()).isEqualTo(expected);
+    }
 
-        for(DeclarationSpec d : declarations) {
+    @Test
+    public void thisWithGetterReactivity() {
+        Expression expression = DrlxParseUtil.parseExpression("_this.getAge() > 20").getExpr();
+        TypedExpressionResult result = new ExpressionTyper(ruleContext, Person.class, null, true).toTypedExpression(expression);
+        assertThat(result.getReactOnProperties()).containsExactly("age");
+    }
+
+    private TypedExpression toTypedExpression(String inputExpression, Class<?> patternType, TypedDeclarationSpec... declarations) {
+
+        for(TypedDeclarationSpec d : declarations) {
             ruleContext.addDeclaration(d);
         }
         Expression expression = DrlxParseUtil.parseExpression(inputExpression).getExpr();
@@ -268,8 +302,8 @@ public class ExpressionTyperTest {
         return new TypedExpression(resultExpression, classResult, fieldName);
     }
 
-    private DeclarationSpec aPersonDecl(String $mark) {
-        return new DeclarationSpec($mark, Person.class);
+    private TypedDeclarationSpec aPersonDecl(String $mark) {
+        return new TypedDeclarationSpec($mark, Person.class);
     }
 
     private void addInlineCastImport() {

@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.util;
 
 import java.io.Externalizable;
@@ -22,7 +24,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Objects;
 
-import org.drools.base.util.FieldIndex;
+import org.drools.base.util.IndexedValueReader;
+import org.drools.core.reteoo.TupleImpl;
 import org.drools.core.reteoo.Tuple;
 import org.drools.core.util.index.TupleList;
 
@@ -145,7 +148,7 @@ public abstract class AbstractHashTable
     
     public abstract int getResizeHashcode(TupleList entry);
 
-    public TupleList<TupleList>[] getTable() {
+    public <T extends TupleImpl> TupleList[] getTable() {
         return this.table;
     }
 
@@ -184,15 +187,15 @@ public abstract class AbstractHashTable
     }
 
     public interface Index extends Externalizable {
-        FieldIndex getFieldIndex(int index);
-        HashEntry hashCodeOf(Tuple tuple, boolean left);
+        IndexedValueReader getFieldIndex(int index);
+        HashEntry hashCodeOf(TupleImpl tuple, boolean left);
     }
 
     public static class SingleIndex implements Index {
 
         private static final long    serialVersionUID = 510l;
 
-        private FieldIndex index;
+        private IndexedValueReader index;
 
         private int startResult;
 
@@ -202,7 +205,7 @@ public abstract class AbstractHashTable
 
         }
 
-        public SingleIndex(final FieldIndex[] indexes,
+        public SingleIndex(final IndexedValueReader[] indexes,
                            final int startResult) {
             this.startResult = startResult;
             this.index = indexes[0];
@@ -211,7 +214,7 @@ public abstract class AbstractHashTable
         @Override
         public void readExternal(ObjectInput in) throws IOException,
                                                 ClassNotFoundException {
-            index = (FieldIndex) in.readObject();
+            index = (IndexedValueReader) in.readObject();
             startResult = in.readInt();
         }
 
@@ -222,7 +225,7 @@ public abstract class AbstractHashTable
         }
 
         @Override
-        public FieldIndex getFieldIndex(int index) {
+        public IndexedValueReader getFieldIndex(int index) {
             if ( index > 0 ) {
                 throw new IllegalArgumentException( "IndexUtil position " + index + " does not exist" );
             }
@@ -230,7 +233,7 @@ public abstract class AbstractHashTable
         }
 
         @Override
-        public HashEntry hashCodeOf(Tuple tuple, boolean left) {
+        public HashEntry hashCodeOf(TupleImpl tuple, boolean left) {
             return hashEntry.set(startResult, index.indexedValueOf( tuple, left ) );
         }
     }
@@ -262,7 +265,7 @@ public abstract class AbstractHashTable
 
         @Override
         protected void copyStateInto(TupleList other) {
-            super.copyStateInto( other );
+            super.copyStateInto(other);
             ( (IndexTupleList) other ).hashEntry = hashEntry;
             ( (IndexTupleList) other ).index = index;
             ( (IndexTupleList) other ).hashCode = hashCode;
@@ -282,8 +285,8 @@ public abstract class AbstractHashTable
 
         private static final long serialVersionUID = 510l;
 
-        private FieldIndex index1;
-        private FieldIndex index2;
+        private IndexedValueReader index1;
+        private IndexedValueReader index2;
 
         private int startResult;
 
@@ -293,7 +296,7 @@ public abstract class AbstractHashTable
 
         }
 
-        public DoubleCompositeIndex(final FieldIndex[] indexes,
+        public DoubleCompositeIndex(final IndexedValueReader[] indexes,
                                     final int startResult) {
             this.startResult = startResult;
 
@@ -304,8 +307,8 @@ public abstract class AbstractHashTable
         @Override
         public void readExternal(ObjectInput in) throws IOException,
                                                 ClassNotFoundException {
-            index1 = (FieldIndex) in.readObject();
-            index2 = (FieldIndex) in.readObject();
+            index1 = (IndexedValueReader) in.readObject();
+            index2 = (IndexedValueReader) in.readObject();
             startResult = in.readInt();
         }
 
@@ -317,7 +320,7 @@ public abstract class AbstractHashTable
         }
 
         @Override
-        public FieldIndex getFieldIndex(int index) {
+        public IndexedValueReader getFieldIndex(int index) {
             switch ( index ) {
                 case 0 :
                     return index1;
@@ -329,7 +332,7 @@ public abstract class AbstractHashTable
         }
 
         @Override
-        public HashEntry hashCodeOf(Tuple tuple, boolean left) {
+        public HashEntry hashCodeOf(TupleImpl tuple, boolean left) {
             return hashEntry.set(startResult, index1.indexedValueOf( tuple, left ), index2.indexedValueOf( tuple, left ) );
         }
     }
@@ -338,9 +341,9 @@ public abstract class AbstractHashTable
 
         private static final long serialVersionUID = 510l;
 
-        private FieldIndex index1;
-        private FieldIndex index2;
-        private FieldIndex index3;
+        private IndexedValueReader index1;
+        private IndexedValueReader index2;
+        private IndexedValueReader index3;
 
         private int startResult;
 
@@ -350,7 +353,7 @@ public abstract class AbstractHashTable
 
         }
 
-        public TripleCompositeIndex(final FieldIndex[] indexes,
+        public TripleCompositeIndex(final IndexedValueReader[] indexes,
                                     final int startResult) {
             this.startResult = startResult;
 
@@ -362,9 +365,9 @@ public abstract class AbstractHashTable
         @Override
         public void readExternal(ObjectInput in) throws IOException,
                                                 ClassNotFoundException {
-            index1 = (FieldIndex) in.readObject();
-            index2 = (FieldIndex) in.readObject();
-            index3 = (FieldIndex) in.readObject();
+            index1 = (IndexedValueReader) in.readObject();
+            index2 = (IndexedValueReader) in.readObject();
+            index3 = (IndexedValueReader) in.readObject();
             startResult = in.readInt();
         }
 
@@ -377,7 +380,7 @@ public abstract class AbstractHashTable
         }
 
         @Override
-        public FieldIndex getFieldIndex(int index) {
+        public IndexedValueReader getFieldIndex(int index) {
             switch ( index ) {
                 case 0 :
                     return index1;
@@ -391,7 +394,7 @@ public abstract class AbstractHashTable
         }
 
         @Override
-        public HashEntry hashCodeOf(Tuple tuple, boolean left) {
+        public HashEntry hashCodeOf(TupleImpl tuple, boolean left) {
             return hashEntry.set(startResult, index1.indexedValueOf( tuple, left ), index2.indexedValueOf( tuple, left ), index3.indexedValueOf( tuple, left ) );
         }
     }
@@ -433,8 +436,12 @@ public abstract class AbstractHashTable
 
         @Override
         public boolean equals( Object o ) {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
+            if ( this == o ) {
+                return true;
+            }
+            if ( o == null || getClass() != o.getClass() ) {
+                return false;
+            }
             SingleHashEntry that = ( SingleHashEntry ) o;
             return hashCode == that.hashCode && Objects.equals( obj1, that.obj1 );
         }
@@ -486,8 +493,12 @@ public abstract class AbstractHashTable
 
         @Override
         public boolean equals( Object o ) {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
+            if ( this == o ) {
+                return true;
+            }
+            if ( o == null || getClass() != o.getClass() ) {
+                return false;
+            }
             DoubleHashEntry that = ( DoubleHashEntry ) o;
             return hashCode == that.hashCode && Objects.equals( obj1, that.obj1 ) && Objects.equals( obj2, that.obj2 );
         }
@@ -544,8 +555,12 @@ public abstract class AbstractHashTable
 
         @Override
         public boolean equals( Object o ) {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
+            if ( this == o ) {
+                return true;
+            }
+            if ( o == null || getClass() != o.getClass() ) {
+                return false;
+            }
             TripleHashEntry that = ( TripleHashEntry ) o;
             return hashCode == that.hashCode && Objects.equals( obj1, that.obj1 ) && Objects.equals( obj2, that.obj2 ) && Objects.equals( obj3, that.obj3 );
         }

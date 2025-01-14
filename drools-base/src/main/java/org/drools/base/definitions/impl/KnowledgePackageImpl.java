@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.base.definitions.impl;
 
 import java.io.ByteArrayInputStream;
@@ -35,13 +37,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.drools.base.rule.DialectRuntimeData;
-import org.drools.base.rule.DuplicateRuleNameException;
-import org.drools.base.rule.ImportDeclaration;
-import org.drools.base.rule.InvalidRuleException;
-import org.drools.base.rule.InvalidRulePackage;
-import org.drools.base.rule.TypeDeclaration;
-import org.drools.base.util.CloneUtil;
+import org.drools.base.RuleBase;
 import org.drools.base.common.DroolsObjectInputStream;
 import org.drools.base.common.DroolsObjectOutputStream;
 import org.drools.base.definitions.InternalKnowledgePackage;
@@ -49,11 +45,17 @@ import org.drools.base.definitions.ProcessPackage;
 import org.drools.base.definitions.ResourceTypePackageRegistry;
 import org.drools.base.definitions.rule.impl.GlobalImpl;
 import org.drools.base.definitions.rule.impl.RuleImpl;
-import org.drools.base.facttemplates.FactTemplate;
+import org.drools.base.rule.DialectRuntimeData;
 import org.drools.base.rule.DialectRuntimeRegistry;
+import org.drools.base.rule.DuplicateRuleNameException;
 import org.drools.base.rule.Function;
+import org.drools.base.rule.ImportDeclaration;
+import org.drools.base.rule.InvalidRuleException;
+import org.drools.base.rule.InvalidRulePackage;
+import org.drools.base.rule.TypeDeclaration;
 import org.drools.base.rule.WindowDeclaration;
 import org.drools.base.ruleunit.RuleUnitDescriptionLoader;
+import org.drools.base.util.CloneUtil;
 import org.drools.util.ClassTypeResolver;
 import org.drools.util.ClassUtils;
 import org.drools.util.TypeResolver;
@@ -62,10 +64,10 @@ import org.kie.api.definition.process.Process;
 import org.kie.api.definition.rule.Global;
 import org.kie.api.definition.rule.Query;
 import org.kie.api.definition.rule.Rule;
-import org.drools.base.RuleBase;
 import org.kie.api.definition.type.FactType;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
+import org.kie.api.prototype.Prototype;
 import org.kie.api.runtime.rule.AccumulateFunction;
 
 public class KnowledgePackageImpl
@@ -101,7 +103,7 @@ public class KnowledgePackageImpl
 
     protected Map<String, Type> globals;
 
-    protected Map<String, FactTemplate> factTemplates;
+    protected Map<String, Prototype> prototypes;
 
     protected DialectRuntimeRegistry dialectRuntimeRegistry;
 
@@ -149,7 +151,7 @@ public class KnowledgePackageImpl
         this.accumulateFunctions = Collections.emptyMap();
         this.staticImports = Collections.emptySet();
         this.globals = Collections.emptyMap();
-        this.factTemplates = Collections.emptyMap();
+        this.prototypes = Collections.emptyMap();
         this.functions = Collections.emptyMap();
         this.dialectRuntimeRegistry = new DialectRuntimeRegistry();
         this.entryPointsIds = Collections.emptySet();
@@ -241,7 +243,7 @@ public class KnowledgePackageImpl
             out.writeObject(this.staticImports);
             out.writeObject(this.functions);
             out.writeObject(this.accumulateFunctions);
-            out.writeObject(this.factTemplates);
+            out.writeObject(this.prototypes);
             out.writeObject(this.globals);
             out.writeBoolean(this.valid);
             out.writeBoolean(this.needStreamMode);
@@ -287,7 +289,7 @@ public class KnowledgePackageImpl
         this.staticImports = (Set) in.readObject();
         this.functions = (Map<String, Function>) in.readObject();
         this.accumulateFunctions = (Map<String, AccumulateFunction>) in.readObject();
-        this.factTemplates = (Map) in.readObject();
+        this.prototypes = (Map) in.readObject();
         this.globals = (Map<String, Type>) in.readObject();
         this.valid = in.readBoolean();
         this.needStreamMode = in.readBoolean();
@@ -443,17 +445,16 @@ public class KnowledgePackageImpl
     }
 
     @Override
-    public FactTemplate getFactTemplate(final String name) {
-        return this.factTemplates.get(name);
+    public Prototype getPrototype(final String name) {
+        return this.prototypes.get(name);
     }
 
     @Override
-    public void addFactTemplate(final FactTemplate factTemplate) {
-        if (this.factTemplates == Collections.EMPTY_MAP) {
-            this.factTemplates = new HashMap<>(1);
+    public void addPrototype(final Prototype prototype) {
+        if (this.prototypes == Collections.EMPTY_MAP) {
+            this.prototypes = new HashMap<>(1);
         }
-        this.factTemplates.put(factTemplate.getName(),
-                               factTemplate);
+        this.prototypes.put(prototype.getName(), prototype);
     }
 
     /**
@@ -584,7 +585,7 @@ public class KnowledgePackageImpl
         this.accumulateFunctions.clear();
         this.staticImports.clear();
         this.globals.clear();
-        this.factTemplates.clear();
+        this.prototypes.clear();
         this.typeDeclarations.clear();
         this.windowDeclarations.clear();
     }
@@ -764,7 +765,9 @@ public class KnowledgePackageImpl
 
     private void removeProcess(Process process) {
         ProcessPackage rtp = (ProcessPackage) getResourceTypePackages().get(ResourceType.BPMN2);
-        if (rtp != null) rtp.remove(process.getId());
+        if (rtp != null) {
+            rtp.remove(process.getId());
+        }
     }
 
     private List<Process> getProcessesGeneratedFromResource(Resource resource) {
@@ -805,8 +808,8 @@ public class KnowledgePackageImpl
                 // if the classloader isn't changed there's no need for a clone
                 return this;
             }
-            if (originalClassLoader instanceof ProjectClassLoader) {
-                ((ProjectClassLoader) classLoader).initFrom((ProjectClassLoader) originalClassLoader);
+            if (originalClassLoader instanceof ProjectClassLoader ocl) {
+                ocl.initFrom((ProjectClassLoader) originalClassLoader);
             }
         }
 

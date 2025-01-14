@@ -1,20 +1,26 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo.builder;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.DroolsQuery;
@@ -32,7 +38,7 @@ import org.drools.base.rule.RuleConditionElement;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.base.rule.WindowReference;
 import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaConstraint;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.rule.constraint.XpathConstraint;
 import org.drools.base.time.impl.Timer;
@@ -45,10 +51,6 @@ import org.drools.core.time.impl.CompositeMaxDurationTimer;
 import org.drools.core.time.impl.DurationTimer;
 import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.definition.type.Expires.Policy;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.drools.base.rule.TypeDeclaration.NEVER_EXPIRES;
 import static org.drools.core.reteoo.builder.GroupElementBuilder.AndBuilder.buildJoinNode;
@@ -187,7 +189,7 @@ public class PatternBuilder
                     linkAlphaConstraint( (AlphaNodeFieldConstraint) constraint, constraints.alphaConstraints );
                     break;
                 case BETA:
-                    linkBetaConstraint( (BetaNodeFieldConstraint) constraint, constraints.betaConstraints );
+                    linkBetaConstraint((BetaConstraint) constraint, constraints.betaConstraints);
                     if ( isNegative && context.getRuleBase().getRuleBaseConfiguration().getEventProcessingMode() == EventProcessingOption.STREAM && pattern.getObjectType().isEvent() && constraint.isTemporal() ) {
                         checkDelaying( context, constraint );
                     }
@@ -202,7 +204,7 @@ public class PatternBuilder
         return constraints;
     }
 
-    protected void linkBetaConstraint( BetaNodeFieldConstraint constraint, List<BetaNodeFieldConstraint> betaConstraints ) {
+    protected void linkBetaConstraint(BetaConstraint constraint, List<BetaConstraint> betaConstraints) {
         betaConstraints.add( constraint );
     }
 
@@ -388,7 +390,7 @@ public class PatternBuilder
      */
     private void checkRemoveIdentities(final BuildContext context,
                                        final Pattern pattern,
-                                       final List<BetaNodeFieldConstraint> betaConstraints) {
+                                       final List<BetaConstraint> betaConstraints) {
         if ( context.getRuleBase().getRuleBaseConfiguration().isRemoveIdentities() && pattern.getObjectType().getClass() == ClassObjectType.class ) {
             // Check if this object type exists before
             // If it does we need stop instance equals cross product
@@ -414,7 +416,7 @@ public class PatternBuilder
 
     private static class Constraints {
         private final List<AlphaNodeFieldConstraint> alphaConstraints = new ArrayList<>();
-        private final List<BetaNodeFieldConstraint> betaConstraints = new ArrayList<>();
-        private final List<XpathConstraint> xpathConstraints = new ArrayList<>();
+        private final List<BetaConstraint>           betaConstraints  = new ArrayList<>();
+        private final List<XpathConstraint>          xpathConstraints = new ArrayList<>();
     }
 }

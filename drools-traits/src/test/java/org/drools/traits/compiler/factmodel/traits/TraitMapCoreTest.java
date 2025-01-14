@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.traits.compiler.factmodel.traits;
 
 import java.util.ArrayList;
@@ -21,19 +24,25 @@ import java.util.List;
 import java.util.Map;
 
 import org.drools.traits.compiler.CommonTraitTest;
-import org.drools.core.ClassObjectFilter;
+import org.kie.api.runtime.ClassObjectFilter;
 import org.drools.traits.core.factmodel.TraitableMap;
 import org.drools.traits.core.factmodel.TraitFactoryImpl;
 import org.drools.base.factmodel.traits.Traitable;
 import org.drools.traits.core.factmodel.VirtualPropertyMode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.kie.api.runtime.KieSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TraitMapCoreTest extends CommonTraitTest {
 
-    @Test(timeout=10000)
+    private static final Logger LOGGER = LoggerFactory.getLogger(TraitMapCoreTest.class);
+
+    @Test()
+    @Timeout(value = 10000)
     public void testMapCoreManyTraits(  ) {
         String source = "package org.drools.test;\n" +
                         "\n" +
@@ -67,7 +76,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "then  \n" +
                         "   Object obj1 = don( $m, PersonMap.class );\n" +
                         "   Object obj2 = don( obj1, StudentMap.class );\n" +
-                        "   System.out.println( \"done: PersonMap\" );\n" +
                         "\n" +
                         "end\n" +
                         "\n";
@@ -86,13 +94,14 @@ public class TraitMapCoreTest extends CommonTraitTest {
         ks.fireAllRules();
 
         for ( Object o : ks.getObjects() ) {
-            System.err.println( o );
+            LOGGER.debug( o.toString() );
         }
 
         assertThat(map.get("GPA")).isEqualTo(3.0);
     }
 
-    @Test(timeout=10000)
+    @Test()
+    @Timeout(value = 10000)
     public void donMapTest() {
         String source = "package org.drools.traits.test; \n" +
                         "import java.util.*\n;" +
@@ -121,11 +130,9 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "when \n" +
                         "   $p : PersonMap( name == \"john\", age > 10 ) \n" +
                         "then \n" +
-                        "   System.out.println( $p ); \n" +
                         "   modify ( $p ) { \n" +
                         "       setHeight( 184.0 ); \n" +
                         "   }" +
-                        "   System.out.println( $p ); " +
                         "end \n";
 
         KieSession ksession = loadKnowledgeBaseFromString( source ).newKieSession();
@@ -134,19 +141,19 @@ public class TraitMapCoreTest extends CommonTraitTest {
         List list = new ArrayList();
         ksession.setGlobal( "list", list );
 
-        Map map = new HashMap();
+        Map<String, Object> map = new HashMap<>();
         map.put( "name", "john" );
         map.put( "age", 18 );
 
         ksession.insert( map );
         ksession.fireAllRules();
 
-        assertThat(map.containsKey("height")).isTrue();
-        assertThat(184.0).isEqualTo(map.get("height"));
+        assertThat(map).containsEntry("height", 184.0);
 
     }
 
-    @Test(timeout=10000)
+    @Test()
+    @Timeout(value = 10000)
     public void testMapCore2(  ) {
         String source = "package org.drools.base.factmodel.traits.test;\n" +
                         "\n" +
@@ -178,7 +185,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "  $m : Map( this[ \"age\"] == 18, this[ \"ID\" ] != \"100\" )\n" +
                         "then  \n" +
                         "   don( $m, PersonMap.class );\n" +
-                        "   System.out.println( \"done: PersonMap\" );\n" +
                         "\n" +
                         "end\n" +
                         "\n" +
@@ -189,20 +195,14 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "   modify ( $p ) {  \n" +
                         "       setHeight( 184.0 );  \n" +
                         "   }\n" +
-                        "   System.out.println(\"Log: \" +  $p );\n" +
                         "end\n" +
-                        "" +
-                        "" +
                         "rule Don2\n" +
                         "salience -1\n" +
                         "when\n" +
                         "   $m : Map( this[ \"age\"] == 18, this[ \"ID\" ] != \"100\" ) " +
                         "then\n" +
                         "   don( $m, StudentMap.class );\n" +
-                        "   System.out.println( \"done2: StudentMap\" );\n" +
                         "end\n" +
-                        "" +
-                        "" +
                         "rule Log2\n" +
                         "salience -2\n" +
                         "no-loop\n" +
@@ -213,10 +213,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "       setGPA( 4.0 ),\n" +
                         "       setID( \"100\" );\n" +
                         "   }\n" +
-                        "   System.out.println(\"Log2: \" + $p );\n" +
                         "end\n" +
-                        "" +
-                        "" +
                         "\n" +
                         "rule Shed1\n" +
                         "salience -5// it seams that the order of shed must be the same as applying don\n" +
@@ -224,7 +221,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "    $m : PersonMap()\n" +
                         "then\n" +
                         "   shed( $m, PersonMap.class );\n" +
-                        "   System.out.println( \"shed: PersonMap\" );\n" +
                         "end\n" +
                         "\n" +
                         "rule Shed2\n" +
@@ -233,7 +229,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "    $m : StudentMap()\n" +
                         "then\n" +
                         "   shed( $m, StudentMap.class );\n" +
-                        "   System.out.println( \"shed: StudentMap\" );\n" +
                         "end\n" +
                         "" +
                         "rule Last  \n" +
@@ -241,12 +236,9 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "when  \n" +
                         "  $m : Map( this not isA StudentMap.class )\n" +
                         "then  \n" +
-                        "   System.out.println( \"Final\" );\n" +
                         "   $m.put( \"final\", true );" +
                         "\n" +
-                        "end\n" +
-                        "\n" +
-                        "\n";
+                        "end\n";
 
         KieSession ks = loadKnowledgeBaseFromString( source ).newKieSession();
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ks.getKieBase() );
@@ -263,7 +255,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
 
         for ( Object o : ks.getObjects() ) {
-            System.err.println( o );
+            LOGGER.debug( o.toString() );
         }
 
         assertThat(map.get("ID")).isEqualTo("100");
@@ -273,7 +265,8 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
     }
 
-    @Test(timeout=10000)
+    @Test()
+    @Timeout(value = 10000)
     public void testMapCoreAliasing(  ) {
         String source = "package org.drools.base.factmodel.traits.test;\n" +
                         "\n" +
@@ -311,10 +304,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
                         "       setHeight( 184.0 ), \n" +
                         "       setEta( 42 );  \n" +
                         "   }\n" +
-                        "   System.out.println(\"Log: \" +  $p );\n" +
-                        "end\n" +
-                        "" +
-                        "\n";
+                        "end\n";
 
         KieSession ks = loadKnowledgeBaseFromString( source ).newKieSession();
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ks.getKieBase() );
@@ -331,7 +321,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
 
         for ( Object o : ks.getObjects() ) {
-            System.err.println( o );
+            LOGGER.debug( o.toString() );
         }
 
         assertThat(map.get("years")).isEqualTo(42);
@@ -339,7 +329,8 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
     }
 
-    @Test(timeout=10000)
+    @Test()
+    @Timeout(value = 10000)
     public void testMapCoreAliasingLogicalTrueWithTypeClash(  ) {
         String source = "package org.drools.base.factmodel.traits.test;\n" +
                         "\n" +
@@ -377,7 +368,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
         KieSession ks = loadKnowledgeBaseFromString( source ).newKieSession();
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ks.getKieBase() );
 
-        List list = new ArrayList();
+        List<Object> list = new ArrayList<>();
         ks.setGlobal( "list", list );
 
         Map<String,Object> map = new HashMap<String, Object>(  );
@@ -387,7 +378,8 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
         ks.fireAllRules();
 
-        assertThat(list.size() == 1 && list.get(0) == null).isTrue();
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0)).isNull();
     }
 
     @Test
@@ -452,7 +444,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "    $map.put(\"worker\" , s);\n" +
                 "    $map.put(\"isEmpty\" , false);\n" +
                 "    update($map);\n" +
-                "    System.out.println(\"don: Person -> Student \");\n" +
                 "    list.add(\"student is donned\");\n" +
                 "end\n" +
                 "\n" +
@@ -463,20 +454,17 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "    $map : Map($stu : this[\"worker\"] isA Student.class)\n" +
                 "then\n" +
                 "    Object obj = don( $map , Worker.class );\n" +
-                "    System.out.println(\"don: Map -> Worker : \"+obj);\n" +
                 "    list.add(\"worker is donned\");\n" +
                 "end\n";
 
         KieSession ksession = loadKnowledgeBaseFromString(drl).newKieSession();
 
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ksession.getKieBase());
-        List list = new ArrayList();
+        List<String> list = new ArrayList<>();
         ksession.setGlobal( "list", list );
         ksession.fireAllRules();
 
-        assertThat(list.contains("initialized")).isTrue();
-        assertThat(list.contains("student is donned")).isTrue();
-        assertThat(list.contains("worker is donned")).isTrue();
+        assertThat(list).contains("initialized", "student is donned", "worker is donned");
 
     }
 
@@ -541,7 +529,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "    $map.put(\"worker\" , s);\n" +
                 "    $map.put(\"isEmpty\" , false);\n" +
                 "    update($map);\n" +
-                "    System.out.println(\"don: Person -> Student \");\n" +
                 "    list.add(\"student is donned\");\n" +
                 "end\n" +
                 "\n" +
@@ -552,20 +539,17 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "    $map : Map($stu : this[\"worker\"], $stu isA Student.class)\n" +
                 "then\n" +
                 "    Object obj = don( $map , Worker.class );\n" +
-                "    System.out.println(\"don: Map -> Worker : \"+obj);\n" +
                 "    list.add(\"worker is donned\");\n" +
                 "end\n";
 
         KieSession ksession = loadKnowledgeBaseFromString(drl).newKieSession();
 
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ksession.getKieBase());
-        List list = new ArrayList();
+        List<String> list = new ArrayList<>();
         ksession.setGlobal("list", list);
         ksession.fireAllRules();
 
-        assertThat(list.contains("initialized")).isTrue();
-        assertThat(list.contains("student is donned")).isTrue();
-        assertThat(list.contains("worker is donned")).isTrue();
+        assertThat(list).contains("initialized", "student is donned", "worker is donned");
     }
 
     @Test
@@ -637,7 +621,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "    $map.put(\"isEmpty\" , false);\n" +
                 "    $map.put(\"hasBenefits\",null);\n" +
                 "    update($map);\n" +
-                "    System.out.println(\"don: Person -> Student \");\n" +
                 "    list.add(\"student is donned\");\n" +
                 "end\n" +
                 "\n" +
@@ -649,7 +632,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "    Map($stu isA Student.class, this == $map)\n" +
                 "then\n" +
                 "    Object obj = don( $map , Worker.class );\n" +
-                "    System.out.println(\"don: Map -> Worker : \"+obj);\n" +
                 "    list.add(\"worker is donned\");\n" +
                 "end\n" +
                 "\n" +
@@ -660,7 +642,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "    $stu : Student()\n" +
                 "then\n" +
                 "    Object obj = don( $stu , StudentWorker.class );\n" +
-                "    System.out.println(\"don: Map -> StudentWorker : \"+obj);\n" +
                 "    list.add(\"studentworker is donned\");\n" +
                 "end\n" +
                 "\n" +
@@ -670,7 +651,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "when\n" +
                 "    StudentWorker(tuitionWaiver == true)\n" +
                 "then\n" +
-                "    System.out.println(\"tuitionWaiver == true\");\n" +
                 "    list.add(\"tuitionWaiver is true\");\n" +
                 "end\n" +
                 "\n";
@@ -678,15 +658,11 @@ public class TraitMapCoreTest extends CommonTraitTest {
         KieSession ksession = loadKnowledgeBaseFromString(drl).newKieSession();
 
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ksession.getKieBase());
-        List list = new ArrayList();
+        List<String> list = new ArrayList<>();
         ksession.setGlobal( "list", list );
         ksession.fireAllRules();
 
-        assertThat(list.contains("initialized")).isTrue();
-        assertThat(list.contains("student is donned")).isTrue();
-        assertThat(list.contains("worker is donned")).isTrue();
-        assertThat(list.contains("studentworker is donned")).isTrue();
-        assertThat(list.contains("tuitionWaiver is true")).isTrue();
+        assertThat(list).contains("initialized", "student is donned", "worker is donned", "studentworker is donned", "tuitionWaiver is true");
     }
 
     @Test
@@ -738,7 +714,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                 "    $stu : Person(isStudent == true)\n" +
                 "then\n" +
                 "    Student s = don( $stu , Student.class );\n" +
-                "    System.out.println(\"don: Person -> Student \" + s);\n" +
                 "    list.add(\"student is donned\");\n" +
                 "end\n" +
                 "\n" +
@@ -781,16 +756,12 @@ public class TraitMapCoreTest extends CommonTraitTest {
         KieSession ksession = loadKnowledgeBaseFromString(drl).newKieSession();
 
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ksession.getKieBase());
-        List list = new ArrayList();
+        List<String> list = new ArrayList<>();
         ksession.setGlobal( "list", list );
         ksession.fireAllRules();
 
-        assertThat(list.contains("initialized")).isTrue();
-        assertThat(list.contains("student is donned")).isTrue();
-        assertThat(list.contains("student has ID and SSN")).isTrue();
-        assertThat(list.contains("student has personID and socialSecurity")).isTrue();
-        assertThat(list.contains("citizen has socialSecurity")).isTrue();
-        assertThat(list.contains("person has personID")).isTrue();
+        assertThat(list).contains("initialized", "student is donned", "student has ID and SSN", 
+        		"student has personID and socialSecurity", "citizen has socialSecurity", "person has personID");
     }
 
     @Test
@@ -835,7 +806,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                           // success
                      "    ChildTrait ct = don( $map , ChildTrait.class );\n" +
                      "" +
-                     "  System.out.println( $map ); \n" +
                      "    list.add( pt );\n" +
                      "    list.add( ct );\n" +
                      "end";
@@ -851,7 +821,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
         ksession.insert( map );
         ksession.fireAllRules();
 
-        assertThat(list.size()).isEqualTo(2);
+        assertThat(list).hasSize(2);
         assertThat(list.get(0)).isNull();
         assertThat(list.get(1)).isNotNull();
     }
@@ -892,26 +862,24 @@ public class TraitMapCoreTest extends CommonTraitTest {
                      "    $c : ChildTrait($n : naam == \"kudak\", id == 1020 )\n" +
                      "    $p : Map( this[\"naam\"] == $n )\n" +
                      "then\n" +
-                     "    System.out.println($p);\n" +
-                     "    System.out.println($c);\n" +
                      "    list.add(\"correct2\");\n" +
                      "end";
 
         KieSession ksession = loadKnowledgeBaseFromString(drl).newKieSession();
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ksession.getKieBase());
 
-        List list = new ArrayList();
+        List<String> list = new ArrayList<>();
         ksession.setGlobal("list",list);
         Map<String,Object> map = new HashMap<String, Object>();
 //        map.put("name", "hulu");
         ksession.insert(map);
         ksession.fireAllRules();
 
-        assertThat(list.contains("correct1")).isTrue();
-        assertThat(list.contains("correct2")).isTrue();
+        assertThat(list).contains("correct1", "correct2");
     }
 
-    @Test(timeout=10000)
+    @Test()
+    @Timeout(value = 10000)
     public void testMapTraitMismatchTypes()
     {
         String drl = "" +
@@ -956,7 +924,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
         ksession.insert(map);
         ksession.fireAllRules();
 
-        assertThat(list.size()).isEqualTo(1);
+        assertThat(list).hasSize(1);
         assertThat(list.get(0)).isEqualTo(null);
     }
 
@@ -1010,7 +978,6 @@ public class TraitMapCoreTest extends CommonTraitTest {
                      "then\n" +
                      " ChildTrait ct = don( $map , ChildTrait.class );\n" +
                      " list.add( ct );\n" +
-                     " System.out.println(ct);\n" +
                      "end\n" +
                      "\n" +
                      "";
@@ -1022,7 +989,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
         ksession.setGlobal("list",list);
         ksession.fireAllRules();
 
-        assertThat(list.size()).isEqualTo(1);
+        assertThat(list).hasSize(1);
         assertThat(list.get(0)).isNotNull();
     }
 
@@ -1082,10 +1049,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
                      "then\n" +
                      " ChildTrait ct = don( $map , ChildTrait.class );\n" +
                      " list.add( ct );\n" +
-                     " System.out.println(ct);\n" +
-                     "end\n" +
-                     "\n" +
-                     "";
+                     "end\n";
 
         KieSession ksession = loadKnowledgeBaseFromString(drl).newKieSession();
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ksession.getKieBase());
@@ -1094,7 +1058,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
         ksession.setGlobal("list",list);
         ksession.fireAllRules();
 
-        assertThat(list.size()).isEqualTo(1);
+        assertThat(list).hasSize(1);
         assertThat(list.get(0)).isNotNull();
     }
 
@@ -1154,10 +1118,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
                      "then\n" +
                      " ChildTrait ct = don( $map , ChildTrait.class );\n" +
                      " list.add( ct );\n" +
-                     " System.out.println(ct);\n" +
-                     "end\n" +
-                     "\n" +
-                     "";
+                     "end\n";
 
         KieSession ksession = loadKnowledgeBaseFromString(drl).newKieSession();
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ksession.getKieBase());
@@ -1166,7 +1127,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
         ksession.setGlobal("list",list);
         ksession.fireAllRules();
 
-        assertThat(list.size()).isEqualTo(1);
+        assertThat(list).hasSize(1);
         assertThat(list.get(0)).isNotNull();
     }
 
@@ -1229,10 +1190,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
                      "then\n" +
                      " ChildTrait ct = don( $map , ChildTrait.class );\n" +
                      " list.add( ct );\n" +
-                     " System.out.println(ct);\n" +
-                     "end\n" +
-                     "\n" +
-                     "";
+                     "end\n";
 
         KieSession ksession = loadKnowledgeBaseFromString(drl).newKieSession();
         TraitFactoryImpl.setMode(VirtualPropertyMode.MAP, ksession.getKieBase());
@@ -1241,7 +1199,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
         ksession.setGlobal("list",list);
         ksession.fireAllRules();
 
-        assertThat(list.size()).isEqualTo(1);
+        assertThat(list).hasSize(1);
         assertThat(list.get(0)).isNotNull();
     }
 
@@ -1284,18 +1242,17 @@ public class TraitMapCoreTest extends CommonTraitTest {
         List list = new ArrayList();
         ksession.setGlobal( "list", list );
 
-        HashMap map = new DomainMap();
+        Map<String, Object> map = new DomainMap();
         map.put( "name", "john" );
         map.put( "age", 18 );
 
         ksession.insert( map );
         ksession.fireAllRules();
 
-        assertThat(map.containsKey("height")).isTrue();
-        assertThat(184.0).isEqualTo(map.get("height"));
+        assertThat(map).containsEntry("height", 184.0);
 
-        assertThat(ksession.getObjects().size()).isEqualTo(2);
-        assertThat(ksession.getObjects(new ClassObjectFilter( DomainMap.class )).size()).isEqualTo(1);
+        assertThat(ksession.getObjects()).hasSize(2);
+        assertThat(ksession.getObjects(new ClassObjectFilter( DomainMap.class ))).hasSize(1);
 
     }
 

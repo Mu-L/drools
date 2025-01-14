@@ -1,20 +1,21 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator.visitor;
 
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
 import org.drools.drl.ast.descr.FromDescr;
 import org.drools.drl.ast.descr.PatternSourceDescr;
 import org.drools.model.codegen.execmodel.errors.InvalidExpressionErrorResult;
-import org.drools.model.codegen.execmodel.generator.DeclarationSpec;
+import org.drools.model.codegen.execmodel.generator.TypedDeclarationSpec;
 import org.drools.model.codegen.execmodel.generator.DrlxParseUtil;
 import org.drools.model.codegen.execmodel.generator.RuleContext;
 import org.drools.model.codegen.execmodel.generator.TypedExpression;
@@ -120,7 +121,7 @@ public class FromVisitor {
             if (isEnumeratedList( expr )) {
                 asListCall.addArgument( createListForLiteralFrom( expr.substring( 1, expr.length()-1 ), fromCall, usedDeclarations ) );
             } else {
-                Optional<DeclarationSpec> optContainsBinding = context.getDeclarationById( expr );
+                Optional<TypedDeclarationSpec> optContainsBinding = context.getTypedDeclarationById(expr );
                 if ( optContainsBinding.isPresent() ) {
                     String bindingId = optContainsBinding.get().getBindingId();
                     fromCall.addArgument( context.getVarExpr( bindingId ) );
@@ -268,7 +269,7 @@ public class FromVisitor {
 
     private Expression createArg(String expression, String bindingId, MethodCallExpr fromCall) {
         if (bindingId != null) {
-            DeclarationSpec declarationSpec = context.getDeclarationById( bindingId ).orElseThrow( RuntimeException::new );
+            TypedDeclarationSpec declarationSpec = context.getTypedDeclarationById(bindingId ).orElseThrow(RuntimeException::new );
             Class<?> clazz = declarationSpec.getDeclarationClass();
 
             DrlxParseResult drlxParseResult = ConstraintParser.withoutVariableValidationConstraintParser(context, context.getPackageModel())

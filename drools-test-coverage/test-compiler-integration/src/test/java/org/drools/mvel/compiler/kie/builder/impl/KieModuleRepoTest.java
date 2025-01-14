@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.compiler.kie.builder.impl;
 
 import java.io.File;
@@ -12,6 +30,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.drools.compiler.kie.builder.impl.BuildContext;
 import org.drools.compiler.kie.builder.impl.InternalKieModule;
@@ -25,9 +44,10 @@ import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.io.InternalResource;
 import org.drools.wiring.api.ResourceProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.builder.KieModule;
 import org.kie.api.builder.KieRepository;
@@ -69,9 +89,9 @@ public class KieModuleRepoTest {
     private Field maxSizeGaCacheField;
     private Field maxSizeGaVersionsCacheField;
 
-    @Before
+    @BeforeEach
     public void before() throws Exception {
-        kieModuleRepo = new KieModuleRepo();
+        kieModuleRepo = new KieModuleRepo(new ReentrantLock());
 
         // store the original values as we need to restore them after the test
         maxSizeGaCacheOrig = KieModuleRepo.MAX_SIZE_GA_CACHE;
@@ -80,7 +100,7 @@ public class KieModuleRepoTest {
         maxSizeGaVersionsCacheField = KieModuleRepo.class.getDeclaredField("MAX_SIZE_GA_VERSIONS_CACHE");
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         setCacheSize(maxSizeGaCacheField, null, maxSizeGaCacheOrig);
         setCacheSize(maxSizeGaVersionsCacheField, null, maxSizeGaVersionsCacheOrig);
@@ -121,6 +141,15 @@ public class KieModuleRepoTest {
         kieModuleRepoField.setAccessible(true);
         kieModuleRepoField.set(kieRepository, kieModuleRepo);
         kieModuleRepoField.setAccessible(false);
+        // share the lock between KieModuleRepo and KieRepository
+        final Field KieModuleRepoLockField = KieModuleRepo.class.getDeclaredField("lock");
+        KieModuleRepoLockField.setAccessible(true);
+        Object lock = KieModuleRepoLockField.get(kieModuleRepo);
+        KieModuleRepoLockField.setAccessible(false);
+        final Field kieRepositoryImplLockField = KieRepositoryImpl.class.getDeclaredField("lock");
+        kieRepositoryImplLockField.setAccessible(true);
+        kieRepositoryImplLockField.set(kieRepository, lock);
+        kieRepositoryImplLockField.setAccessible(false);
 
         // kie container
         final KieContainerImpl kieContainerImpl = new KieContainerImpl(mockKieProject, kieRepository);
@@ -148,7 +177,8 @@ public class KieModuleRepoTest {
 
     // simultaneous requests to deploy two new deployments (different versions)
     // for an empty/new GA artifactMap
-    @Test(timeout=5000)
+    @Test
+    @Timeout(5000)
     public void testDeployTwoArtifactVersionsSameTime() throws Exception {
         final String groupId = "org";
         final String artifactId = "one";
@@ -203,7 +233,8 @@ public class KieModuleRepoTest {
 
     // remove request followed by a store request on a high load system
     // * remove does not completely finish before store starts
-    @Test(timeout=5000)
+    @Test
+    @Timeout(5000)
     public void removeStoreArtifactMapTest() throws Exception {
         // actual test
         final ReleaseIdImpl releaseId = new ReleaseIdImpl("org", "redeploy", "2.0");
@@ -418,7 +449,8 @@ public class KieModuleRepoTest {
     // 2. simultaneous deploy requests
     // - multitenant UI
     // - duplicate REST requests
-    @Test(timeout=5000)
+    @Test
+    @Timeout(5000)
     public void newerVersionDeployOverwritesTest() throws Exception {
 
         // setup

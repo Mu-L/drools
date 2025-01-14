@@ -1,23 +1,27 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.api.runtime.rule;
 
 import java.util.Collection;
+import java.util.NoSuchElementException;
 
+import org.kie.api.runtime.ClassObjectFilter;
 import org.kie.api.runtime.ObjectFilter;
 
 /**
@@ -151,6 +155,34 @@ public interface EntryPoint {
     Collection<? extends Object> getObjects(ObjectFilter filter);
 
     /**
+     * Returns a Collection of objects in this entry-point that are instances of the given class.
+     * @param clazz the class of objects to be retrieved
+     * @return all facts from this entry-point that are instance of the given class.
+     */
+    default <T> Collection<T> getInstancesOf(Class<T> clazz) {
+        return (Collection<T>) getObjects(new ClassObjectFilter(clazz));
+    }
+
+    /**
+     * Returns the only object in this entry-point that is an instance of the given class.
+     * @param clazz the class of object to be retrieved
+     * @return the only object from this entry-point that is an instance of the given class.
+     * @throws NoSuchElementException if there isn't any object of the given class in this entry-point
+     * @throws IllegalStateException if there is more than one object of the given class in this entry-point
+     */
+    default <T> T getSingleInstanceOf(Class<T> clazz) {
+        Collection<T> ts = (Collection<T>) getObjects(new ClassObjectFilter(clazz));
+        int size = ts.size();
+        if (size == 0) {
+            throw new NoSuchElementException();
+        }
+        if (size > 1) {
+            throw new IllegalStateException("Found " + size + " instances instead of the expected single one");
+        }
+        return ts.iterator().next();
+    }
+
+    /**
      * @return all <code>FactHandle</code>s from the current session.
      */
     <T extends FactHandle> Collection< T > getFactHandles();
@@ -166,5 +198,4 @@ public interface EntryPoint {
      * @return the total number of facts currently in this entry point
      */
     long getFactCount();
-
 }

@@ -1,25 +1,28 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.ancompiler;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.kie.api.KieBase;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.KieServices;
@@ -31,12 +34,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class RangeIndexANCTest extends BaseModelTest {
 
-    public RangeIndexANCTest(RUN_TYPE testRunType) {
-        super(testRunType);
-    }
-
-    @Test
-    public void testInteger() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testInteger(RUN_TYPE testRunType) {
         final String drl =
                 "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
@@ -50,7 +50,7 @@ public class RangeIndexANCTest extends BaseModelTest {
                            "   Person( age > 8 )\n" +
                            "then\n end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(testRunType, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
         ksession.insert(new Person("John", 18));
@@ -62,15 +62,16 @@ public class RangeIndexANCTest extends BaseModelTest {
         assertThat(fired).isEqualTo(2);
     }
 
-    private KieBase createKieBaseWithRangeIndexThresholdValue(String drl, int rangeIndexThresholdValue) {
-        final KieContainer kieContainer = getKieContainer(drl);
+    private KieBase createKieBaseWithRangeIndexThresholdValue(RUN_TYPE testRunType, String drl, int rangeIndexThresholdValue) {
+        final KieContainer kieContainer = getKieContainer(testRunType, drl);
         final KieBaseConfiguration kieBaseConfiguration = KieServices.get().newKieBaseConfiguration();
         kieBaseConfiguration.setOption(AlphaRangeIndexThresholdOption.get(rangeIndexThresholdValue)); // for test convenience. Default value is AlphaRangeIndexThresholdOption.DEFAULT_VALUE
         return kieContainer.newKieBase(kieBaseConfiguration);
     }
 
-    @Test
-    public void testMixedRangeHashAndOther() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testMixedRangeHashAndOther(RUN_TYPE testRunType) {
         final String drl = "package org.drools.compiler.test\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
                            "global java.util.List results;\n" +
@@ -110,7 +111,7 @@ public class RangeIndexANCTest extends BaseModelTest {
                            "   results.add(drools.getRule().getName());" +
                            "end\n";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(testRunType, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
         List<String> results = new ArrayList<>();
@@ -126,8 +127,9 @@ public class RangeIndexANCTest extends BaseModelTest {
         assertThat(results).containsOnly("test1", "test3", "test4", "test7");
     }
 
-    @Test
-    public void testChainRange() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testChainRange(RUN_TYPE testRunType) {
         final String drl = "package com.sample\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
                            "global java.util.List results;\n" +
@@ -162,7 +164,7 @@ public class RangeIndexANCTest extends BaseModelTest {
                            "   results.add(drools.getRule().getName());" +
                            "end";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(testRunType, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
         List<String> results = new ArrayList<>();
@@ -179,8 +181,9 @@ public class RangeIndexANCTest extends BaseModelTest {
         results.clear();
     }
 
-    @Test
-    public void testRangeWithBeta() {
+    @ParameterizedTest(name = "{0}")
+	@MethodSource("parameters")
+    public void testRangeWithBeta(RUN_TYPE testRunType) {
         final String drl = "package com.sample\n" +
                            "import " + Person.class.getCanonicalName() + "\n" +
                            "global java.util.List results;\n" +
@@ -212,7 +215,7 @@ public class RangeIndexANCTest extends BaseModelTest {
                            "   results.add(drools.getRule().getName());" +
                            "end";
 
-        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(drl, 3);
+        final KieBase kbase = createKieBaseWithRangeIndexThresholdValue(testRunType, drl, 3);
         final KieSession ksession = kbase.newKieSession();
 
         List<String> results = new ArrayList<>();

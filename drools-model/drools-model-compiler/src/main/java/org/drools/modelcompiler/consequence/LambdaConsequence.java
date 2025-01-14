@@ -1,24 +1,22 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler.consequence;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import org.drools.base.base.ValueResolver;
 import org.drools.base.definitions.rule.impl.RuleImpl;
@@ -32,6 +30,10 @@ import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.model.Variable;
 import org.kie.api.runtime.rule.FactHandle;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class LambdaConsequence implements Consequence<KnowledgeHelper> {
 
     // Enable the optimization to extract from the activation tuple the arguments to be passed to this
@@ -39,18 +41,20 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
     private static final boolean ENABLE_LINEARIZED_ARGUMENTS_RETRIEVAL_OPTIMIZATION = true;
 
     private final org.drools.model.Consequence consequence;
-    private final boolean        enabledTupleOptimization;
-    private Declaration[]        requiredDeclarations;
+    private final int factsNr;
+    private final boolean enabledTupleOptimization;
+    private Declaration[] requiredDeclarations;
 
     private TupleFactSupplier[] factSuppliers;
-    private GlobalSupplier[]    globalSuppliers;
-    private Object[]            facts;
+    private GlobalSupplier[] globalSuppliers;
+    private Object[] facts;
 
-    private FactHandleLookup    fhLookup;
+    private FactHandleLookup fhLookup;
 
     public LambdaConsequence( org.drools.model.Consequence consequence, boolean enabledTupleOptimization) {
         this.consequence = consequence;
         this.enabledTupleOptimization = ENABLE_LINEARIZED_ARGUMENTS_RETRIEVAL_OPTIMIZATION & enabledTupleOptimization;
+        this.factsNr = consequence.getVariables().length + ( consequence.isUsingDrools() ? 1 : 0 );
     }
 
     @Override
@@ -61,7 +65,7 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
     @Override
     public void evaluate(KnowledgeHelper knowledgeHelper, ValueResolver valueResolver) throws Exception {
         if ( this.requiredDeclarations == null ) {
-            Declaration[] declarations = (( RuleTerminalNode ) knowledgeHelper.getMatch().getTuple().getTupleSink()).getRequiredDeclarations();
+            Declaration[] declarations = (( RuleTerminalNode ) knowledgeHelper.getMatch().getTuple().getSink()).getRequiredDeclarations();
             if (enabledTupleOptimization) {
                 this.requiredDeclarations = declarations;
             } else {
@@ -125,12 +129,10 @@ public class LambdaConsequence implements Consequence<KnowledgeHelper> {
         Object[] facts;
         FactHandleLookup fhLookup = null;
         if (reteEvaluator.getRuleSessionConfiguration().isThreadSafe()) {
+            facts = new Object[factsNr];
             if ( consequence.isUsingDrools() ) {
-                facts = new Object[consequence.getVariables().length + 1];
                 fhLookup = FactHandleLookup.create( factSuppliers.length );
                 facts[0] = new DroolsImpl( knowledgeHelper, reteEvaluator, fhLookup );
-            } else {
-                facts = new Object[consequence.getVariables().length];
             }
         } else {
             facts = this.facts;
