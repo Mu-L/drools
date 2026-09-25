@@ -545,7 +545,7 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
         deleteFromTMS( handle, handle.getEqualityKey(), typeConf, null );
     }
 
-    protected void addPropertyChangeListener(final InternalFactHandle handle, final boolean dynamicFlag ) {
+    public void addPropertyChangeListener(final InternalFactHandle handle, final boolean dynamicFlag ) {
         Object object = handle.getObject();
         try {
             final Method method = object.getClass().getMethod( "addPropertyChangeListener",
